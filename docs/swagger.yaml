@@ -1,0 +1,90 @@
+openapi: 3.0.0
+info:
+  title: Maestro API
+  version: 1.0.0
+  description: API for Maestro application
+paths:
+  /api/v1/login:
+    post:
+      summary: User login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: jdoe
+                password:
+                  type: string
+                  example: secret123
+      responses:
+        '200':
+          description: Successful login
+          headers:
+            Set-Cookie:
+              description: Cookie containing refresh_token
+              schema:
+                type: string
+                example: refresh_token=abcde12345; HttpOnly; Path=/
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJhb...
+                  username:
+                    type: string
+                    example: jdoe
+                  role:
+                    type: string
+                    example: admin
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+  /api/v1/refresh:
+    post:
+      summary: Refresh access token
+      operationId: refresh
+      parameters:
+        - in: cookie
+          name: refresh_token
+          schema:
+            type: string
+          required: true
+          description: The refresh token cookie
+      responses:
+        '200':
+          description: Successful refresh
+          headers:
+            Set-Cookie:
+              description: Cookie containing new refresh_token
+              schema:
+                type: string
+                example: refresh_token=fghij67890; HttpOnly; Path=/
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJhb...
+        '401':
+          description: Unauthorized or invalid refresh token
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+

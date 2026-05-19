@@ -55,12 +55,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation error
+                  value:
+                    code: BAD_REQUEST
+                    message: "Validation failed: missing required fields"
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_credentials:
+                  summary: Invalid credentials
+                  value:
+                    code: INVALID_CREDENTIALS
+                    message: "Invalid email or password"
   /api/v1/refresh:
     post:
       tags:
@@ -97,6 +109,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_token:
+                  summary: Invalid refresh token
+                  value:
+                    code: INVALID_TOKEN
+                    message: "Refresh token is expired, missing or invalid"
   /api/v1/logout:
     post:
       tags:
@@ -135,6 +153,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bad_request:
+                  summary: Invalid request payload
+                  value:
+                    code: BAD_REQUEST
+                    message: "Missing access_token in request body"
 components:
   schemas:
     ErrorResponse:
@@ -142,10 +166,8 @@ components:
       properties:
         code:
           type: string
-          example: INVALID_CREDENTIALS
         message:
           type: string
-          example: Invalid email or password
   securitySchemes:
     cookieAuth:
       type: apiKey

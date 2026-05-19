@@ -51,8 +51,16 @@ paths:
                     example: admin
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/refresh:
     post:
       tags:
@@ -85,6 +93,10 @@ paths:
                     example: eyJhb...
         '401':
           description: Unauthorized or invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/logout:
     post:
       tags:
@@ -119,7 +131,21 @@ paths:
                 example: refresh_token=; Max-Age=0; HttpOnly; Path=/
         '400':
           description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_CREDENTIALS
+        message:
+          type: string
+          example: Invalid email or password
   securitySchemes:
     cookieAuth:
       type: apiKey

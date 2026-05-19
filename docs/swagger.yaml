@@ -6,6 +6,8 @@ info:
 paths:
   /api/v1/login:
     post:
+      tags:
+        - auth
       summary: User login
       operationId: login
       requestBody:
@@ -53,6 +55,8 @@ paths:
           description: Unauthorized
   /api/v1/refresh:
     post:
+      tags:
+        - auth
       summary: Refresh access token
       operationId: refresh
       parameters:
@@ -81,10 +85,43 @@ paths:
                     example: eyJhb...
         '401':
           description: Unauthorized or invalid refresh token
+  /api/v1/logout:
+    post:
+      tags:
+        - auth
+      summary: User logout
+      operationId: logout
+      parameters:
+        - in: cookie
+          name: refresh_token
+          schema:
+            type: string
+          required: true
+          description: The refresh token cookie
+      requestBody:
+        description: Access token for logging purposes
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  example: eyJhb...
+      responses:
+        '200':
+          description: Successful logout
+          headers:
+            Set-Cookie:
+              description: Cookie invalidating the refresh_token
+              schema:
+                type: string
+                example: refresh_token=; Max-Age=0; HttpOnly; Path=/
+        '400':
+          description: Invalid request
 components:
   securitySchemes:
     cookieAuth:
       type: apiKey
       in: cookie
       name: refresh_token
-

@@ -159,6 +159,163 @@ paths:
                   value:
                     code: BAD_REQUEST
                     message: "Missing access_token in request body"
+  /api/v1/audit-logs:
+    get:
+      tags:
+        - audit
+      summary: Get audit logs list
+      operationId: getAuditLogs
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: action
+          schema:
+            type: string
+        - in: query
+          name: connector
+          schema:
+            type: string
+        - in: query
+          name: actor
+          schema:
+            type: string
+        - in: query
+          name: start_data
+          schema:
+            type: string
+        - in: query
+          name: end_data
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        created_at:
+                          type: string
+                        action:
+                          type: string
+                        user_name:
+                          type: string
+                        user_id:
+                          type: string
+                        connector_name:
+                          type: string
+                        connector_id:
+                          type: string
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bad_request:
+                  summary: Invalid query parameters
+                  value:
+                    code: BAD_REQUEST
+                    message: "Invalid query parameters provided"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+  /api/v1/audit-logs/{id}:
+    get:
+      tags:
+        - audit
+      summary: Get specific audit log by ID
+      operationId: getAuditLogById
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  state_before:
+                    type: object
+                  state_after:
+                    type: object
+                  action:
+                    type: string
+                  connector_name:
+                    type: string
+                  user_name:
+                    type: string
+                  user_id:
+                    type: string
+                  connector_id:
+                    type: string
+                  created_at:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Log not found
+                  value:
+                    code: NOT_FOUND
+                    message: "Audit log with provided ID not found"
 components:
   schemas:
     ErrorResponse:

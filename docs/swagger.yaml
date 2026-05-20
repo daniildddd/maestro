@@ -395,6 +395,60 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+  /api/v1/users/{id}:
+    get:
+      tags:
+        - users
+      summary: Get user by ID
+      operationId: getUserById
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  username:
+                    type: string
+                  role:
+                    type: string
+                  created_at:
+                    type: string
+                  updated_at:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: User not found
+                  value:
+                    code: NOT_FOUND
+                    message: "User with provided ID not found"
 components:
   schemas:
     ErrorResponse:

@@ -516,6 +516,118 @@ paths:
                   value:
                     code: NOT_FOUND
                     message: "User with provided ID not found"
+  /api/v1/users/{id}/password:
+    patch:
+      tags:
+        - users
+      summary: Admin changes user password
+      operationId: adminChangeUserPassword
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - new_password
+              properties:
+                new_password:
+                  type: string
+                  example: newSecret123
+      responses:
+        '204':
+          description: Password changed successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation error
+                  value:
+                    code: BAD_REQUEST
+                    message: "Validation failed: missing required fields"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: User not found
+                  value:
+                    code: NOT_FOUND
+                    message: "User not found"
+  /api/v1/users/me/password:
+    patch:
+      tags:
+        - users
+      summary: User changes their own password
+      operationId: changeOwnPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - old_password
+                - new_password
+              properties:
+                old_password:
+                  type: string
+                  example: oldSecret123
+                new_password:
+                  type: string
+                  example: newSecret123
+      responses:
+        '204':
+          description: Password changed successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation error
+                  value:
+                    code: BAD_REQUEST
+                    message: "Validation failed or incorrect old password"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
 components:
   schemas:
     ErrorResponse:

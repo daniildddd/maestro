@@ -832,6 +832,40 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+  /api/v1/connectors/stats:
+    get:
+      tags:
+        - connectors
+      summary: Get connectors statistics
+      operationId: getConnectorsStats
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  failed_connectors:
+                    type: integer
+                  running_connectors:
+                    type: integer
+                  paused_connectors:
+                    type: integer
+                  records_second:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
 
 components:
   schemas:

@@ -1248,6 +1248,38 @@ paths:
                   value:
                     code: NOT_FOUND
                     message: "Connector plugin not found"
+  /api/v1/connector-plugins:
+    get:
+      tags:
+        - connector-plugins
+      summary: Get list of available connector plugins
+      operationId: getConnectorPlugins
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
 
 components:
   schemas:

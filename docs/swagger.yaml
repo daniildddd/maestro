@@ -765,7 +765,7 @@ paths:
           schema:
             type: string
         - in: query
-          name: name
+          name: search
           schema:
             type: string
         - in: query

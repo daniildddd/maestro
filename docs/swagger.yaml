@@ -884,6 +884,50 @@ paths:
                   value:
                     code: NOT_FOUND
                     message: "Connector not found"
+  /api/v1/connectors/{id}/tasks/{task_id}/restart:
+    post:
+      tags:
+        - connectors
+      summary: Restart a specific task for a connector
+      operationId: restartConnectorTask
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: task_id
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Task restarted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Connector or task not found
+                  value:
+                    code: NOT_FOUND
+                    message: "Connector or task not found"
   /api/v1/connectors/stats:
     get:
       tags:

@@ -832,6 +832,58 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+  /api/v1/connectors/{id}/summary:
+    get:
+      tags:
+        - connectors
+      summary: Get summary for a specific connector
+      operationId: getConnectorSummary
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lag_ms:
+                    type: integer
+                  records_sec:
+                    type: integer
+                  uptime:
+                    type: integer
+                  errors:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Connector not found
+                  value:
+                    code: NOT_FOUND
+                    message: "Connector not found"
   /api/v1/connectors/stats:
     get:
       tags:

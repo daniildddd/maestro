@@ -843,6 +843,108 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+    post:
+      tags:
+        - connectors
+      summary: Create a new connector
+      operationId: createConnector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - plugin_type
+                - config
+              properties:
+                name:
+                  type: string
+                plugin_type:
+                  type: string
+                config:
+                  type: object
+                  description: Connector configuration including DB connection properties, converters, and optional SMTs.
+            examples:
+              postgres_example:
+                summary: PostgreSQL Connector with JSON Converter and SMT
+                value:
+                  name: "pg-connector"
+                  plugin_type: "io.debezium.connector.postgresql.PostgresConnector"
+                  config:
+                    "database.hostname": "localhost"
+                    "database.port": "5432"
+                    "database.user": "postgres"
+                    "database.password": "postgres"
+                    "database.dbname": "testdb"
+                    "plugin.name": "pgoutput"
+                    "key.converter": "org.apache.kafka.connect.json.JsonConverter"
+                    "value.converter": "org.apache.kafka.connect.json.JsonConverter"
+                    "transforms": "unwrap"
+                    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+              mysql_example:
+                summary: MySQL Connector with Avro Converter
+                value:
+                  name: "mysql-connector"
+                  plugin_type: "io.debezium.connector.mysql.MySqlConnector"
+                  config:
+                    "database.hostname": "mysql"
+                    "database.port": "3306"
+                    "database.user": "debezium"
+                    "database.password": "dbz"
+                    "database.server.id": "184054"
+                    "database.include.list": "inventory"
+                    "key.converter": "io.confluent.connect.avro.AvroConverter"
+                    "value.converter": "io.confluent.connect.avro.AvroConverter"
+                    "key.converter.schema.registry.url": "http://schema-registry:8081"
+                    "value.converter.schema.registry.url": "http://schema-registry:8081"
+      responses:
+        '201':
+          description: Connector created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  source_db:
+                    type: string
+                  status:
+                    type: string
+                  lag:
+                    type: integer
+                  tasks_count:
+                    type: integer
+                  created_at:
+                    type: string
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bad_request:
+                  summary: Invalid request
+                  value:
+                    code: BAD_REQUEST
+                    message: "Invalid configuration provided"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
   /api/v1/connectors/{id}:
     get:
       tags:

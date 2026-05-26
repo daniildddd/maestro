@@ -1188,6 +1188,63 @@ paths:
                   value:
                     code: NOT_FOUND
                     message: "Connector not found"
+  /api/v1/connectors/{id}/tasks/{task_id}:
+    get:
+      tags:
+        - connectors
+      summary: Get details of a specific task for a connector
+      operationId: getConnectorTaskById
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+        - in: path
+          name: task_id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  state:
+                    type: string
+                  worker_id:
+                    type: string
+                  trace:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Connector or task not found
+                  value:
+                    code: NOT_FOUND
+                    message: "Connector or task not found"
   /api/v1/connectors/{id}/tasks/{task_id}/restart:
     post:
       tags:

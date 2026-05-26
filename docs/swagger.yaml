@@ -793,7 +793,7 @@ paths:
                           type: string
                         status:
                           type: string
-                        lag:
+                        lag_ms:
                           type: integer
                         tasks_count:
                           type: integer
@@ -807,6 +807,17 @@ paths:
                       page:
                         type: integer
                       limit:
+                        type: integer
+                  cluster_stats:
+                    type: object
+                    properties:
+                      failed_connectors:
+                        type: integer
+                      running_connectors:
+                        type: integer
+                      paused_connectors:
+                        type: integer
+                      records_second:
                         type: integer
         '400':
           description: Invalid request

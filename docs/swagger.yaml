@@ -1088,6 +1088,8 @@ paths:
               schema:
                 type: object
                 properties:
+                  status:
+                    type: string
                   lag_ms:
                     type: integer
                   records_sec:
@@ -1096,6 +1098,17 @@ paths:
                     type: integer
                   errors:
                     type: integer
+                  tasks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        state:
+                          type: string
+                        worker_id:
+                          type: string
         '401':
           description: Unauthorized
           content:

@@ -1645,6 +1645,11 @@ paths:
                       type: string
                     name:
                       type: string
+              example:
+                - id: "io.debezium.connector.postgresql.PostgresConnector"
+                  name: "PostgresConnector"
+                - id: "io.debezium.connector.mysql.MySqlConnector"
+                  name: "MySqlConnector"
         '401':
           description: Unauthorized
           content:

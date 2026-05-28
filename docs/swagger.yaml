@@ -1601,6 +1601,20 @@ paths:
                           type: boolean
                         default:
                           type: string
+              example:
+                fields:
+                  - name: "database.hostname"
+                    label: "Database Hostname"
+                    description: "IP address or hostname of the PostgreSQL database server."
+                    type: "STRING"
+                    required: true
+                    default: "localhost"
+                  - name: "database.port"
+                    label: "Database Port"
+                    description: "Port number of the PostgreSQL database server."
+                    type: "INT"
+                    required: true
+                    default: "5432"
         '401':
           description: Unauthorized
           content:

@@ -1756,6 +1756,44 @@ paths:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
 
+  /api/v1/smt-plugins:
+    get:
+      tags:
+        - smt-plugins
+      summary: Get list of available SMT (Single Message Transform) plugins
+      operationId: getSmtPlugins
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+              example:
+                - id: "org.apache.kafka.connect.transforms.InsertField$Value"
+                  name: "InsertField"
+                - id: "org.apache.kafka.connect.transforms.ExtractField$Key"
+                  name: "ExtractField"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+
 components:
   schemas:
     ErrorResponse:

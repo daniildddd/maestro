@@ -1012,6 +1012,107 @@ paths:
                   value:
                     code: NOT_FOUND
                     message: "Connector not found"
+    patch:
+      tags:
+        - connectors
+      summary: Update a specific connector
+      operationId: updateConnector
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Optional new name for the connector
+                config:
+                  type: object
+                  description: Optional new configuration for the connector
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  source_db:
+                    type: string
+                  status:
+                    type: string
+                  lag:
+                    type: integer
+                  tasks_count:
+                    type: integer
+                  created_at:
+                    type: string
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                bad_request:
+                  summary: Invalid request payload
+                  value:
+                    code: BAD_REQUEST
+                    message: "Invalid configuration provided"
+        '422':
+          description: Blocked due to modification of critical (immutable) fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                immutable_fields_violation:
+                  summary: Attempt to modify an immutable field (config.topic.prefix)
+                  value:
+                    code: IMMUTABLE_FIELD_VIOLATION
+                    message: "Modifying these fields will trigger offset reset. It is recommended to create a new connector."
+                    details:
+                      - field: "config.topic.prefix"
+                        reason: "This field is immutable for the given connector."
+                        metadata:
+                          suggest_new_connector: true
+                          current_value: "old_prefix"
+                          rejected_value: "new_prefix"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Connector not found
+                  value:
+                    code: NOT_FOUND
+                    message: "Connector not found"
     delete:
       tags:
         - connectors
@@ -1561,11 +1662,44 @@ components:
   schemas:
     ErrorResponse:
       type: object
+      required:
+        - code
+        - message
       properties:
         code:
           type: string
+          description: String error code for programmatic handling on the frontend.
+          example: "VALIDATION_FAILED"
         message:
           type: string
+          description: Human-readable error description to display to the user.
+          example: "Provided configuration is invalid."
+        details:
+          type: array
+          description: Optional array containing detailed information about specific fields (populated during validation errors).
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      required:
+        - field
+        - reason
+      properties:
+        field:
+          type: string
+          description: Path to the JSON field that caused the error.
+          example: "config.topic.prefix"
+        reason:
+          type: string
+          description: Description of the issue with this specific field.
+          example: "Field cannot be changed after the connector is started."
+        metadata:
+          type: object
+          description: Arbitrary additional metadata for frontend logic.
+          additionalProperties: true
+          example:
+            suggest_new_connector: true
+
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -1658,6 +1658,85 @@ paths:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
 
+  /api/v1/connectors/validate:
+    post:
+      tags:
+        - connectors
+      summary: Validate connector configuration
+      operationId: validateConnectorConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plugin_id
+                - config
+              properties:
+                plugin_id:
+                  type: string
+                config:
+                  type: object
+                transforms:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        step:
+                          type: string
+                        status:
+                          type: string
+                        message:
+                          type: string
+              examples:
+                successful_validation:
+                  summary: Validation passed
+                  value:
+                    valid: true
+                    results: []
+                failed_validation:
+                  summary: Validation failed with issues
+                  value:
+                    valid: false
+                    results:
+                      - field: "database.hostname"
+                        step: "config_validation"
+                        status: "ERROR"
+                        message: "Unable to reach database host."
+                      - field: "tasks.max"
+                        step: "config_validation"
+                        status: "WARNING"
+                        message: "Value '10' is unusually high. Recommend 1-5."
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+
 components:
   schemas:
     ErrorResponse:

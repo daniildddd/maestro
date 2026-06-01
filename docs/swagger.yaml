@@ -43,12 +43,17 @@ paths:
                   access_token:
                     type: string
                     example: eyJhb...
+                    description: |
+                        JWT. Decoded payload example:
+                        {
+                          "sub": "1234567890",
+                          "role": "admin",
+                          "iat": 1516239022,
+                          "exp": 1516242622
+                        }
                   username:
                     type: string
-                    example: jdoe
-                  role:
-                    type: string
-                    example: admin
+                    example: John Doe
         '400':
           description: Invalid request
           content:

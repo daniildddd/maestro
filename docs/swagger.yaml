@@ -133,16 +133,6 @@ paths:
             type: string
           required: true
           description: The refresh token cookie
-      requestBody:
-        description: Access token for logging purposes
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                access_token:
-                  type: string
-                  example: eyJhb...
       responses:
         '200':
           description: Successful logout
@@ -151,7 +141,7 @@ paths:
               description: Cookie invalidating the refresh_token
               schema:
                 type: string
-                example: refresh_token=; Max-Age=0; HttpOnly; Path=/
+              example: refresh_token=; Max-Age=0; HttpOnly; Path=/; Secure; SameSite=Strict
         '400':
           description: Invalid request
           content:
@@ -160,10 +150,22 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
                 bad_request:
-                  summary: Invalid request payload
+                  summary: Missing refresh_token cookie
                   value:
                     code: BAD_REQUEST
-                    message: "Missing access_token in request body"
+                    message: "Missing refresh_token cookie"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid access token
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
   /api/v1/audit-logs:
     get:
       tags:

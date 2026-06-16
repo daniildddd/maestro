@@ -87,6 +87,8 @@ paths:
         - auth
       summary: Refresh access token
       operationId: refresh
+      security:
+        - cookieAuth: []
       parameters:
         - in: cookie
           name: refresh_token

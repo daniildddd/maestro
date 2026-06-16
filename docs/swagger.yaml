@@ -3,6 +3,8 @@ info:
   title: Maestro API
   version: 1.0.0
   description: API for Maestro application
+security:
+  - bearerAuth: []
 paths:
   /api/v1/login:
     post:

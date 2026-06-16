@@ -12,6 +12,7 @@ paths:
         - auth
       summary: User login
       operationId: login
+      security: []
       requestBody:
         required: true
         content:

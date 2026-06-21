@@ -4,9 +4,11 @@ import "errors"
 
 const (
 	errInvalidCredentials  = "invalid credentials"
-	errInvalidRefreshToken = "refresh token invalid"
-	errExpiredRefreshToken = "refresh token expired"
-	errMissingRefreshToken = "refresh token missing"
+	errInvalidRefreshToken = "invalid refresh token"
+	errExpiredRefreshToken = "expired refresh token"
+	errMissingRefreshToken = "missing refresh token"
+	errInvalidInput        = "invalid input"
+	errInvalidRequestBody  = "invalid request body"
 )
 
 var (
@@ -14,4 +16,6 @@ var (
 	ErrInvalidRefreshToken = errors.New(errInvalidRefreshToken)
 	ErrExpiredRefreshToken = errors.New(errExpiredRefreshToken)
 	ErrMissingRefreshToken = errors.New(errMissingRefreshToken)
+	ErrInvalidInput        = errors.New(errInvalidInput)
+	ErrInvalidRequestBody  = errors.New(errInvalidRequestBody)
 )

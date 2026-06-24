@@ -7,7 +7,6 @@ const (
 	errInvalidRefreshToken = "invalid refresh token"
 	errExpiredRefreshToken = "expired refresh token"
 	errMissingRefreshToken = "missing refresh token"
-	errInvalidInput        = "invalid input"
 	errInvalidRequestBody  = "invalid request body"
 )
 
@@ -16,6 +15,5 @@ var (
 	ErrInvalidRefreshToken = errors.New(errInvalidRefreshToken)
 	ErrExpiredRefreshToken = errors.New(errExpiredRefreshToken)
 	ErrMissingRefreshToken = errors.New(errMissingRefreshToken)
-	ErrInvalidInput        = errors.New(errInvalidInput)
 	ErrInvalidRequestBody  = errors.New(errInvalidRequestBody)
 )

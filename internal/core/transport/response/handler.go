@@ -82,3 +82,14 @@ func (rh *HTTPResponseHandler) ErrorResponse(
 		rh.log.Error("write HTTP response")
 	}
 }
+
+func (rh *HTTPResponseHandler) JSONResponse(
+	responseBody any,
+	statusCode int,
+) {
+	rh.w.WriteHeader(statusCode)
+
+	if err := json.NewEncoder(rh.w).Encode(responseBody); err != nil {
+		rh.log.Error("write HTTP response", zap.Error(err))
+	}
+}

@@ -8,6 +8,7 @@ const (
 	errExpiredRefreshToken = "expired refresh token"
 	errMissingRefreshToken = "missing refresh token"
 	errInvalidRequestBody  = "invalid request body"
+	errUserNotFound        = "user not found"
 )
 
 var (
@@ -16,4 +17,5 @@ var (
 	ErrExpiredRefreshToken = errors.New(errExpiredRefreshToken)
 	ErrMissingRefreshToken = errors.New(errMissingRefreshToken)
 	ErrInvalidRequestBody  = errors.New(errInvalidRequestBody)
+	ErrUserNotFound        = errors.New(errUserNotFound)
 )

@@ -61,6 +61,11 @@ func (rh *HTTPResponseHandler) ErrorResponse(
 		logFunc = rh.log.Info
 		codeError = codeInvalidCredentials
 
+	case errors.Is(err, errs.ErrValidationFailed):
+		statusCode = http.StatusBadRequest
+		logFunc = rh.log.Info
+		codeError = codeInvalidRequestBody
+
 	default:
 		statusCode = http.StatusInternalServerError
 		logFunc = rh.log.Error

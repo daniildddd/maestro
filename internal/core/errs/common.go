@@ -9,6 +9,7 @@ const (
 	errMissingRefreshToken = "missing refresh token"
 	errInvalidRequestBody  = "invalid request body"
 	errUserNotFound        = "user not found"
+	errValidationFailed    = "validation failed"
 )
 
 var (
@@ -18,4 +19,5 @@ var (
 	ErrMissingRefreshToken = errors.New(errMissingRefreshToken)
 	ErrInvalidRequestBody  = errors.New(errInvalidRequestBody)
 	ErrUserNotFound        = errors.New(errUserNotFound)
+	ErrValidationFailed    = errors.New(errValidationFailed)
 )

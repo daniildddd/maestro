@@ -39,32 +39,32 @@ func (rh *HTTPResponseHandler) ErrorResponse(
 	case errors.Is(err, errs.ErrExpiredRefreshToken):
 		statusCode = http.StatusUnauthorized
 		logFunc = rh.log.Warn
-		codeError = CodeInvalidRefreshToken
+		codeError = codeInvalidRefreshToken
 
 	case errors.Is(err, errs.ErrInvalidRefreshToken):
 		statusCode = http.StatusUnauthorized
 		logFunc = rh.log.Warn
-		codeError = CodeInvalidRefreshToken
+		codeError = codeInvalidRefreshToken
 
 	case errors.Is(err, errs.ErrMissingRefreshToken):
 		statusCode = http.StatusUnauthorized
 		logFunc = rh.log.Warn
-		codeError = CodeInvalidRefreshToken
+		codeError = codeInvalidRefreshToken
 
 	case errors.Is(err, errs.ErrInvalidRequestBody):
 		statusCode = http.StatusBadRequest
 		logFunc = rh.log.Warn
-		codeError = CodeInvalidRequestBody
+		codeError = codeInvalidRequestBody
 
 	case errors.Is(err, errs.ErrInvalidCredentials):
 		statusCode = http.StatusUnauthorized
 		logFunc = rh.log.Info
-		codeError = CodeInvalidCredentials
+		codeError = codeInvalidCredentials
 
 	default:
 		statusCode = http.StatusInternalServerError
 		logFunc = rh.log.Error
-		codeError = CodeInternal
+		codeError = codeInternal
 	}
 
 	logFunc(msg, zap.Error(err))

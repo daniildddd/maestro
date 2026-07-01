@@ -1,8 +1,8 @@
 package response
 
 const (
-	CodeInvalidCredentials  = "INVALID_CREDENTIALS"
-	CodeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
-	CodeInvalidRequestBody  = "INVALID_REQUEST_BODY"
-	CodeInternal            = "INTERNAL"
+	codeInvalidCredentials  = "INVALID_CREDENTIALS"
+	codeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+	codeInvalidRequestBody  = "INVALID_REQUEST_BODY"
+	codeInternal            = "INTERNAL"
 )

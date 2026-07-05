@@ -2,20 +2,22 @@ package pgxadapter
 
 import (
 	"fmt"
+	"net"
+	"net/url"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	Host     string `json:"HOST" default:"localhost"`
-	Port     string `json:"PORT" default:"5432"`
-	User     string `json:"USER" required:"true"`
-	Password string `json:"PASSWORD" required:"true"`
-	Database string `json:"DATABASE" default:"postgres"`
+	Host     string `envconfig:"HOST" default:"localhost"`
+	Port     string `envconfig:"PORT" default:"5432"`
+	User     string `envconfig:"USER" required:"true"`
+	Password string `envconfig:"PASSWORD" required:"true"`
+	Database string `envconfig:"DATABASE" default:"postgres"`
 	DSN      string
 
-	Timeout time.Duration `json:"TIMEOUT"`
+	Timeout time.Duration `envconfig:"TIMEOUT"`
 }
 
 func NewConfig() (Config, error) {
@@ -46,8 +48,15 @@ func NewConfigMust() Config {
 }
 
 func createDSN(host, port, user, password, database string) string {
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		user, password, host, port, database,
-	)
+	const schemeName = "postgres"
+
+	u := &url.URL{
+		Scheme: schemeName,
+		User:   url.UserPassword(user, password),
+		Host:   net.JoinHostPort(host, port),
+		Path:   database,
+	}
+
+	u.RawQuery = "sslmode=disable"
+	return u.String()
 }

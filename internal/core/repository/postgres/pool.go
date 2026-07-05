@@ -8,7 +8,7 @@ import (
 type Pool interface {
 	Query(ctx context.Context, sql string, args ...any) (Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...any) Row
-	Exec(ctx context.Context, sql string, arguments ...any) (CommandTag, error)
+	Exec(ctx context.Context, sql string, args ...any) (CommandTag, error)
 	Close()
 	OpTimeout() time.Duration
 }
@@ -25,5 +25,5 @@ type Row interface {
 }
 
 type CommandTag interface {
-	RowsAffected()
+	RowsAffected() int64
 }

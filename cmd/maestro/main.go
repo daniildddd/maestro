@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	corelogger "github.com/daniildddd/maestro/internal/core/logger"
+	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 )
 
 func main() {
-	logger, err := corelogger.NewLogger(corelogger.NewConfigMust())
+	logger, err := core_logger.NewLogger(core_logger.NewConfigMust())
 	if err != nil {
 		fmt.Println("failed to init logger:", err)
 		os.Exit(1)

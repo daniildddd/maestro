@@ -8,18 +8,20 @@ import (
 	"net/http"
 
 	"github.com/daniildddd/maestro/internal/core/errs"
+	"github.com/go-playground/validator/v10"
 )
 
 const maxBodyBytes = 1 << 20 // 1 MB
 
-type Validator interface {
-	Struct(s any) error
+var requestValidator = validator.New()
+
+type validatable interface {
+	Validate() error
 }
 
 func DecodeAndValidate(
 	w http.ResponseWriter,
 	r *http.Request,
-	validator Validator,
 	dest any,
 ) error {
 	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
@@ -61,7 +63,14 @@ func DecodeAndValidate(
 		)
 	}
 
-	if err := validator.Struct(dest); err != nil {
+	v, ok := dest.(validatable)
+	if ok {
+		err = v.Validate()
+	} else {
+		err = requestValidator.Struct(dest)
+	}
+
+	if err != nil {
 		return fmt.Errorf(
 			"request validation: %w: %w",
 			err,

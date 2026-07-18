@@ -1,0 +1,45 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/daniildddd/maestro/internal/core/domain"
+	"github.com/daniildddd/maestro/internal/core/repository/postgres"
+)
+
+func (r *AuthRepository) SaveRefreshToken(
+	ctx context.Context,
+	token domain.RefreshToken,
+) error {
+	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
+	defer cancel()
+
+	query := `
+	INSERT INTO refresh_tokens (id, user_id, token_hash, created_at, expires_at, revoked_at)
+	VALUES ($1, $2, $3, $4, $5, $6)`
+
+	_, err := r.pool.Exec(
+		ctx,
+		query,
+		token.Id,
+		token.UserId,
+		token.TokenHash,
+		token.CreatedAt,
+		token.ExpiresAt,
+		token.RevokedAt,
+	)
+	if err != nil {
+		if errors.Is(err, postgres.ErrViolatesForeignKey) {
+			return fmt.Errorf("user with id='%s' does not exist: %w",
+				token.UserId,
+				err,
+			)
+		}
+
+		return fmt.Errorf("exec query: %w", err)
+	}
+
+	return nil
+}

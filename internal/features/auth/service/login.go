@@ -29,7 +29,7 @@ func (s *AuthService) Login(
 	err = s.passwordHasher.Verify(user.PasswordHash, password)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"verify password: %w: %w",
+			"verify password: %v: %w",
 			err,
 			errs.ErrInvalidCredentials,
 		)
@@ -41,13 +41,20 @@ func (s *AuthService) Login(
 			"generate access token: %w", err)
 	}
 
-	refreshToken, expiresAt, err := s.refreshGen.Generate()
+	rawToken, expiresAt, err := s.refreshGen.Generate()
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
 			"generate refresh token: %w", err)
 	}
 
-	err = s.authRepository.SaveRefreshToken(ctx, user.Id, refreshToken, expiresAt)
+	refreshToken, err := domain.CreateRefreshToken(user.Id, rawToken, expiresAt)
+	if err != nil {
+		return domain.TokenPair{}, fmt.Errorf(
+			"create refresh token: %w", err,
+		)
+	}
+
+	err = s.authRepository.SaveRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
 			"save refresh token: %w", err)
@@ -55,7 +62,7 @@ func (s *AuthService) Login(
 
 	return domain.TokenPair{
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: rawToken,
 		Username:     username,
 		ExpiresAt:    expiresAt,
 	}, nil

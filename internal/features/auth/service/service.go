@@ -34,8 +34,6 @@ type PasswordHasher interface {
 		hash string,
 		plain string,
 	) error
-
-	Hash()
 }
 
 type AccessTokenGenerator interface {
@@ -57,8 +55,6 @@ type AuthRepository interface {
 
 	SaveRefreshToken(
 		ctx context.Context,
-		userID uuid.UUID,
-		refreshToken string,
-		expiresAt time.Time,
+		token domain.RefreshToken,
 	) error
 }

@@ -3,6 +3,7 @@ package response
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -74,18 +75,7 @@ func (rh *HTTPResponseHandler) ErrorResponse(
 
 	logFunc(msg, zap.Error(err))
 
-	rh.w.WriteHeader(statusCode)
-
-	rh.w.Header().Set("Content-Type", "application/json")
-
-	errorResponse := ErrorResponse{
-		Code:    codeError,
-		Message: msg,
-	}
-
-	if err = json.NewEncoder(rh.w).Encode(errorResponse); err != nil {
-		rh.log.Error("write HTTP response")
-	}
+	rh.errorResponse(statusCode, codeError, msg)
 }
 
 func (rh *HTTPResponseHandler) JSONResponse(
@@ -94,7 +84,40 @@ func (rh *HTTPResponseHandler) JSONResponse(
 ) {
 	rh.w.WriteHeader(statusCode)
 
+	rh.w.Header().Set("Content-Type", "application/json")
+
 	if err := json.NewEncoder(rh.w).Encode(responseBody); err != nil {
 		rh.log.Error("write HTTP response", zap.Error(err))
 	}
+}
+
+func (rh *HTTPResponseHandler) PanicResponse(
+	p any,
+	msg string,
+) {
+	err := fmt.Errorf("unexpected panic: %v", p)
+
+	rh.log.Error(msg, zap.Error(err))
+
+	rh.errorResponse(
+		http.StatusInternalServerError,
+		codeInternal,
+		msg,
+	)
+}
+
+func (rh *HTTPResponseHandler) errorResponse(
+	statusCode int,
+	codeError string,
+	msg string,
+) {
+	errorResponse := ErrorResponse{
+		Code:    codeError,
+		Message: msg,
+	}
+
+	rh.JSONResponse(
+		errorResponse,
+		statusCode,
+	)
 }

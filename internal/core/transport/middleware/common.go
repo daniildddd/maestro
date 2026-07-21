@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -84,6 +85,26 @@ func CORS(allowedOriginsList []string) Middleware {
 			}
 
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func RequireRole(roles ...string) Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+			role := reqctx.Role(ctx)
+
+			for _, allowed := range roles {
+				if role == allowed {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+
+			log := core_logger.FromContext(ctx)
+			responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
+			responseHandler.JSONResponse("forbidden", http.StatusForbidden)
 		})
 	}
 }

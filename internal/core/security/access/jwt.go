@@ -1,6 +1,7 @@
 package access
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -47,4 +48,35 @@ func (m *Manager) Generate(
 	}
 
 	return signed, nil
+}
+
+func (m *Manager) Verify(
+	tokenStr string,
+) error {
+	var claims Claims
+	token, err := jwt.ParseWithClaims(
+		tokenStr,
+		&claims,
+		func(t *jwt.Token) (any, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf(
+					"unexpected method: %s", t.Header["alg"])
+			}
+
+			return []byte(m.cfg.Secret), nil
+		},
+	)
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return fmt.Errorf("token is expired: %w", err)
+		}
+
+		return fmt.Errorf("verify token: %w", err)
+	}
+
+	if !token.Valid {
+		return fmt.Errorf("invalid token")
+	}
+
+	return nil
 }

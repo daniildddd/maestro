@@ -11,8 +11,9 @@ type ctxKey struct {
 }
 
 var (
-	keyRole   = ctxKey{name: "role"}
-	keyUserId = ctxKey{name: "user_id"}
+	keyRole      = ctxKey{name: "role"}
+	keyUserId    = ctxKey{name: "user_id"}
+	keyRequestId = ctxKey{name: "request_id"}
 )
 
 func WithRole(ctx context.Context, role string) context.Context {
@@ -40,6 +41,19 @@ func UserId(ctx context.Context) uuid.UUID {
 	v, ok := ctx.Value(keyUserId).(uuid.UUID)
 	if !ok {
 		panic("userId not found in context")
+	}
+
+	return v
+}
+
+func WithRequestId(ctx context.Context, requestId uuid.UUID) context.Context {
+	return context.WithValue(ctx, keyRequestId, requestId)
+}
+
+func RequestId(ctx context.Context) uuid.UUID {
+	v, ok := ctx.Value(keyRequestId).(uuid.UUID)
+	if !ok {
+		panic("requestId not found in context")
 	}
 
 	return v

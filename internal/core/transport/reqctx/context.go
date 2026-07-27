@@ -15,7 +15,7 @@ var (
 	keyUserId = ctxKey{name: "user_id"}
 )
 
-func WithKeyRole(ctx context.Context, role string) context.Context {
+func WithRole(ctx context.Context, role string) context.Context {
 	ctx = context.WithValue(ctx, keyRole, role)
 
 	return ctx

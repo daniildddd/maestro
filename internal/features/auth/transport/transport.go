@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
+	core_http_server "github.com/daniildddd/maestro/internal/core/transport/server"
 )
 
 type AuthHTTPHandler struct {
@@ -26,5 +27,15 @@ func NewAuthHTTPHandler(
 	return &AuthHTTPHandler{
 		authService: authService,
 		cfg:         cfg,
+	}
+}
+
+func (h *AuthHTTPHandler) PublicRoutes() []core_http_server.Route {
+	return []core_http_server.Route{
+		{
+			Method:  "POST",
+			Path:    "/login",
+			Handler: h.login,
+		},
 	}
 }

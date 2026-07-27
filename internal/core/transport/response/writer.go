@@ -11,8 +11,8 @@ type ResponseWriter struct {
 	statusCode int
 }
 
-func NewResponseWriter(w http.ResponseWriter) ResponseWriter {
-	return ResponseWriter{
+func NewResponseWriter(w http.ResponseWriter) *ResponseWriter {
+	return &ResponseWriter{
 		ResponseWriter: w,
 		statusCode:     StatusCodeUninitialized,
 	}

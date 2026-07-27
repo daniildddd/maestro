@@ -20,6 +20,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var _ middleware.TokenVerifier = (*access.Manager)(nil)
+
 func main() {
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),

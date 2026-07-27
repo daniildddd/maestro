@@ -19,9 +19,14 @@ func NewManager(cfg Config) *Manager {
 	}
 }
 
-type Claims struct {
+type jwtClaims struct {
 	jwt.RegisteredClaims
 	Role string `json:"role"`
+}
+
+type AuthUser struct {
+	UserId uuid.UUID
+	Role   string
 }
 
 func (m *Manager) Generate(
@@ -30,7 +35,7 @@ func (m *Manager) Generate(
 ) (string, error) {
 	now := time.Now()
 
-	claims := Claims{
+	claims := jwtClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    m.cfg.Issuer,
 			Subject:   userID.String(),
@@ -52,8 +57,8 @@ func (m *Manager) Generate(
 
 func (m *Manager) Verify(
 	tokenStr string,
-) error {
-	var claims Claims
+) (AuthUser, error) {
+	var claims jwtClaims
 	token, err := jwt.ParseWithClaims(
 		tokenStr,
 		&claims,
@@ -67,16 +72,35 @@ func (m *Manager) Verify(
 		},
 	)
 	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			return fmt.Errorf("token is expired: %w", err)
+		switch {
+		case errors.Is(err, jwt.ErrTokenExpired):
+			return AuthUser{}, fmt.Errorf("token is expired: %w", err)
+		case errors.Is(err, jwt.ErrTokenSignatureInvalid):
+			return AuthUser{}, fmt.Errorf("token signature: %w", err)
+		default:
+			return AuthUser{}, fmt.Errorf("verify token: %w", err)
 		}
-
-		return fmt.Errorf("verify token: %w", err)
 	}
 
 	if !token.Valid {
-		return fmt.Errorf("invalid token")
+		return AuthUser{}, fmt.Errorf("invalid token")
 	}
 
-	return nil
+	userId, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return AuthUser{}, fmt.Errorf("parse subject: %w", err)
+	}
+
+	if userId == uuid.Nil {
+		return AuthUser{}, fmt.Errorf("subject is nil uuid")
+	}
+
+	if claims.Role == "" {
+		return AuthUser{}, fmt.Errorf("user role is missing")
+	}
+
+	return AuthUser{
+		UserId: userId,
+		Role:   claims.Role,
+	}, nil
 }

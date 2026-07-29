@@ -13,7 +13,6 @@ type RefreshToken struct {
 	TokenHash string
 	CreatedAt time.Time
 	ExpiresAt time.Time
-	RevokedAt *time.Time
 }
 
 func CreateRefreshToken(
@@ -39,6 +38,5 @@ func CreateRefreshToken(
 		TokenHash: token,
 		CreatedAt: time.Now(),
 		ExpiresAt: expiresAt,
-		RevokedAt: nil,
 	}, nil
 }

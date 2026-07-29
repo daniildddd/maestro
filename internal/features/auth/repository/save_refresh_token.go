@@ -17,8 +17,8 @@ func (r *AuthRepository) SaveRefreshToken(
 	defer cancel()
 
 	query := `
-	INSERT INTO refresh_tokens (id, user_id, token_hash, created_at, expires_at, revoked_at)
-	VALUES ($1, $2, $3, $4, $5, $6)`
+	INSERT INTO refresh_tokens (id, user_id, token_hash, created_at, expires_at)
+	VALUES ($1, $2, $3, $4, $5)`
 
 	_, err := r.pool.Exec(
 		ctx,
@@ -28,7 +28,6 @@ func (r *AuthRepository) SaveRefreshToken(
 		token.TokenHash,
 		token.CreatedAt,
 		token.ExpiresAt,
-		token.RevokedAt,
 	)
 	if err != nil {
 		if errors.Is(err, postgres.ErrViolatesForeignKey) {

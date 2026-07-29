@@ -1,8 +1,6 @@
 package domain
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -20,14 +18,14 @@ type RefreshToken struct {
 
 func CreateRefreshToken(
 	userId uuid.UUID,
-	rawToken string,
+	token string,
 	expiresAt time.Time,
 ) (RefreshToken, error) {
 	if userId == uuid.Nil {
 		return RefreshToken{}, fmt.Errorf("userId must not be nil")
 	}
 
-	if rawToken == "" {
+	if token == "" {
 		return RefreshToken{}, fmt.Errorf("rawToken must not be empty")
 	}
 
@@ -35,11 +33,10 @@ func CreateRefreshToken(
 		return RefreshToken{}, fmt.Errorf("expiresAt must be after now")
 	}
 
-	sum := sha256.Sum256([]byte(rawToken))
 	return RefreshToken{
 		Id:        uuid.New(),
 		UserId:    userId,
-		TokenHash: hex.EncodeToString(sum[:]),
+		TokenHash: token,
 		CreatedAt: time.Now(),
 		ExpiresAt: expiresAt,
 		RevokedAt: nil,

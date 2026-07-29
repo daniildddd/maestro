@@ -78,6 +78,10 @@ func (rh *HTTPResponseHandler) ErrorResponse(
 	rh.errorResponse(statusCode, codeError, msg)
 }
 
+func (rh *HTTPResponseHandler) NoContent() {
+	rh.w.WriteHeader(http.StatusNoContent)
+}
+
 func (rh *HTTPResponseHandler) JSONResponse(
 	responseBody any,
 	statusCode int,

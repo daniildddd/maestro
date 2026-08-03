@@ -20,8 +20,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var _ middleware.TokenVerifier = (*access.Manager)(nil)
-
 func main() {
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
@@ -88,12 +86,25 @@ func main() {
 		baseMW...,
 	)
 
+	privateMW := append([]middleware.Middleware{}, baseMW...)
+
+	privateMW = append(
+		privateMW,
+		middleware.Auth(accessManager),
+		middleware.RequireRole(cfgMiddleware.Roles...))
+
+	privateV1 := server.NewAPIVersionRouter(
+		authTransportHTTP.PrivateRoutes(),
+		server.ApiVersion1,
+		privateMW...,
+	)
+
 	srv := server.NewHTTPServer(
 		server.NewConfigMust(),
 		logger,
 	)
 
-	srv.RegisterAPIRouters(publicV1)
+	srv.RegisterAPIRouters(publicV1, privateV1)
 
 	if err = srv.Run(ctx); err != nil {
 		logger.Fatal("HTTP server run error", zap.Error(err))

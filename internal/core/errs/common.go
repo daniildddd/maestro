@@ -1,23 +1,91 @@
 package errs
 
-import "errors"
+import (
+	"errors"
+	"net/http"
 
-const (
-	errInvalidCredentials  = "invalid credentials"
-	errInvalidRefreshToken = "invalid refresh token"
-	errExpiredRefreshToken = "expired refresh token"
-	errMissingRefreshToken = "missing refresh token"
-	errInvalidRequestBody  = "invalid request body"
-	errUserNotFound        = "user not found"
-	errValidationFailed    = "validation failed"
+	"go.uber.org/zap/zapcore"
 )
 
-var (
-	ErrInvalidCredentials  = errors.New(errInvalidCredentials)
-	ErrInvalidRefreshToken = errors.New(errInvalidRefreshToken)
-	ErrExpiredRefreshToken = errors.New(errExpiredRefreshToken)
-	ErrMissingRefreshToken = errors.New(errMissingRefreshToken)
-	ErrInvalidRequestBody  = errors.New(errInvalidRequestBody)
-	ErrUserNotFound        = errors.New(errUserNotFound)
-	ErrValidationFailed    = errors.New(errValidationFailed)
-)
+type AppError struct {
+	HTTPStatus int
+	Code       string
+	Message    string
+	LogLevel   zapcore.Level
+}
+
+func (e *AppError) Error() string {
+	return e.Message
+}
+
+func (e *AppError) Is(target error) bool {
+	var appErr *AppError
+	if errors.As(target, &appErr) {
+		return appErr.Code == e.Code
+	}
+
+	return false
+}
+
+var ErrInvalidRefreshToken = &AppError{
+	HTTPStatus: http.StatusUnauthorized,
+	Code:       "INVALID_REFRESH_TOKEN",
+	Message:    "Invalid refresh token",
+	LogLevel:   zapcore.WarnLevel,
+}
+
+var ErrExpiredRefreshToken = &AppError{
+	HTTPStatus: http.StatusUnauthorized,
+	Code:       "INVALID_REFRESH_TOKEN",
+	Message:    "Expired refresh token",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrMissingRefreshToken = &AppError{
+	HTTPStatus: http.StatusUnauthorized,
+	Code:       "INVALID_REFRESH_TOKEN",
+	Message:    "Refresh token is required",
+	LogLevel:   zapcore.WarnLevel,
+}
+
+var ErrUserNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       "USER_NOT_FOUND",
+	Message:    "User not found",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrRefreshTokenNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       "REFRESH_TOKEN_NOT_FOUND",
+	Message:    "Refresh token not found",
+	LogLevel:   zapcore.WarnLevel,
+}
+
+var ErrInvalidCredentials = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "INVALID_CREDENTIALS",
+	Message:    "Invalid credentials",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrInvalidRequestBody = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "INVALID_REQUEST_BODY",
+	Message:    "Invalid request body",
+	LogLevel:   zapcore.WarnLevel,
+}
+
+var ErrValidationFailed = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "VALIDATION_FAILED",
+	Message:    "Validation failed",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrInternal = &AppError{
+	HTTPStatus: http.StatusInternalServerError,
+	Code:       "INTERNAL_ERROR",
+	Message:    "Internal server error",
+	LogLevel:   zapcore.ErrorLevel,
+}

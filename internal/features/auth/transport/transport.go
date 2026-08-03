@@ -18,6 +18,16 @@ type AuthService interface {
 		username string,
 		password string,
 	) (domain.TokenPair, error)
+
+	Logout(
+		ctx context.Context,
+		refreshToken string,
+	) error
+
+	Refresh(
+		ctx context.Context,
+		refreshToken string,
+	) (domain.TokenPair, error)
 }
 
 func NewAuthHTTPHandler(
@@ -26,7 +36,7 @@ func NewAuthHTTPHandler(
 ) *AuthHTTPHandler {
 	return &AuthHTTPHandler{
 		authService: authService,
-		cfg:         cfg,
+		cfg:          cfg,
 	}
 }
 

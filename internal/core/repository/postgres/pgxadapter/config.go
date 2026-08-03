@@ -14,7 +14,7 @@ type Config struct {
 	Port     string `envconfig:"PORT" default:"5432"`
 	User     string `envconfig:"USER" required:"true"`
 	Password string `envconfig:"PASSWORD" required:"true"`
-	Database string `envconfig:"DATABASE" default:"postgres"`
+	Database string `envconfig:"DB" default:"postgres"`
 	DSN      string
 
 	Timeout time.Duration `envconfig:"TIMEOUT"`

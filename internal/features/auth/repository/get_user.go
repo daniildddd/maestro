@@ -24,7 +24,7 @@ func (r *AuthRepository) GetUser(
 
 	row := r.pool.QueryRow(ctx, query, username)
 
-	var userModel UserModel
+	var userModel userModel
 	if err := userModel.Scan(row); err != nil {
 		if errors.Is(err, core_postgres_pool.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(

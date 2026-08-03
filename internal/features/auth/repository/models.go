@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserModel struct {
+type userModel struct {
 	Id           uuid.UUID
 	Username     string
 	PasswordHash string
@@ -17,7 +17,7 @@ type UserModel struct {
 	UpdatedAt    *time.Time
 }
 
-func (u *UserModel) Scan(row core_postgres_pool.Row) error {
+func (u *userModel) Scan(row core_postgres_pool.Row) error {
 	return row.Scan(
 		&u.Id,
 		&u.Username,
@@ -28,7 +28,7 @@ func (u *UserModel) Scan(row core_postgres_pool.Row) error {
 	)
 }
 
-func userModelToDomain(model UserModel) domain.User {
+func userModelToDomain(model userModel) domain.User {
 	return domain.NewUser(
 		model.Id,
 		model.Username,

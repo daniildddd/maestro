@@ -28,13 +28,13 @@ func (u *userModel) Scan(row core_postgres_pool.Row) error {
 	)
 }
 
-func userModelToDomain(model userModel) domain.User {
+func (u *userModel) toDomain() domain.User {
 	return domain.NewUser(
-		model.Id,
-		model.Username,
-		model.PasswordHash,
-		model.Role,
-		model.CreatedAt,
-		model.UpdatedAt,
+		u.Id,
+		u.Username,
+		u.PasswordHash,
+		u.Role,
+		u.CreatedAt,
+		u.UpdatedAt,
 	)
 }

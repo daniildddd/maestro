@@ -38,7 +38,5 @@ func (r *AuthRepository) GetUser(
 		)
 	}
 
-	userDomain := userModelToDomain(userModel)
-
-	return userDomain, nil
+	return userModel.toDomain(), nil
 }

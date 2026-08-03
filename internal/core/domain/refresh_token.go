@@ -40,3 +40,23 @@ func CreateRefreshToken(
 		ExpiresAt: expiresAt,
 	}, nil
 }
+
+func NewRefreshToken(
+	id uuid.UUID,
+	userId uuid.UUID,
+	tokenHash string,
+	createdAt time.Time,
+	expiresAt time.Time,
+) RefreshToken {
+	return RefreshToken{
+		Id:        id,
+		UserId:    userId,
+		TokenHash: tokenHash,
+		CreatedAt: createdAt,
+		ExpiresAt: expiresAt,
+	}
+}
+
+func (t *RefreshToken) IsExpired(now time.Time) bool {
+	return t.ExpiresAt.Before(now)
+}

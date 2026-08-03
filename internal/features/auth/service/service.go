@@ -12,14 +12,14 @@ type AuthService struct {
 	authRepository AuthRepository
 	passwordHasher PasswordHasher
 	accessGen      AccessTokenGenerator
-	refreshGen     RefreshTokenGenerator
+	refreshGen     RefreshTokenManager
 }
 
 func NewAuthService(
 	authRepository AuthRepository,
 	passwordHasher PasswordHasher,
 	accessGen AccessTokenGenerator,
-	refreshGen RefreshTokenGenerator,
+	refreshGen RefreshTokenManager,
 ) *AuthService {
 	return &AuthService{
 		authRepository: authRepository,
@@ -43,7 +43,7 @@ type AccessTokenGenerator interface {
 	) (string, error)
 }
 
-type RefreshTokenGenerator interface {
+type RefreshTokenManager interface {
 	Generate() (token string, expiresAt time.Time, err error)
 	Hash(rawToken string) string
 }

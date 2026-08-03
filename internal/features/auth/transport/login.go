@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
@@ -20,6 +21,8 @@ type LoginUserResponse struct {
 }
 
 func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
+	const op = "auth.transport.login"
+
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
@@ -27,7 +30,11 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest LoginUserRequest
 	if err := request.DecodeAndValidate(w, r, &loginRequest); err != nil {
 		responseHandler.ErrorResponse(
-			err,
+			fmt.Errorf(
+				"%s: failed decode and validate HTTP request: %w",
+				op,
+				err,
+			),
 		)
 
 		return
@@ -41,7 +48,11 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		responseHandler.ErrorResponse(
-			err,
+			fmt.Errorf(
+				"%s: login: %w",
+				op,
+				err,
+			),
 		)
 
 		return

@@ -45,6 +45,7 @@ type AccessTokenGenerator interface {
 
 type RefreshTokenGenerator interface {
 	Generate() (token string, expiresAt time.Time, err error)
+	Hash(rawToken string) string
 }
 
 type AuthRepository interface {

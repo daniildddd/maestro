@@ -14,22 +14,31 @@ func (s *AuthService) Login(
 	username string,
 	password string,
 ) (domain.TokenPair, error) {
+	const op = "auth.service.login"
+
 	user, err := s.authRepository.GetUserByName(ctx, username)
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(
-				"get user from repository: %w",
+				"%s: get user: %w: %v",
+				op,
 				errs.ErrInvalidCredentials,
+				err,
 			)
 		}
+
 		return domain.TokenPair{}, fmt.Errorf(
-			"get user from repository: %w", err)
+			"%s: get user: %w",
+			op,
+			err,
+		)
 	}
 
 	err = s.passwordHasher.Verify(user.PasswordHash, password)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"verify password: %v: %w",
+			"%s: verify password: %v: %w",
+			op,
 			err,
 			errs.ErrInvalidCredentials,
 		)
@@ -38,13 +47,19 @@ func (s *AuthService) Login(
 	accessToken, err := s.accessGen.Generate(user.Id, user.Role)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"generate access token: %w", err)
+			"%s: generate access token: %w",
+			op,
+			err,
+		)
 	}
 
 	rawToken, expiresAt, err := s.refreshGen.Generate()
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"generate refresh token: %w", err)
+			"%s: generate refresh token: %w",
+			op,
+			err,
+		)
 	}
 
 	token := s.refreshGen.Hash(rawToken)
@@ -52,14 +67,19 @@ func (s *AuthService) Login(
 	refreshToken, err := domain.CreateRefreshToken(user.Id, token, expiresAt)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"create refresh token: %w", err,
+			"%s: create refresh token: %w",
+			op,
+			err,
 		)
 	}
 
 	err = s.authRepository.SaveRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"save refresh token: %w", err)
+			"%s: save refresh token: %w",
+			op,
+			err,
+		)
 	}
 
 	return domain.TokenPair{

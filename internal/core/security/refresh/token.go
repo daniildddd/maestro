@@ -2,7 +2,9 @@ package refresh
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"time"
 )
@@ -26,7 +28,7 @@ func NewManager(cfg Config) (*Manager, error) {
 	}, nil
 }
 
-func (m *Manager) Generate() (token string, expiresAt time.Time, err error) {
+func (m *Manager) Generate() (string, time.Time, error) {
 	now := time.Now()
 
 	b := make([]byte, tokenBytes)
@@ -38,4 +40,9 @@ func (m *Manager) Generate() (token string, expiresAt time.Time, err error) {
 	}
 
 	return base64.RawURLEncoding.EncodeToString(b), now.Add(m.cfg.TTL), nil
+}
+
+func (m *Manager) Hash(rawToken string) string {
+	sum := sha256.Sum256([]byte(rawToken))
+	return hex.EncodeToString(sum[:])
 }

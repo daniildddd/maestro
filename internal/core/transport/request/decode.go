@@ -27,17 +27,17 @@ func DecodeAndValidate(
 	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
 		return fmt.Errorf(
-			"parse content type: %v: %w",
-			err,
+			"parse content type: %w: %v",
 			errs.ErrInvalidRequestBody,
+			err,
 		)
 	}
 
 	if mediaType != "application/json" {
 		return fmt.Errorf(
-			"invalid content type: %q: %w",
-			mediaType,
+			"invalid content type: %w: %v",
 			errs.ErrInvalidRequestBody,
+			mediaType,
 		)
 	}
 
@@ -46,20 +46,20 @@ func DecodeAndValidate(
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	if err := dec.Decode(dest); err != nil {
+	if err = dec.Decode(dest); err != nil {
 		var maxBytesErr *http.MaxBytesError
 		if errors.As(err, &maxBytesErr) {
 			return fmt.Errorf(
-				"request body too large: %v: %w",
-				err,
+				"request body too large: %w: %v",
 				errs.ErrInvalidRequestBody,
+				err,
 			)
 		}
 
 		return fmt.Errorf(
-			"decode json: %v: %w",
-			err,
+			"decode json: %w: %v",
 			errs.ErrInvalidRequestBody,
+			err,
 		)
 	}
 
@@ -72,9 +72,9 @@ func DecodeAndValidate(
 
 	if err != nil {
 		return fmt.Errorf(
-			"request validation: %v: %w",
-			err,
+			"request validation: %w: %v",
 			errs.ErrValidationFailed,
+			err,
 		)
 	}
 

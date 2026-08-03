@@ -13,6 +13,8 @@ func (r *AuthRepository) SaveRefreshToken(
 	ctx context.Context,
 	token domain.RefreshToken,
 ) error {
+	const op = "auth.repository.SaveRefreshToken"
+	
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 
@@ -31,13 +33,17 @@ func (r *AuthRepository) SaveRefreshToken(
 	)
 	if err != nil {
 		if errors.Is(err, postgres.ErrViolatesForeignKey) {
-			return fmt.Errorf("user with id='%s' does not exist: %w",
+			return fmt.Errorf("%s: save refresh token for user_id= %s: FK violation %w",
+				op,
 				token.UserId,
 				err,
 			)
 		}
 
-		return fmt.Errorf("exec query: %w", err)
+		return fmt.Errorf("%s: exec query: %w",
+			op,
+			err,
+		)
 	}
 
 	return nil

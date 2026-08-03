@@ -14,7 +14,7 @@ func (s *AuthService) Login(
 	username string,
 	password string,
 ) (domain.TokenPair, error) {
-	user, err := s.authRepository.GetUser(ctx, username)
+	user, err := s.authRepository.GetUserByName(ctx, username)
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(

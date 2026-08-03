@@ -49,7 +49,7 @@ type RefreshTokenManager interface {
 }
 
 type AuthRepository interface {
-	GetUser(
+	GetUserByName(
 		ctx context.Context,
 		username string,
 	) (domain.User, error)

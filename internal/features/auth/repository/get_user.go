@@ -10,7 +10,7 @@ import (
 	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 )
 
-func (r *AuthRepository) GetUser(
+func (r *AuthRepository) GetUserByName(
 	ctx context.Context,
 	username string,
 ) (domain.User, error) {

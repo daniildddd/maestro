@@ -14,10 +14,7 @@ func Recovery() Middleware {
 				log := core_logger.FromContext(r.Context())
 				responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 				if p := recover(); p != nil {
-					responseHandler.PanicResponse(
-						p,
-						"internal error while processing request",
-					)
+					responseHandler.PanicResponse(p)
 				}
 			}()
 			next.ServeHTTP(w, r)

@@ -65,5 +65,5 @@ func stripBearer(h string) (string, bool) {
 func writeUnauthorized(ctx context.Context, w http.ResponseWriter, msg string) {
 	log := core_logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
-	responseHandler.ErrorResponse(errs.ErrInvalidCredentials, msg)
+	responseHandler.ErrorResponse(errs.ErrInvalidCredentials)
 }

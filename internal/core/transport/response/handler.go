@@ -26,56 +26,33 @@ func NewHTTPResponseHandler(
 	}
 }
 
-func (rh *HTTPResponseHandler) ErrorResponse(
-	err error,
-	msg string,
-) {
-	var (
-		statusCode int
-		codeError  string
-		logFunc    func(string, ...zap.Field)
-	)
-
-	switch {
-	case errors.Is(err, errs.ErrExpiredRefreshToken):
-		statusCode = http.StatusUnauthorized
-		logFunc = rh.log.Warn
-		codeError = codeInvalidRefreshToken
-
-	case errors.Is(err, errs.ErrInvalidRefreshToken):
-		statusCode = http.StatusUnauthorized
-		logFunc = rh.log.Warn
-		codeError = codeInvalidRefreshToken
-
-	case errors.Is(err, errs.ErrMissingRefreshToken):
-		statusCode = http.StatusUnauthorized
-		logFunc = rh.log.Warn
-		codeError = codeInvalidRefreshToken
-
-	case errors.Is(err, errs.ErrInvalidRequestBody):
-		statusCode = http.StatusBadRequest
-		logFunc = rh.log.Warn
-		codeError = codeInvalidRequestBody
-
-	case errors.Is(err, errs.ErrInvalidCredentials):
-		statusCode = http.StatusUnauthorized
-		logFunc = rh.log.Info
-		codeError = codeInvalidCredentials
-
-	case errors.Is(err, errs.ErrValidationFailed):
-		statusCode = http.StatusBadRequest
-		logFunc = rh.log.Info
-		codeError = codeInvalidRequestBody
-
-	default:
-		statusCode = http.StatusInternalServerError
-		logFunc = rh.log.Error
-		codeError = codeInternal
+func (rh *HTTPResponseHandler) ErrorResponse(err error) {
+	rw, ok := rh.w.(*RWriter)
+	if !ok {
+		panic("response: underlying ResponseWriter must be *RWriter")
 	}
 
-	logFunc(msg, zap.Error(err))
+	rw.RawErr = err
 
-	rh.errorResponse(statusCode, codeError, msg)
+	var appErr *errs.AppError
+	if errors.As(err, &appErr) {
+		if appErr.HTTPStatus == http.StatusUnauthorized {
+			rw.Header().Set("WWW-Authenticate", "Bearer")
+		}
+
+		rw.AppErr = appErr
+		rh.JSONResponse(
+			ErrorResponse{
+				Code:    appErr.Code,
+				Message: appErr.Message,
+			},
+			appErr.HTTPStatus,
+		)
+		return
+	}
+
+	rw.AppErr = errs.ErrInternal
+	rh.errorResponse()
 }
 
 func (rh *HTTPResponseHandler) NoContent() {
@@ -86,42 +63,37 @@ func (rh *HTTPResponseHandler) JSONResponse(
 	responseBody any,
 	statusCode int,
 ) {
-	rh.w.WriteHeader(statusCode)
-
 	rh.w.Header().Set("Content-Type", "application/json")
+
+	rh.w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(rh.w).Encode(responseBody); err != nil {
 		rh.log.Error("write HTTP response", zap.Error(err))
 	}
 }
 
-func (rh *HTTPResponseHandler) PanicResponse(
-	p any,
-	msg string,
-) {
+func (rh *HTTPResponseHandler) PanicResponse(p any) {
+	rw, ok := rh.w.(*RWriter)
+	if !ok {
+		panic("response: underlying ResponseWriter must be *RWriter.")
+	}
+
 	err := fmt.Errorf("unexpected panic: %v", p)
 
-	rh.log.Error(msg, zap.Error(err))
+	rw.RawErr = err
+	rw.AppErr = errs.ErrInternal
 
-	rh.errorResponse(
-		http.StatusInternalServerError,
-		codeInternal,
-		msg,
-	)
+	rh.errorResponse()
 }
 
-func (rh *HTTPResponseHandler) errorResponse(
-	statusCode int,
-	codeError string,
-	msg string,
-) {
-	errorResponse := ErrorResponse{
-		Code:    codeError,
-		Message: msg,
+func (rh *HTTPResponseHandler) errorResponse() {
+	errResponse := ErrorResponse{
+		Code:    errs.ErrInternal.Code,
+		Message: errs.ErrInternal.Message,
 	}
 
 	rh.JSONResponse(
-		errorResponse,
-		statusCode,
+		errResponse,
+		errs.ErrInternal.HTTPStatus,
 	)
 }

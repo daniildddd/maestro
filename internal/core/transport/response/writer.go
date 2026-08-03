@@ -1,6 +1,10 @@
 package response
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/daniildddd/maestro/internal/core/errs"
+)
 
 var (
 	StatusCodeUninitialized = -1
@@ -9,6 +13,8 @@ var (
 type RWriter struct {
 	http.ResponseWriter
 	statusCode int
+	AppErr     *errs.AppError
+	RawErr     error
 }
 
 func NewResponseWriter(w http.ResponseWriter) *RWriter {

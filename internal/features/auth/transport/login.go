@@ -28,7 +28,6 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 	if err := request.DecodeAndValidate(w, r, &loginRequest); err != nil {
 		responseHandler.ErrorResponse(
 			err,
-			"failed decode and validate HTTP request",
 		)
 
 		return
@@ -43,7 +42,6 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		responseHandler.ErrorResponse(
 			err,
-			"failed to login",
 		)
 
 		return

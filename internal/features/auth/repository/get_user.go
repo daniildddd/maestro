@@ -14,6 +14,8 @@ func (r *AuthRepository) GetUserByName(
 	ctx context.Context,
 	username string,
 ) (domain.User, error) {
+	const op = "auth.repository.GetUserByName"
+
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 
@@ -24,19 +26,23 @@ func (r *AuthRepository) GetUserByName(
 
 	row := r.pool.QueryRow(ctx, query, username)
 
-	var userModel userModel
-	if err := userModel.Scan(row); err != nil {
+	var dbUser userModel
+	if err := dbUser.Scan(row); err != nil {
 		if errors.Is(err, core_postgres_pool.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(
-				"user with username='%s': %w",
+				"%s: scan row (username='%s'): %w",
+				op,
 				username,
 				errs.ErrUserNotFound,
 			)
 		}
 		return domain.User{}, fmt.Errorf(
-			"scan error: %w", err,
+			"%s: scan row (username='%s'): %w",
+			op,
+			username,
+			err,
 		)
 	}
 
-	return userModel.toDomain(), nil
+	return dbUser.toDomain(), nil
 }

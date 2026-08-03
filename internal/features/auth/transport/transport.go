@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	core_http_server "github.com/daniildddd/maestro/internal/core/transport/server"
@@ -40,12 +41,27 @@ func NewAuthHTTPHandler(
 	}
 }
 
+func (h *AuthHTTPHandler) PrivateRoutes() []core_http_server.Route {
+	return []core_http_server.Route{
+		{
+			Method:  http.MethodPost,
+			Path:    "/logout",
+			Handler: h.logout,
+		},
+	}
+}
+
 func (h *AuthHTTPHandler) PublicRoutes() []core_http_server.Route {
 	return []core_http_server.Route{
 		{
-			Method:  "POST",
+			Method:  http.MethodPost,
 			Path:    "/login",
 			Handler: h.login,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/refresh",
+			Handler: h.refresh,
 		},
 	}
 }

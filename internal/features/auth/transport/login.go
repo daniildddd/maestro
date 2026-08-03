@@ -60,19 +60,23 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 		Expires:  loginCredentials.ExpiresAt,
 	})
 
-	response := loginResponseFromDomain(loginCredentials)
+	loginResp := loginResponseFromDomain(
+		loginCredentials,
+		loginRequest.Username,
+	)
 
 	responseHandler.JSONResponse(
-		response,
+		loginResp,
 		http.StatusOK,
 	)
 }
 
 func loginResponseFromDomain(
 	credentials domain.TokenPair,
+	username string,
 ) LoginUserResponse {
 	return LoginUserResponse{
 		AccessToken: credentials.AccessToken,
-		Username:    credentials.Username,
+		Username:    username,
 	}
 }

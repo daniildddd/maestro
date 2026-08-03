@@ -65,7 +65,6 @@ func (s *AuthService) Login(
 	return domain.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: rawToken,
-		Username:     username,
 		ExpiresAt:    expiresAt,
 	}, nil
 }

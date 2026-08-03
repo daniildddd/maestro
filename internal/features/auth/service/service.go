@@ -54,8 +54,23 @@ type AuthRepository interface {
 		username string,
 	) (domain.User, error)
 
+	GetUserById(
+		ctx context.Context,
+		id uuid.UUID,
+	) (domain.User, error)
+
 	SaveRefreshToken(
 		ctx context.Context,
 		token domain.RefreshToken,
+	) error
+
+	GetRefreshTokenByHash(
+		ctx context.Context,
+		token string,
+	) (domain.RefreshToken, error)
+
+	DeleteRefreshToken(
+		ctx context.Context,
+		token string,
 	) error
 }

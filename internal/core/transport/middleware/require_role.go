@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
@@ -14,11 +15,10 @@ func RequireRole(roles ...string) Middleware {
 			ctx := r.Context()
 			role := reqctx.Role(ctx)
 
-			for _, allowed := range roles {
-				if role == allowed {
-					next.ServeHTTP(w, r)
-					return
-				}
+			if slices.Contains(roles, role) {
+				next.ServeHTTP(w, r)
+
+				return
 			}
 
 			log := core_logger.FromContext(ctx)

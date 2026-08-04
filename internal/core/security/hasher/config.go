@@ -14,7 +14,7 @@ func NewConfigMust() Config {
 	var cfg Config
 
 	if err := envconfig.Process("HASHER", &cfg); err != nil {
-		panic(fmt.Errorf("process hasher config: %v", err))
+		panic(fmt.Errorf("process hasher config: %w", err))
 	}
 
 	return cfg

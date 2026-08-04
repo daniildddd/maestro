@@ -15,7 +15,7 @@ func NewConfigMust() Config {
 	var cfg Config
 
 	if err := envconfig.Process("REFRESH", &cfg); err != nil {
-		panic(fmt.Errorf("process refresh token config: %v", err))
+		panic(fmt.Errorf("process refresh token config: %w", err))
 	}
 
 	return cfg

@@ -22,7 +22,7 @@ func NewConfigMust() Config {
 	var cfg Config
 
 	if err := envconfig.Process("SERVER", &cfg); err != nil {
-		panic(fmt.Errorf("process server config: %v", err))
+		panic(fmt.Errorf("process server config: %w", err))
 	}
 
 	return cfg

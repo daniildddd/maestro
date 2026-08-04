@@ -42,7 +42,7 @@ func main() {
 		pgxadapter.NewConfigMust(),
 	)
 	if err != nil {
-		panic(fmt.Errorf("create postgres adapter pool: %v", err))
+		panic(fmt.Errorf("create postgres adapter pool: %w", err))
 	}
 	defer postgresPool.Close()
 
@@ -50,14 +50,14 @@ func main() {
 
 	bcryptHasher, err := hasher.NewBcryptHasher(hasher.NewConfigMust())
 	if err != nil {
-		panic(fmt.Errorf("init bcrypt hasher: %v", err))
+		panic(fmt.Errorf("init bcrypt hasher: %w", err))
 	}
 
 	accessManager := access.NewManager(access.NewConfigMust())
 
 	refreshManager, err := refresh.NewManager(refresh.NewConfigMust())
 	if err != nil {
-		panic(fmt.Errorf("init refresh token manager: %v", err))
+		panic(fmt.Errorf("init refresh token manager: %w", err))
 	}
 
 	authService := service.NewAuthService(

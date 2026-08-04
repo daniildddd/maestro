@@ -15,7 +15,7 @@ func NewConfigMust() Config {
 	var cfg Config
 
 	if err := envconfig.Process("MIDDLEWARE", &cfg); err != nil {
-		panic(fmt.Errorf("process middleware config: %v", err))
+		panic(fmt.Errorf("process middleware config: %w", err))
 	}
 
 	return cfg

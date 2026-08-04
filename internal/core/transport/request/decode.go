@@ -28,7 +28,7 @@ func DecodeAndValidate(
 	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
 		return fmt.Errorf(
-			"parse content type: %w: %v",
+			"parse content type: %w: %w",
 			errs.ErrInvalidRequestBody,
 			err,
 		)
@@ -52,14 +52,14 @@ func DecodeAndValidate(
 
 		if errors.As(err, &maxBytesErr) {
 			return fmt.Errorf(
-				"request body too large: %w: %v",
+				"request body too large: %w: %w",
 				errs.ErrInvalidRequestBody,
 				err,
 			)
 		}
 
 		return fmt.Errorf(
-			"decode json: %w: %v",
+			"decode json: %w: %w",
 			errs.ErrInvalidRequestBody,
 			err,
 		)
@@ -74,7 +74,7 @@ func DecodeAndValidate(
 
 	if err != nil {
 		return fmt.Errorf(
-			"request validation: %w: %v",
+			"request validation: %w: %w",
 			errs.ErrValidationFailed,
 			err,
 		)

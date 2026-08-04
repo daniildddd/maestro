@@ -17,7 +17,7 @@ func NewConfigMust() Config {
 	var cfg Config
 
 	if err := envconfig.Process("JWT", &cfg); err != nil {
-		panic(fmt.Errorf("process jwt config: %v", err))
+		panic(fmt.Errorf("process jwt config: %w", err))
 	}
 
 	return cfg

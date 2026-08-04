@@ -72,28 +72,28 @@ func mapErrors(err error) error {
 		switch pgErr.Code {
 		case pgxForeignKeyViolation:
 			return fmt.Errorf(
-				"%w: %v",
+				"%w: %w",
 				core_postgres_pool.ErrViolatesForeignKey,
 				err,
 			)
 
 		case pgxUniqueViolation:
 			return fmt.Errorf(
-				"%w: %v",
+				"%w: %w",
 				core_postgres_pool.ErrDuplicate,
 				err,
 			)
 
 		case pgxCheckViolation:
 			return fmt.Errorf(
-				"%w: %v",
+				"%w: %w",
 				core_postgres_pool.ErrValidation,
 				err,
 			)
 
 		case pgxDeadlockDetected:
 			return fmt.Errorf(
-				"%w: %v",
+				"%w: %w",
 				core_postgres_pool.ErrDeadlock,
 				err,
 			)
@@ -104,5 +104,5 @@ func mapErrors(err error) error {
 		return err
 	}
 
-	return fmt.Errorf("%w: %v", core_postgres_pool.ErrUnknown, err)
+	return fmt.Errorf("%w: %w", core_postgres_pool.ErrUnknown, err)
 }

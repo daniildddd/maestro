@@ -15,7 +15,7 @@ func NewConfig() (Config, error) {
 	var cfg Config
 
 	if err := envconfig.Process("AUTH", &cfg); err != nil {
-		return Config{}, fmt.Errorf("proccess cookie config: %w", err)
+		return Config{}, fmt.Errorf("process cookie config: %w", err)
 	}
 
 	return cfg, nil

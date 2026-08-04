@@ -27,7 +27,7 @@ func NewBcryptHasher(cfg Config) (*BcryptHasher, error) {
 	}, nil
 }
 
-func (h *BcryptHasher) Verify(hash string, plain string) error {
+func (h *BcryptHasher) Verify(hash, plain string) error {
 	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(plain)); err != nil {
 		return fmt.Errorf("compare hash and password: %w", err)
 	}

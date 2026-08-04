@@ -19,3 +19,4 @@ services:
     restart: unless-stopped
 volumes:
   postgres_data:
+    name: maestro_postgres_data

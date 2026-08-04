@@ -20,6 +20,7 @@ func (e *AppError) Error() string {
 
 func (e *AppError) Is(target error) bool {
 	var appErr *AppError
+
 	if errors.As(target, &appErr) {
 		return appErr.Code == e.Code
 	}

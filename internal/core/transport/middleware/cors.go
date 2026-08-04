@@ -9,6 +9,7 @@ func CORS(allowedOriginsList []string) Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			origin := r.Header.Get("Origin")
 			_, allowed := allowedOrigins[origin]
+
 			if allowed {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -21,7 +22,9 @@ func CORS(allowedOriginsList []string) Middleware {
 					w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 					w.Header().Set("Access-Control-Max-Age", "600")
 				}
+
 				w.WriteHeader(http.StatusNoContent)
+
 				return
 			}
 

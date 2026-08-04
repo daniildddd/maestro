@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/response"
-	"go.uber.org/zap"
 )
 
 func Trace() Middleware {
@@ -37,6 +38,7 @@ func Trace() Middleware {
 				if ce := log.Check(appErr.LogLevel, "request completed with error"); ce != nil {
 					ce.Write(fields...)
 				}
+
 				return
 			}
 

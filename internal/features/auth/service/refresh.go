@@ -46,6 +46,7 @@ func (s *AuthService) Refresh(
 				errs.ErrInvalidRefreshToken,
 			)
 		}
+
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: get user by id(user_id='%s'): %w",
 			op,

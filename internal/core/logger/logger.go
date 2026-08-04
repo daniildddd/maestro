@@ -13,18 +13,19 @@ import (
 
 type loggerContextKey struct{}
 
-var (
-	key = loggerContextKey{}
-)
+var key = loggerContextKey{}
 
 type Logger struct {
 	*zap.Logger
+
 	file *os.File
 }
 
 func NewLogger(config Config) (*Logger, error) {
 	const formatTimestamp = "2006-01-02T15-04-05.000000"
+
 	zapLvl := zap.NewAtomicLevel()
+
 	if err := zapLvl.UnmarshalText([]byte(config.Level)); err != nil {
 		return nil, fmt.Errorf("unmarshal log level: %w", err)
 	}
@@ -66,6 +67,7 @@ func (l *Logger) Close() {
 	if err := l.Sync(); err != nil {
 		fmt.Println("sync logger:", err)
 	}
+
 	if err := l.file.Close(); err != nil {
 		fmt.Println("close log file: ", err)
 	}

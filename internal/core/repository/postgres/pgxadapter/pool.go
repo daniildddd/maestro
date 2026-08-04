@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 )
 
 type Pool struct {
 	*pgxpool.Pool
+
 	opTimeout time.Duration
 }
 

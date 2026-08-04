@@ -28,6 +28,7 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
 	var loginRequest LoginUserRequest
+
 	if err := request.DecodeAndValidate(w, r, &loginRequest); err != nil {
 		responseHandler.ErrorResponse(
 			fmt.Errorf(
@@ -45,7 +46,6 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 		loginRequest.Username,
 		loginRequest.Password,
 	)
-
 	if err != nil {
 		responseHandler.ErrorResponse(
 			fmt.Errorf(

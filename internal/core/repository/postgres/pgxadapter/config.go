@@ -10,11 +10,11 @@ import (
 )
 
 type Config struct {
-	Host     string `envconfig:"HOST" default:"localhost"`
-	Port     string `envconfig:"PORT" default:"5432"`
-	User     string `envconfig:"USER" required:"true"`
+	Host     string `default:"localhost"  envconfig:"HOST"`
+	Port     string `default:"5432"       envconfig:"PORT"`
+	User     string `envconfig:"USER"     required:"true"`
 	Password string `envconfig:"PASSWORD" required:"true"`
-	Database string `envconfig:"DB" default:"postgres"`
+	Database string `default:"postgres"   envconfig:"DB"`
 	DSN      string
 
 	Timeout time.Duration `envconfig:"TIMEOUT"`
@@ -58,5 +58,6 @@ func createDSN(host, port, user, password, database string) string {
 	}
 
 	u.RawQuery = "sslmode=disable"
+
 	return u.String()
 }

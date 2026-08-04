@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/logger"
-	"go.uber.org/zap"
 )
 
 type HTTPResponseHandler struct {
@@ -35,6 +36,7 @@ func (rh *HTTPResponseHandler) ErrorResponse(err error) {
 	rw.RawErr = err
 
 	var appErr *errs.AppError
+
 	if errors.As(err, &appErr) {
 		if appErr.HTTPStatus == http.StatusUnauthorized {
 			rw.Header().Set("WWW-Authenticate", "Bearer")
@@ -48,10 +50,12 @@ func (rh *HTTPResponseHandler) ErrorResponse(err error) {
 			},
 			appErr.HTTPStatus,
 		)
+
 		return
 	}
 
 	rw.AppErr = errs.ErrInternal
+
 	rh.errorResponse()
 }
 

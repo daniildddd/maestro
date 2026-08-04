@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	CookieSecure bool   `envconfig:"COOKIE_SECURE" default:"false"`
-	CookieDomain string `envconfig:"COOKIE_DOMAIN" default:""`
+	CookieSecure bool   `default:"false" envconfig:"COOKIE_SECURE"`
+	CookieDomain string `default:""      envconfig:"COOKIE_DOMAIN"`
 }
 
 func NewConfig() (Config, error) {

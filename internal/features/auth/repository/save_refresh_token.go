@@ -14,7 +14,7 @@ func (r *AuthRepository) SaveRefreshToken(
 	token domain.RefreshToken,
 ) error {
 	const op = "auth.repository.SaveRefreshToken"
-	
+
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
 

@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+
+	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 )
 
 type pgxRows struct {
@@ -66,6 +67,7 @@ func mapErrors(err error) error {
 	)
 
 	var pgErr *pgconn.PgError
+
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
 		case pgxForeignKeyViolation:

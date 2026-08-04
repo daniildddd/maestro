@@ -14,7 +14,7 @@ func (h *AuthHTTPHandler) logout(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
 	responseHandler := response.NewHTTPResponseHandler(w, log)
-	
+
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil || cookie == nil {
 		responseHandler.NoContent()
@@ -31,6 +31,7 @@ func (h *AuthHTTPHandler) logout(w http.ResponseWriter, r *http.Request) {
 				err,
 			),
 		)
+
 		return
 	}
 

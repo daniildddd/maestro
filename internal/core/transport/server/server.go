@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
-	"go.uber.org/zap"
 )
 
 type HTTPServer struct {
@@ -61,12 +62,14 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 	}
 
 	ch := make(chan error)
+
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				ch <- err
 			}
 		}
+
 		close(ch)
 	}()
 

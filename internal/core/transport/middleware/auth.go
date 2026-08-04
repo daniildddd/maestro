@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"strings"
 
+	"go.uber.org/zap"
+
 	"github.com/daniildddd/maestro/internal/core/errs"
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/security/access"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
-	"go.uber.org/zap"
 )
 
 type TokenVerifier interface {
@@ -28,6 +29,7 @@ func Auth(tv TokenVerifier) Middleware {
 			token, ok := stripBearer(r.Header.Get("Authorization"))
 			if !ok {
 				writeUnauthorized(ctx, w, "missing or invalid Authorization header")
+
 				return
 			}
 
@@ -35,6 +37,7 @@ func Auth(tv TokenVerifier) Middleware {
 			if err != nil {
 				log.Warn("verify jwt token", zap.Error(err))
 				writeUnauthorized(ctx, w, "invalid or expired token")
+
 				return
 			}
 
@@ -55,6 +58,7 @@ func Auth(tv TokenVerifier) Middleware {
 
 func stripBearer(h string) (string, bool) {
 	const prefix = "Bearer "
+
 	if !strings.HasPrefix(h, prefix) {
 		return "", false
 	}

@@ -7,8 +7,9 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/go-playground/validator/v10"
+
+	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
 const maxBodyBytes = 1 << 20 // 1 MB
@@ -48,6 +49,7 @@ func DecodeAndValidate(
 
 	if err = dec.Decode(dest); err != nil {
 		var maxBytesErr *http.MaxBytesError
+
 		if errors.As(err, &maxBytesErr) {
 			return fmt.Errorf(
 				"request body too large: %w: %v",

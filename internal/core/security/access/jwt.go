@@ -21,6 +21,7 @@ func NewManager(cfg Config) *Manager {
 
 type jwtClaims struct {
 	jwt.RegisteredClaims
+
 	Role string `json:"role"`
 }
 
@@ -59,6 +60,7 @@ func (m *Manager) Verify(
 	tokenStr string,
 ) (AuthUser, error) {
 	var claims jwtClaims
+
 	token, err := jwt.ParseWithClaims(
 		tokenStr,
 		&claims,

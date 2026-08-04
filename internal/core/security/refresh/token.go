@@ -44,5 +44,6 @@ func (m *Manager) Generate() (string, time.Time, error) {
 
 func (m *Manager) Hash(rawToken string) string {
 	sum := sha256.Sum256([]byte(rawToken))
+
 	return hex.EncodeToString(sum[:])
 }

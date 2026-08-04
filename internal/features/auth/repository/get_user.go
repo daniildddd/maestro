@@ -27,6 +27,7 @@ func (r *AuthRepository) GetUserByName(
 	row := r.pool.QueryRow(ctx, query, username)
 
 	var dbUser userModel
+
 	if err := dbUser.Scan(row); err != nil {
 		if errors.Is(err, core_postgres_pool.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(
@@ -36,6 +37,7 @@ func (r *AuthRepository) GetUserByName(
 				errs.ErrUserNotFound,
 			)
 		}
+
 		return domain.User{}, fmt.Errorf(
 			"%s: scan row (username='%s'): %w",
 			op,

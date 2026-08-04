@@ -5,10 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/repository/postgres"
-	"github.com/google/uuid"
 )
 
 func (r *AuthRepository) GetUserById(
@@ -27,6 +28,7 @@ func (r *AuthRepository) GetUserById(
 	row := r.pool.QueryRow(ctx, query, id)
 
 	var dbUser userModel
+
 	if err := dbUser.Scan(row); err != nil {
 		if errors.Is(err, postgres.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(

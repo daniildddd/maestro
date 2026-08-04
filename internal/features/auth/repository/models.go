@@ -3,9 +3,10 @@ package repository
 import (
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/domain"
 	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
-	"github.com/google/uuid"
 )
 
 type userModel struct {

@@ -37,7 +37,7 @@ func NewAuthHTTPHandler(
 ) *AuthHTTPHandler {
 	return &AuthHTTPHandler{
 		authService: authService,
-		cfg:          cfg,
+		cfg:         cfg,
 	}
 }
 

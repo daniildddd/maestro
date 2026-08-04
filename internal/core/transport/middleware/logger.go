@@ -3,9 +3,10 @@ package middleware
 import (
 	"net/http"
 
+	"go.uber.org/zap"
+
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
-	"go.uber.org/zap"
 )
 
 func Logger(log *core_logger.Logger) Middleware {

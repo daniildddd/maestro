@@ -3,10 +3,12 @@ package middleware
 import (
 	"net/http"
 
+	"go.uber.org/zap"
+
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
-	"github.com/google/uuid"
-	"go.uber.org/zap"
 )
 
 const requestIDHeader = "X-Request-ID"
@@ -19,11 +21,13 @@ func RequestID() Middleware {
 
 			received := r.Header.Get(requestIDHeader)
 			id, ok := isValidRequestID(received)
+
 			if !ok {
 				log.Debug(
 					"invalid or missing X-Request-ID, generating new one",
 					zap.String("received", received),
 				)
+
 				id = uuid.New()
 			}
 

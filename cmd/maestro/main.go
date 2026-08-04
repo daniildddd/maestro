@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
+
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/repository/postgres/pgxadapter"
 	"github.com/daniildddd/maestro/internal/core/security/access"
@@ -17,7 +19,6 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
 	"github.com/daniildddd/maestro/internal/features/auth/transport"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -53,6 +54,7 @@ func main() {
 	}
 
 	accessManager := access.NewManager(access.NewConfigMust())
+
 	refreshManager, err := refresh.NewManager(refresh.NewConfigMust())
 	if err != nil {
 		panic(fmt.Errorf("init refresh token manager: %v", err))

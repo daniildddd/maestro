@@ -12,6 +12,7 @@ type BcryptHasher struct {
 
 func NewBcryptHasher(cfg Config) (*BcryptHasher, error) {
 	const maxPracticalCost = 14
+
 	if cfg.Cost < bcrypt.MinCost || cfg.Cost > maxPracticalCost {
 		return nil, fmt.Errorf(
 			"hasher cost must be in [%d, %d], got %d",

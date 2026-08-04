@@ -10,6 +10,7 @@ func (s *AuthService) Logout(
 	rawToken string,
 ) error {
 	const op = "auth.service.Logout"
+
 	token := s.refreshGen.Hash(rawToken)
 
 	err := s.authRepository.DeleteRefreshToken(ctx, token)

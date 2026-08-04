@@ -6,12 +6,11 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-var (
-	StatusCodeUninitialized = -1
-)
+var StatusCodeUninitialized = -1
 
 type RWriter struct {
 	http.ResponseWriter
+
 	statusCode int
 	AppErr     *errs.AppError
 	RawErr     error

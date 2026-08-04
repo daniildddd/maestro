@@ -27,6 +27,7 @@ func (r *AuthRepository) GetRefreshTokenByHash(
 	row := r.pool.QueryRow(ctx, query, tokenHash)
 
 	var dbToken refreshTokenModel
+
 	if err := dbToken.Scan(row); err != nil {
 		if errors.Is(err, postgres.ErrNoRows) {
 			return domain.RefreshToken{}, fmt.Errorf(

@@ -19,6 +19,7 @@ func (h *AuthHTTPHandler) refresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
 	responseHandler := response.NewHTTPResponseHandler(w, log)
+
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		responseHandler.ErrorResponse(

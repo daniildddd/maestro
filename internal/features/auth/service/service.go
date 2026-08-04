@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/google/uuid"
+
+	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
 type AuthService struct {

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
@@ -10,13 +11,15 @@ import (
 func Recovery() Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				log := core_logger.FromContext(r.Context())
+			defer func(ctx context.Context) {
+				log := core_logger.FromContext(ctx)
 				responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
+
 				if p := recover(); p != nil {
 					responseHandler.PanicResponse(p)
 				}
-			}()
+			}(r.Context())
+
 			next.ServeHTTP(w, r)
 		})
 	}

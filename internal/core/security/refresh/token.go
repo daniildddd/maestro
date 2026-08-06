@@ -31,15 +31,16 @@ func NewManager(cfg Config) (*Manager, error) {
 func (m *Manager) Generate() (string, time.Time, error) {
 	now := time.Now()
 
-	b := make([]byte, tokenBytes)
-	if _, err := rand.Read(b); err != nil {
+	var b [tokenBytes]byte
+
+	if _, err := rand.Read(b[:]); err != nil {
 		return "", time.Time{}, fmt.Errorf(
 			"read random bytes: %w",
 			err,
 		)
 	}
 
-	return base64.RawURLEncoding.EncodeToString(b), now.Add(m.cfg.TTL), nil
+	return base64.RawURLEncoding.EncodeToString(b[:]), now.Add(m.cfg.TTL), nil
 }
 
 func (m *Manager) Hash(rawToken string) string {

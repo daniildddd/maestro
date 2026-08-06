@@ -8,14 +8,14 @@ import (
 )
 
 type Config struct {
-	Addr                         string        `default:"localhost" envconfig:"ADDR"`
-	ReadTimeout                  time.Duration `default:"30s"       envconfig:"READ_TIMEOUT"`
-	ReadHeaderTimeout            time.Duration `default:"10s"       envconfig:"READ_HEADER_TIMEOUT"`
-	WriteTimeout                 time.Duration `default:"30s"       envconfig:"WRITE_TIMEOUT"`
-	IdleTimeout                  time.Duration `default:"120s"      envconfig:"IDLE_TIMEOUT"`
-	MaxHeaderBytes               int           `default:"8192"      envconfig:"MAX_HEADER_BYTES"`
-	DisableGeneralOptionsHandler bool          `default:"true"      envconfig:"DISABLE_GENERAL_OPTIONS_HANDLER"`
-	ShutdownTimeout              time.Duration `default:"30s"       envconfig:"SHUTDOWN_TIMEOUT"`
+	Addr                         string        `default:"localhost:8080" envconfig:"ADDR"`
+	ReadTimeout                  time.Duration `default:"30s"            envconfig:"READ_TIMEOUT"`
+	ReadHeaderTimeout            time.Duration `default:"10s"            envconfig:"READ_HEADER_TIMEOUT"`
+	WriteTimeout                 time.Duration `default:"30s"            envconfig:"WRITE_TIMEOUT"`
+	IdleTimeout                  time.Duration `default:"120s"           envconfig:"IDLE_TIMEOUT"`
+	MaxHeaderBytes               int           `default:"8192"           envconfig:"MAX_HEADER_BYTES"`
+	DisableGeneralOptionsHandler bool          `default:"true"           envconfig:"DISABLE_GENERAL_OPTIONS_HANDLER"`
+	ShutdownTimeout              time.Duration `default:"30s"            envconfig:"SHUTDOWN_TIMEOUT"`
 }
 
 func NewConfigMust() Config {

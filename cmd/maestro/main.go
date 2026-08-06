@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,6 +22,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		syscall.SIGINT|syscall.SIGTERM,
@@ -30,10 +34,18 @@ func main() {
 
 	logger, err := core_logger.NewLogger(core_logger.NewConfigMust())
 	if err != nil {
-		fmt.Println("failed to init logger:", err)
-		os.Exit(1)
+		slog.New(slog.NewTextHandler(os.Stderr, nil)).
+			Error("init logger", slog.String("error", err.Error()))
+
+		return 1
 	}
-	defer logger.Close()
+
+	defer func() {
+		if err := logger.Close(); err != nil {
+			slog.New(slog.NewTextHandler(os.Stderr, nil)).
+				Error("close logger gracefully", slog.String("error", err.Error()))
+		}
+	}()
 
 	logger.Info("logger successful init")
 
@@ -42,7 +54,9 @@ func main() {
 		pgxadapter.NewConfigMust(),
 	)
 	if err != nil {
-		panic(fmt.Errorf("create postgres adapter pool: %w", err))
+		logger.Error("create postgres adapter pool", zap.Error(err))
+
+		return 1
 	}
 	defer postgresPool.Close()
 
@@ -50,14 +64,18 @@ func main() {
 
 	bcryptHasher, err := hasher.NewBcryptHasher(hasher.NewConfigMust())
 	if err != nil {
-		panic(fmt.Errorf("init bcrypt hasher: %w", err))
+		logger.Error("init bcrypt hasher", zap.Error(err))
+
+		return 1
 	}
 
 	accessManager := access.NewManager(access.NewConfigMust())
 
 	refreshManager, err := refresh.NewManager(refresh.NewConfigMust())
 	if err != nil {
-		panic(fmt.Errorf("init refresh token manager: %w", err))
+		logger.Error("init refresh token manager", zap.Error(err))
+
+		return 1
 	}
 
 	authService := service.NewAuthService(
@@ -109,6 +127,12 @@ func main() {
 	srv.RegisterAPIRouters(publicV1, privateV1)
 
 	if err = srv.Run(ctx); err != nil {
-		logger.Fatal("HTTP server run error", zap.Error(err))
+		logger.Error("HTTP server stopped", zap.Error(err))
+
+		return 1
 	}
+
+	logger.Info("HTTP server shut down gracefully")
+
+	return 0
 }

@@ -7,6 +7,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+
+	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
 type Manager struct {
@@ -61,7 +63,7 @@ func (m *Manager) Verify(
 ) (AuthUser, error) {
 	var claims jwtClaims
 
-	token, err := jwt.ParseWithClaims(
+	_, err := jwt.ParseWithClaims(
 		tokenStr,
 		&claims,
 		func(t *jwt.Token) (any, error) {
@@ -76,29 +78,25 @@ func (m *Manager) Verify(
 	if err != nil {
 		switch {
 		case errors.Is(err, jwt.ErrTokenExpired):
-			return AuthUser{}, fmt.Errorf("token is expired: %w", err)
+			return AuthUser{}, fmt.Errorf("token is expired: %w", errs.ErrAccessTokenExpired)
 		case errors.Is(err, jwt.ErrTokenSignatureInvalid):
-			return AuthUser{}, fmt.Errorf("token signature: %w", err)
+			return AuthUser{}, fmt.Errorf("token signature: %w", errs.ErrAccessTokenInvalid)
 		default:
-			return AuthUser{}, fmt.Errorf("verify token: %w", err)
+			return AuthUser{}, fmt.Errorf("verify token: %w", errs.ErrAccessTokenInvalid)
 		}
-	}
-
-	if !token.Valid {
-		return AuthUser{}, fmt.Errorf("invalid token")
 	}
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return AuthUser{}, fmt.Errorf("parse subject: %w", err)
+		return AuthUser{}, fmt.Errorf("invalid subject(uuid parse): %w", errs.ErrAccessTokenInvalid)
 	}
 
 	if userId == uuid.Nil {
-		return AuthUser{}, fmt.Errorf("subject is nil uuid")
+		return AuthUser{}, fmt.Errorf("subject is nil uuid: %w", errs.ErrAccessTokenInvalid)
 	}
 
 	if claims.Role == "" {
-		return AuthUser{}, fmt.Errorf("user role is missing")
+		return AuthUser{}, fmt.Errorf("user role is missing: %w", errs.ErrAccessTokenInvalid)
 	}
 
 	return AuthUser{

@@ -8,7 +8,7 @@ linters:
     - err113 # Opinionated.
     - exhaustruct # Depends on the development approach.
     - funlen # Not the best code quality metric. Better use gocyclo, gocognit, maintidx. For example, table-driven tests will always be large.
-    - gochecknoglobals # Does not allow adding exceptions (time.Date, regex.Must, etc). reassign with * configuration partially solves the problem https://github.com/tommy-muehle/go-mnd/issues/14
+    - gochecknoglobals # Does not allow adding exceptions (time.Date, regex.Must, etc.). reassign with * configuration partially solves the problem https://github.com/tommy-muehle/go-mnd/issues/14
     - godoclint # More suitable for libraries
     - ireturn # There are situations where returning interfaces is necessary: the factory pattern or some external libraries require it (ogen, otel)
     - lll # Rarely relevant with a large screen and auto-formatting enabled

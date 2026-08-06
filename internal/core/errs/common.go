@@ -7,6 +7,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const codeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+
 type AppError struct {
 	HTTPStatus int
 	Code       string
@@ -30,22 +32,43 @@ func (e *AppError) Is(target error) bool {
 
 var ErrInvalidRefreshToken = &AppError{
 	HTTPStatus: http.StatusUnauthorized,
-	Code:       "INVALID_REFRESH_TOKEN",
+	Code:       codeInvalidRefreshToken,
 	Message:    "Invalid refresh token",
 	LogLevel:   zapcore.WarnLevel,
 }
 
 var ErrExpiredRefreshToken = &AppError{
 	HTTPStatus: http.StatusUnauthorized,
-	Code:       "INVALID_REFRESH_TOKEN",
+	Code:       codeInvalidRefreshToken,
 	Message:    "Expired refresh token",
 	LogLevel:   zapcore.InfoLevel,
 }
 
 var ErrMissingRefreshToken = &AppError{
 	HTTPStatus: http.StatusUnauthorized,
-	Code:       "INVALID_REFRESH_TOKEN",
+	Code:       codeInvalidRefreshToken,
 	Message:    "Refresh token is required",
+	LogLevel:   zapcore.WarnLevel,
+}
+
+var ErrAccessTokenExpired = &AppError{
+	HTTPStatus: http.StatusUnauthorized,
+	Code:       "ACCESS_TOKEN_EXPIRED",
+	Message:    "Access token expired",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrAccessTokenInvalid = &AppError{
+	HTTPStatus: http.StatusUnauthorized,
+	Code:       "ACCESS_TOKEN_INVALID",
+	Message:    "Invalid access token",
+	LogLevel:   zapcore.WarnLevel,
+}
+
+var ErrAccessTokenMissing = &AppError{
+	HTTPStatus: http.StatusUnauthorized,
+	Code:       "ACCESS_TOKEN_MISSING",
+	Message:    "Access token missing",
 	LogLevel:   zapcore.WarnLevel,
 }
 

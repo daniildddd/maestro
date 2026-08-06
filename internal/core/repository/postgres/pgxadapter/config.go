@@ -17,7 +17,7 @@ type Config struct {
 	Database string `default:"postgres"   envconfig:"DB"`
 	DSN      string
 
-	Timeout time.Duration `envconfig:"TIMEOUT"`
+	Timeout time.Duration `default:"5s" envconfig:"TIMEOUT"`
 }
 
 func NewConfig() (Config, error) {

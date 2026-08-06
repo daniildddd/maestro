@@ -35,8 +35,9 @@ func (h *AuthHTTPHandler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//nolint:gosec // controlled by config; must be true in production
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
+		Name:     refreshTokenCookieName,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,

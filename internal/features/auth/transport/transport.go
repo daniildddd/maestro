@@ -8,6 +8,8 @@ import (
 	core_http_server "github.com/daniildddd/maestro/internal/core/transport/server"
 )
 
+const refreshTokenCookieName = "refresh_token"
+
 type AuthHTTPHandler struct {
 	authService AuthService
 	cfg         Config

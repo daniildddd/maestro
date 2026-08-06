@@ -30,7 +30,7 @@ func NewLogger(config Config) (*Logger, error) {
 		return nil, fmt.Errorf("unmarshal log level: %w", err)
 	}
 
-	if err := os.MkdirAll(config.Folder, 0o755); err != nil {
+	if err := os.MkdirAll(config.Folder, 0o750); err != nil {
 		return nil, fmt.Errorf("mkdir log folder: %w", err)
 	}
 
@@ -40,7 +40,7 @@ func NewLogger(config Config) (*Logger, error) {
 		fmt.Sprintf("%s.log", timestamp),
 	)
 
-	logFile, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE, 0o644)
+	logFile, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %w", err)
 	}
@@ -63,14 +63,14 @@ func NewLogger(config Config) (*Logger, error) {
 	}, nil
 }
 
-func (l *Logger) Close() {
-	if err := l.Sync(); err != nil {
-		fmt.Println("sync logger:", err)
-	}
+func (l *Logger) Close() error {
+	_ = l.Sync() //nolint:errcheck // zap docs: Sync fails with EINVAL on stdout/stderr; errors not actionable at shutdown (https://github.com/uber-go/zap/issues/370)
 
 	if err := l.file.Close(); err != nil {
-		fmt.Println("close log file: ", err)
+		return fmt.Errorf("close log file: %w", err)
 	}
+
+	return nil
 }
 
 func (l *Logger) With(field ...zap.Field) *Logger {

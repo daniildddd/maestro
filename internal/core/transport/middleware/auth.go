@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,15 +29,14 @@ func Auth(tv TokenVerifier) Middleware {
 
 			token, ok := stripBearer(r.Header.Get("Authorization"))
 			if !ok {
-				writeUnauthorized(ctx, w, "missing or invalid Authorization header")
+				writeUnauthorized(ctx, w, errs.ErrAccessTokenMissing)
 
 				return
 			}
 
 			claims, err := tv.Verify(token)
 			if err != nil {
-				log.Warn("verify jwt token", zap.Error(err))
-				writeUnauthorized(ctx, w, "invalid or expired token")
+				writeUnauthorized(ctx, w, fmt.Errorf("middleware auth: %w", err))
 
 				return
 			}
@@ -66,8 +66,8 @@ func stripBearer(h string) (string, bool) {
 	return strings.TrimPrefix(h, prefix), true
 }
 
-func writeUnauthorized(ctx context.Context, w http.ResponseWriter, msg string) {
+func writeUnauthorized(ctx context.Context, w http.ResponseWriter, err error) {
 	log := core_logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
-	responseHandler.ErrorResponse(errs.ErrInvalidCredentials)
+	responseHandler.ErrorResponse(err)
 }

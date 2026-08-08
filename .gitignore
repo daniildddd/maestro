@@ -9,6 +9,7 @@
 
 *.out
 /logs
+/bin/
 
 .idea/
 .vscode/

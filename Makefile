@@ -1,10 +1,14 @@
 -include .env
 export
 
-.PHONY: run migrate-create docker-up docker-down lint lint-fix help
+.DEFAULT_GOAL := help
+.PHONY: build run migrate-create docker-up docker-down lint lint-fix help test
 
-run: ## Run the server
-	@go run cmd/maestro/main.go
+build:
+	@go build -o bin/maestro ./cmd/maestro
+
+run: build
+	@./bin/maestro
 
 migrate-create: ## Create a migration (make migrate-create seq=init)
 	@if [ -z "$(seq)" ]; then \
@@ -27,6 +31,9 @@ lint: ## Run the linter
 
 lint-fix: ## Auto-fix linter issues
 	@golangci-lint run --fix ./...
+
+test: ## Run unit tests with race detection and coverage
+	@go test -race -cover ./...
 
 help: ## Show available commands
 	@echo "Available commands:"

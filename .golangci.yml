@@ -278,6 +278,13 @@ linters:
           - forbidigo
         text: 'panic\(\) in main is forbidden\. Use os\.Exit\(1\) instead'
 
+      # linters disabled in tests
+      - path: "_test\\.go$"
+        linters:
+          - dupl
+          - goconst
+          - funlen
+
 formatters:
   enable:
     - gci

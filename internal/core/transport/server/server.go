@@ -75,7 +75,7 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		s.log.Debug(
+		s.log.Info(
 			"starting graceful shutdown",
 			zap.Duration("timeout", s.config.ShutdownTimeout),
 		)

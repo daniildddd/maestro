@@ -25,10 +25,18 @@ paths:
               properties:
                 username:
                   type: string
+                  minLength: 3
+                  maxLength: 32
+                  pattern: '^[a-zA-Z0-9_-]+$'
                   example: jdoe
+                  description: Unique login identifier. ASCII letters, digits, underscore and hyphen only.
                 password:
                   type: string
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^[^\x00-\x1F\x7F]+$'
                   example: secret123
+                  description: Plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
       responses:
         '200':
           description: Successful login
@@ -182,10 +190,15 @@ paths:
           name: page
           schema:
             type: integer
+            minimum: 1
+            default: 1
         - in: query
           name: limit
           schema:
             type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
         - in: query
           name: action
           schema:
@@ -202,10 +215,12 @@ paths:
           name: start_data
           schema:
             type: string
+            format: date-time
         - in: query
           name: end_data
           schema:
             type: string
+            format: date-time
       responses:
         '200':
           description: Successful response
@@ -381,14 +396,22 @@ paths:
           name: page
           schema:
             type: integer
+            minimum: 1
+            default: 1
         - in: query
           name: limit
           schema:
             type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
         - in: query
           name: username
           schema:
             type: string
+            minLength: 3
+            maxLength: 32
+            pattern: '^[a-zA-Z0-9_-]+$'
         - in: query
           name: role
           schema:
@@ -504,6 +527,9 @@ paths:
               properties:
                 username:
                   type: string
+                  minLength: 3
+                  maxLength: 32
+                  pattern: '^[a-zA-Z0-9_-]+$'
                   example: updateduser
                 role:
                   type: string
@@ -615,7 +641,11 @@ paths:
               properties:
                 new_password:
                   type: string
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^[^\x00-\x1F\x7F]+$'
                   example: newSecret123
+                  description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
       responses:
         '204':
           description: Password changed successfully
@@ -673,10 +703,17 @@ paths:
               properties:
                 old_password:
                   type: string
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^[^\x00-\x1F\x7F]+$'
                   example: oldSecret123
                 new_password:
                   type: string
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^[^\x00-\x1F\x7F]+$'
                   example: newSecret123
+                  description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
       responses:
         '204':
           description: Password changed successfully
@@ -715,10 +752,15 @@ paths:
           name: page
           schema:
             type: integer
+            minimum: 1
+            default: 1
         - in: query
           name: limit
           schema:
             type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
         - in: query
           name: status
           schema:
@@ -1880,7 +1922,10 @@ components:
           description: UUID primary key (users.id, DEFAULT gen_random_uuid()).
         username:
           type: string
-          description: Unique username (users.username, TEXT NOT NULL UNIQUE).
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: Unique username (users.username, TEXT NOT NULL UNIQUE). Stored as entered after sanitization; compared case-insensitively.
         role:
           type: string
           enum: [admin, user, viewer]
@@ -1903,11 +1948,18 @@ components:
       properties:
         username:
           type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-zA-Z0-9_-]+$'
           example: newuser
+          description: Unique login identifier. ASCII letters, digits, underscore and hyphen only.
         password:
           type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^[^\x00-\x1F\x7F]+$'
           example: secret123
-          description: Plaintext password; stored as password_hash in the users table.
+          description: Plaintext password; stored as password_hash in the users table. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed. No mandatory character classes (NIST SP 800-63B).
         role:
           type: string
           enum: [admin, user, viewer]

@@ -11,11 +11,11 @@ import (
 	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 )
 
-type pgxRows struct {
+type PgxRows struct {
 	pgx.Rows
 }
 
-func (r pgxRows) Scan(dest ...any) error {
+func (r PgxRows) Scan(dest ...any) error {
 	err := r.Rows.Scan(dest...)
 	if err != nil {
 		return mapErrors(err)
@@ -24,7 +24,7 @@ func (r pgxRows) Scan(dest ...any) error {
 	return nil
 }
 
-func (r pgxRows) Err() error {
+func (r PgxRows) Err() error {
 	err := r.Rows.Err()
 	if err != nil {
 		return mapErrors(err)
@@ -33,11 +33,11 @@ func (r pgxRows) Err() error {
 	return nil
 }
 
-type pgxRow struct {
+type PgxRow struct {
 	pgx.Row
 }
 
-func (r pgxRow) Scan(dest ...any) error {
+func (r PgxRow) Scan(dest ...any) error {
 	err := r.Row.Scan(dest...)
 	if err != nil {
 		return mapErrors(err)
@@ -46,7 +46,7 @@ func (r pgxRow) Scan(dest ...any) error {
 	return nil
 }
 
-type pgxCommandTag struct {
+type PgxCommandTag struct {
 	pgconn.CommandTag
 }
 

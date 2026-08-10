@@ -50,7 +50,7 @@ func (p *Pool) Query(
 		return nil, mapErrors(err)
 	}
 
-	return pgxRows{rows}, nil
+	return PgxRows{rows}, nil
 }
 
 func (p *Pool) QueryRow(
@@ -60,7 +60,7 @@ func (p *Pool) QueryRow(
 ) core_postgres_pool.Row {
 	row := p.Pool.QueryRow(ctx, sql, args...)
 
-	return pgxRow{row}
+	return PgxRow{row}
 }
 
 func (p *Pool) Exec(
@@ -73,7 +73,7 @@ func (p *Pool) Exec(
 		return nil, mapErrors(err)
 	}
 
-	return pgxCommandTag{commandTag}, nil
+	return PgxCommandTag{commandTag}, nil
 }
 
 func (p *Pool) OpTimeout() time.Duration {

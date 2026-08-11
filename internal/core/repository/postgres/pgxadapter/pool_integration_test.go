@@ -19,6 +19,7 @@ import (
 
 func newTestDSN(t *testing.T) string {
 	t.Helper()
+
 	ctx := context.Background()
 	must := require.New(t)
 	container, err := postgres.Run(ctx, "postgres:17-alpine",
@@ -53,6 +54,8 @@ func newTestPool(t *testing.T) *pgxadapter.Pool {
 func TestNewPool(t *testing.T) {
 	t.Parallel()
 
+	unreachableDSN := "postgres://invalid:invalid@localhost:1/postgres?sslmode=disable" //nolint:gosec // placeholder credentials in test fixture DSN
+
 	tests := []struct {
 		name    string
 		dsn     string
@@ -72,7 +75,7 @@ func TestNewPool(t *testing.T) {
 		},
 		{
 			name:   "unreachable host lazy pool fails at ping",
-			dsn:    "postgres://invalid:invalid@localhost:1/postgres?sslmode=disable",
+			dsn:    unreachableDSN,
 			errMsg: "ping",
 		},
 	}
@@ -92,6 +95,7 @@ func TestNewPool(t *testing.T) {
 				must.Error(err)
 				must.Nil(pool)
 				is.ErrorContains(err, tt.errMsg)
+
 				return
 			}
 
@@ -127,6 +131,7 @@ func TestPool_Query(t *testing.T) {
 				must.Error(err)
 				must.Nil(rows)
 				must.ErrorIs(err, tt.target)
+
 				return
 			}
 
@@ -162,6 +167,7 @@ func TestPool_Exec(t *testing.T) {
 				must.Error(err)
 				must.Nil(tag)
 				must.ErrorIs(err, tt.target)
+
 				return
 			}
 
@@ -192,11 +198,13 @@ func TestPool_QueryRow(t *testing.T) {
 			must := require.New(t)
 
 			var v int
+
 			err := pool.QueryRow(context.Background(), tt.sql).Scan(&v)
 
 			if tt.target != nil {
 				must.Error(err)
 				must.ErrorIs(err, tt.target)
+
 				return
 			}
 

@@ -60,7 +60,7 @@ func TestRequestID(t *testing.T) {
 			})
 
 			headers := http.Header{"X-Request-ID": []string{tt.headerValue}}
-			req := newTestRequest(t, http.MethodGet, headers)
+			req := newTestRequest(t, http.MethodGet, "/", headers)
 			req = req.WithContext(core_logger.ToContext(req.Context(), nopLogger()))
 			rec := httptest.NewRecorder()
 
@@ -90,7 +90,7 @@ func TestRequestID(t *testing.T) {
 		t.Parallel()
 		must := require.New(t)
 
-		req := newTestRequest(t, http.MethodGet, http.Header{
+		req := newTestRequest(t, http.MethodGet, "/", http.Header{
 			"X-Request-ID": []string{"non-a-uuid"},
 		})
 		log, recordedLogs := newObservableLogger(t, zapcore.DebugLevel)

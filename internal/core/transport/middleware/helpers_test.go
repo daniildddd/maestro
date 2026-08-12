@@ -12,10 +12,10 @@ import (
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 )
 
-func newTestRequest(t *testing.T, method string, headers http.Header) *http.Request {
+func newTestRequest(t *testing.T, method, path string, headers http.Header) *http.Request {
 	t.Helper()
 
-	r := httptest.NewRequest(method, "/", http.NoBody)
+	r := httptest.NewRequest(method, path, http.NoBody)
 
 	for k, values := range headers {
 		for _, v := range values {

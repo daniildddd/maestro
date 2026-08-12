@@ -23,7 +23,7 @@ func TestRecovery(t *testing.T) {
 
 		chained := middleware.Recovery()(nextHandler)
 
-		req := newTestRequest(t, http.MethodGet, nil)
+		req := newTestRequest(t, http.MethodGet, "/", nil)
 		req = req.WithContext(core_logger.ToContext(req.Context(), nopLogger()))
 		rec := httptest.NewRecorder()
 		rw := core_http_response.NewResponseWriter(rec)
@@ -42,7 +42,7 @@ func TestRecovery(t *testing.T) {
 
 		chained := middleware.Recovery()(nextHandler)
 
-		req := newTestRequest(t, http.MethodGet, nil)
+		req := newTestRequest(t, http.MethodGet, "/", nil)
 		req = req.WithContext(core_logger.ToContext(req.Context(), nopLogger()))
 		rec := httptest.NewRecorder()
 		rw := core_http_response.NewResponseWriter(rec)

@@ -35,6 +35,9 @@ lint-fix: ## Auto-fix linter issues
 test: ## Run unit tests with race detection and coverage
 	@go test -race -cover ./...
 
+test-integration:
+	@go test -tags integration -race ./...
+
 help: ## Show available commands
 	@echo "Available commands:"
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z%_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort

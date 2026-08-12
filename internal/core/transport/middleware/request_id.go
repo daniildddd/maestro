@@ -45,5 +45,9 @@ func isValidRequestID(requestId string) (uuid.UUID, bool) {
 		return uuid.Nil, false
 	}
 
+	if v == uuid.Nil {
+		return uuid.Nil, false
+	}
+
 	return v, true
 }

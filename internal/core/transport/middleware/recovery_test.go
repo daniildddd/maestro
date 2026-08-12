@@ -5,24 +5,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/require"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
-
-func newRequestWithLogger(t *testing.T) *http.Request {
-	t.Helper()
-
-	req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
-	testLog := &core_logger.Logger{Logger: zap.NewNop()}
-	ctx := core_logger.ToContext(req.Context(), testLog)
-
-	return req.WithContext(ctx)
-}
 
 func TestRecovery(t *testing.T) {
 	t.Parallel()
@@ -35,7 +23,8 @@ func TestRecovery(t *testing.T) {
 
 		chained := middleware.Recovery()(nextHandler)
 
-		req := newRequestWithLogger(t)
+		req := newTestRequest(t, http.MethodGet, nil)
+		req = req.WithContext(core_logger.ToContext(req.Context(), nopLogger()))
 		rec := httptest.NewRecorder()
 		rw := core_http_response.NewResponseWriter(rec)
 
@@ -53,7 +42,8 @@ func TestRecovery(t *testing.T) {
 
 		chained := middleware.Recovery()(nextHandler)
 
-		req := newRequestWithLogger(t)
+		req := newTestRequest(t, http.MethodGet, nil)
+		req = req.WithContext(core_logger.ToContext(req.Context(), nopLogger()))
 		rec := httptest.NewRecorder()
 		rw := core_http_response.NewResponseWriter(rec)
 

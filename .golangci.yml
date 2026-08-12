@@ -284,6 +284,7 @@ linters:
           - dupl
           - goconst
           - funlen
+          - noctx # httptest.NewRequest in tests doesn't make real network calls; context is unnecessary
 
 formatters:
   enable:

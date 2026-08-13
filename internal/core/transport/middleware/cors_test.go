@@ -101,9 +101,11 @@ func TestCORS(t *testing.T) {
 			})
 
 			headers := http.Header{}
+
 			if tt.origin != "" {
 				headers.Set("Origin", tt.origin)
 			}
+
 			req := newTestRequest(t, tt.method, "/", headers)
 			rec := httptest.NewRecorder()
 

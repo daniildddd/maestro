@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/transport/response"
 )
@@ -13,16 +14,17 @@ import (
 func TestNewResponseWriter(t *testing.T) {
 	t.Parallel()
 
-	t.Run("wraps underlying ResponseWriter", func(t *testing.T) {
+	t.Run("returns initialized RWriter wrapping the given ResponseWriter", func(t *testing.T) {
 		t.Parallel()
-		is := assert.New(t)
+		must := require.New(t)
 
 		rec := httptest.NewRecorder()
 		rw := response.NewResponseWriter(rec)
 
-		_, _ = rw.Write([]byte("hello")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
-
-		is.Equal("hello", rec.Body.String())
+		must.NotNil(rw)
+		must.Same(rec, rw.ResponseWriter)
+		must.Nil(rw.AppErr)
+		must.NoError(rw.RawErr)
 	})
 }
 

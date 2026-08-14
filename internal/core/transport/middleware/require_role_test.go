@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 func TestRequireRole(t *testing.T) {
@@ -24,19 +26,19 @@ func TestRequireRole(t *testing.T) {
 		{
 			name:          "allowed role passes through",
 			role:          "admin",
-			roles:         []string{"viewer", "admin"},
+			roles:         []string{"user", "admin"},
 			wantForbidden: false,
 		},
 		{
 			name:          "unknown role forbidden",
 			role:          "non-accept-role",
-			roles:         []string{"viewer", "admin"},
+			roles:         []string{"user", "admin"},
 			wantForbidden: true,
 		},
 		{
 			name:          "empty role forbidden",
 			role:          "",
-			roles:         []string{"viewer", "admin"},
+			roles:         []string{"user", "admin"},
 			wantForbidden: true,
 		},
 	}
@@ -55,12 +57,17 @@ func TestRequireRole(t *testing.T) {
 			ctx := logger.ToContext(req.Context(), nopLogger())
 			ctx = reqctx.WithRole(ctx, tt.role)
 			req = req.WithContext(ctx)
+			rw := core_http_response.NewResponseWriter(rec)
 			chained := middleware.RequireRole(tt.roles...)(nextHandler)
-			chained.ServeHTTP(rec, req)
+			chained.ServeHTTP(rw, req)
 
 			if tt.wantForbidden {
 				must.Equal(http.StatusForbidden, rec.Code)
-				must.Contains(rec.Body.String(), "forbidden")
+
+				var body core_http_response.ErrorResponse
+				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+				must.Equal("FORBIDDEN", body.Code)
+				must.Equal("Forbidden", body.Message)
 
 				return
 			}

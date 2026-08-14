@@ -18,13 +18,13 @@ func TestNewConfigMust(t *testing.T) {
 
 		unsetAllMiddlewareEnv(t)
 		t.Setenv("MIDDLEWARE_ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
-		t.Setenv("MIDDLEWARE_ROLES", "admin,user,viewer")
+		t.Setenv("MIDDLEWARE_ROLES", "admin,user")
 
 		cfg := middleware.NewConfigMust()
 
 		must.NotEmpty(cfg)
 		is.Equal([]string{"http://localhost:3000", "http://localhost:5173"}, cfg.AllowedOrigins)
-		is.Equal([]string{"admin", "user", "viewer"}, cfg.Roles)
+		is.Equal([]string{"admin", "user"}, cfg.Roles)
 	})
 
 	t.Run("single origin and role parsed correctly", func(t *testing.T) {

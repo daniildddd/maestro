@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/daniildddd/maestro/internal/core/errs"
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
@@ -23,7 +24,7 @@ func RequireRole(roles ...string) Middleware {
 
 			log := core_logger.FromContext(ctx)
 			responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
-			responseHandler.JSONResponse("forbidden", http.StatusForbidden)
+			responseHandler.ErrorResponse(errs.ErrForbidden)
 		})
 	}
 }

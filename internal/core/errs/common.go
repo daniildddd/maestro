@@ -79,6 +79,13 @@ var ErrUserNotFound = &AppError{
 	LogLevel:   zapcore.InfoLevel,
 }
 
+var ErrForbidden = &AppError{
+	HTTPStatus: http.StatusForbidden,
+	Code:       "FORBIDDEN",
+	Message:    "Forbidden",
+	LogLevel:   zapcore.WarnLevel,
+}
+
 var ErrRefreshTokenNotFound = &AppError{
 	HTTPStatus: http.StatusNotFound,
 	Code:       "REFRESH_TOKEN_NOT_FOUND",

@@ -185,6 +185,7 @@ paths:
         - audit
       summary: Get audit logs list
       operationId: getAuditLogs
+      x-required-roles: [user, admin]
       parameters:
         - in: query
           name: page
@@ -281,12 +282,25 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
   /api/v1/audit-logs/{id}:
     get:
       tags:
         - audit
       summary: Get specific audit log by ID
       operationId: getAuditLogById
+      x-required-roles: [user, admin]
       parameters:
         - in: path
           name: id
@@ -331,6 +345,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -349,6 +375,7 @@ paths:
         - users
       summary: Create a new user
       operationId: createUser
+      x-required-roles: [admin]
       requestBody:
         required: true
         content:
@@ -386,11 +413,24 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
     get:
       tags:
         - users
       summary: Get list of users
       operationId: getUsers
+      x-required-roles: [admin]
       parameters:
         - in: query
           name: page
@@ -416,7 +456,7 @@ paths:
           name: role
           schema:
             type: string
-            enum: [admin, user, viewer]
+            enum: [admin, user]
       responses:
         '200':
           description: Successful response
@@ -462,12 +502,25 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
   /api/v1/users/{id}:
     get:
       tags:
         - users
       summary: Get user by ID
       operationId: getUserById
+      x-required-roles: [user, admin]
       parameters:
         - in: path
           name: id
@@ -494,6 +547,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -511,6 +576,7 @@ paths:
         - users
       summary: Update user profile
       operationId: updateUser
+      x-required-roles: [user, admin]
       parameters:
         - in: path
           name: id
@@ -531,10 +597,6 @@ paths:
                   maxLength: 32
                   pattern: '^[a-zA-Z0-9_-]+$'
                   example: updateduser
-                role:
-                  type: string
-                  enum: [admin, user, viewer]
-                  example: user
       responses:
         '200':
           description: Successful update
@@ -566,6 +628,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -583,6 +657,7 @@ paths:
         - users
       summary: Delete user
       operationId: deleteUser
+      x-required-roles: [admin]
       parameters:
         - in: path
           name: id
@@ -605,6 +680,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -623,6 +710,7 @@ paths:
         - users
       summary: Admin changes user password
       operationId: adminChangeUserPassword
+      x-required-roles: [admin]
       parameters:
         - in: path
           name: id
@@ -673,6 +761,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -691,6 +791,7 @@ paths:
         - users
       summary: User changes their own password
       operationId: changeOwnPassword
+      x-required-roles: [user, admin]
       requestBody:
         required: true
         content:
@@ -741,12 +842,87 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
+  /api/v1/users/me:
+    delete:
+      tags:
+        - users
+      summary: Delete own account
+      operationId: deleteOwnAccount
+      x-required-roles: [user, admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+                  pattern: '^[^\x00-\x1F\x7F]+$'
+                  example: mySecret123
+                  description: Current password to confirm account deletion. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+      responses:
+        '204':
+          description: Account deleted successfully
+        '400':
+          description: Invalid request or incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_credentials:
+                  summary: Incorrect password
+                  value:
+                    code: INVALID_CREDENTIALS
+                    message: "Invalid credentials"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized
+                  value:
+                    code: UNAUTHORIZED
+                    message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
   /api/v1/connectors:
     get:
       tags:
         - connectors
       summary: Get connectors list
       operationId: getConnectors
+      x-required-roles: [user]
       parameters:
         - in: query
           name: page
@@ -844,11 +1020,24 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
     post:
       tags:
         - connectors
       summary: Create a new connector
       operationId: createConnector
+      x-required-roles: [user]
       requestBody:
         required: true
         content:
@@ -946,12 +1135,25 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
   /api/v1/connectors/{id}:
     get:
       tags:
         - connectors
       summary: Get specific connector details
       operationId: getConnectorById
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1001,6 +1203,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1018,6 +1232,7 @@ paths:
         - connectors
       summary: Update a specific connector
       operationId: updateConnector
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1102,6 +1317,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1119,6 +1346,7 @@ paths:
         - connectors
       summary: Delete a connector
       operationId: deleteConnector
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1140,6 +1368,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1158,6 +1398,7 @@ paths:
         - connectors
       summary: Perform action on a connector
       operationId: connectorAction
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1222,6 +1463,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1240,6 +1493,7 @@ paths:
         - connectors
       summary: Get connector metrics
       operationId: getConnectorMetrics
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1298,6 +1552,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1316,6 +1582,7 @@ paths:
         - connectors
       summary: Get summary for a specific connector
       operationId: getConnectorSummary
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1363,6 +1630,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1381,6 +1660,7 @@ paths:
         - connectors
       summary: Get tasks for a specific connector
       operationId: getConnectorTasks
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1418,6 +1698,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1436,6 +1728,7 @@ paths:
         - connectors
       summary: Get details of a specific task for a connector
       operationId: getConnectorTaskById
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1475,6 +1768,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1493,6 +1798,7 @@ paths:
         - connectors
       summary: Restart a specific task for a connector
       operationId: restartConnectorTask
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1519,6 +1825,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1537,6 +1855,7 @@ paths:
         - connectors
       summary: Get connectors statistics
       operationId: getConnectorsStats
+      x-required-roles: [user]
       responses:
         '200':
           description: Successful response
@@ -1565,12 +1884,25 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
   /api/v1/connector-plugins/{id}/schema:
     get:
       tags:
         - connector-plugins
       summary: Get configuration schema for a connector plugin
       operationId: getConnectorPluginSchema
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1628,6 +1960,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1646,6 +1990,7 @@ paths:
         - connector-plugins
       summary: Get list of available connector plugins
       operationId: getConnectorPlugins
+      x-required-roles: [user]
       responses:
         '200':
           description: Successful response
@@ -1677,6 +2022,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
 
   /api/v1/connectors/validate:
     post:
@@ -1684,6 +2041,7 @@ paths:
         - connectors
       summary: Validate connector configuration
       operationId: validateConnectorConfig
+      x-required-roles: [user]
       requestBody:
         required: true
         content:
@@ -1756,6 +2114,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
 
   /api/v1/smt-plugins:
     get:
@@ -1763,6 +2133,7 @@ paths:
         - smt-plugins
       summary: Get list of available SMT (Single Message Transform) plugins
       operationId: getSmtPlugins
+      x-required-roles: [user]
       responses:
         '200':
           description: Successful response
@@ -1794,6 +2165,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
 
   /api/v1/smt-plugins/{id}/schema:
     get:
@@ -1801,6 +2184,7 @@ paths:
         - smt-plugins
       summary: Get configuration schema for a specific SMT plugin
       operationId: getSmtPluginSchema
+      x-required-roles: [user]
       parameters:
         - in: path
           name: id
@@ -1858,6 +2242,18 @@ paths:
                   value:
                     code: UNAUTHORIZED
                     message: "Missing or invalid token"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Forbidden
+                  value:
+                    code: FORBIDDEN
+                    message: "Forbidden"
         '404':
           description: Not found
           content:
@@ -1928,7 +2324,7 @@ components:
           description: Unique username (users.username, TEXT NOT NULL UNIQUE). Stored as entered after sanitization; compared case-insensitively.
         role:
           type: string
-          enum: [admin, user, viewer]
+          enum: [admin, user]
           description: User role (users.role, TEXT NOT NULL, CHECK constraint).
         created_at:
           type: string
@@ -1962,7 +2358,7 @@ components:
           description: Plaintext password; stored as password_hash in the users table. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed. No mandatory character classes (NIST SP 800-63B).
         role:
           type: string
-          enum: [admin, user, viewer]
+          enum: [admin, user]
           example: admin
 
   securitySchemes:

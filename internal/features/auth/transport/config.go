@@ -24,7 +24,7 @@ func NewConfig() (Config, error) {
 func NewConfigMust() Config {
 	cfg, err := NewConfig()
 	if err != nil {
-		panic(fmt.Sprintf("get cookie config: %v", err))
+		panic(fmt.Errorf("get cookie config: %w", err))
 	}
 
 	return cfg

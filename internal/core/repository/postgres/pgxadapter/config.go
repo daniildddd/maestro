@@ -43,7 +43,7 @@ func NewConfig() (Config, error) {
 func NewConfigMust() Config {
 	config, err := NewConfig()
 	if err != nil {
-		panic(fmt.Sprintf("get database config: %v", err))
+		panic(fmt.Errorf("get database config: %w", err))
 	}
 
 	return config

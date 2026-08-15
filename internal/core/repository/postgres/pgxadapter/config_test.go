@@ -126,9 +126,9 @@ func TestNewConfigMust(t *testing.T) {
 		}()
 
 		must.NotNil(panicVal)
-		msg, ok := panicVal.(string)
+		panicErr, ok := panicVal.(error)
 		must.True(ok)
-		is.Contains(msg, "get database config")
+		is.Contains(panicErr.Error(), "get database config")
 	})
 
 	t.Run("missing required PASSWORD panics", func(t *testing.T) {
@@ -147,9 +147,9 @@ func TestNewConfigMust(t *testing.T) {
 		}()
 
 		must.NotNil(panicVal)
-		msg, ok := panicVal.(string)
+		panicErr, ok := panicVal.(error)
 		must.True(ok)
-		is.Contains(msg, "get database config")
+		is.Contains(panicErr.Error(), "get database config")
 	})
 }
 

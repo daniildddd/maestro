@@ -21,10 +21,12 @@ type Config struct {
 }
 
 func NewConfig() (Config, error) {
+	const op = "postgres.pgxadapter.NewConfig"
+
 	var config Config
 
 	if err := envconfig.Process("POSTGRES", &config); err != nil {
-		return Config{}, fmt.Errorf("process config: %w", err)
+		return Config{}, fmt.Errorf("%s: process config: %w", op, err)
 	}
 
 	config.DSN = createDSN(

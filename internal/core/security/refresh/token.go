@@ -16,9 +16,12 @@ type Manager struct {
 }
 
 func NewManager(cfg Config) (*Manager, error) {
+	const op = "security.refresh.NewManager"
+
 	if cfg.TTL <= 0 {
 		return nil, fmt.Errorf(
-			"refresh ttl must be greater than zero, got %d",
+			"%s: refresh ttl must be greater than zero, got %d",
+			op,
 			cfg.TTL,
 		)
 	}
@@ -29,13 +32,16 @@ func NewManager(cfg Config) (*Manager, error) {
 }
 
 func (m *Manager) Generate() (string, time.Time, error) {
+	const op = "security.refresh.Generate"
+
 	now := time.Now()
 
 	var b [tokenBytes]byte
 
 	if _, err := rand.Read(b[:]); err != nil {
 		return "", time.Time{}, fmt.Errorf(
-			"read random bytes: %w",
+			"%s: read random bytes: %w",
+			op,
 			err,
 		)
 	}

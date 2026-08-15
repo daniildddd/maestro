@@ -22,16 +22,18 @@ type Logger struct {
 }
 
 func NewLogger(config Config) (*Logger, error) {
+	const op = "core.logger.NewLogger"
+
 	const formatTimestamp = "2006-01-02T15-04-05.000000"
 
 	zapLvl := zap.NewAtomicLevel()
 
 	if err := zapLvl.UnmarshalText([]byte(config.Level)); err != nil {
-		return nil, fmt.Errorf("unmarshal log level: %w", err)
+		return nil, fmt.Errorf("%s: unmarshal log level: %w", op, err)
 	}
 
 	if err := os.MkdirAll(config.Folder, 0o750); err != nil {
-		return nil, fmt.Errorf("mkdir log folder: %w", err)
+		return nil, fmt.Errorf("%s: mkdir log folder: %w", op, err)
 	}
 
 	timestamp := time.Now().UTC().Format(formatTimestamp)
@@ -42,7 +44,7 @@ func NewLogger(config Config) (*Logger, error) {
 
 	logFile, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE, 0o600)
 	if err != nil {
-		return nil, fmt.Errorf("open log file: %w", err)
+		return nil, fmt.Errorf("%s: open log file: %w", op, err)
 	}
 
 	zapConfig := zap.NewDevelopmentEncoderConfig()
@@ -64,10 +66,12 @@ func NewLogger(config Config) (*Logger, error) {
 }
 
 func (l *Logger) Close() error {
+	const op = "core.logger.Close"
+
 	_ = l.Sync() //nolint:errcheck // zap docs: Sync fails with EINVAL on stdout/stderr; errors not actionable at shutdown (https://github.com/uber-go/zap/issues/370)
 
 	if err := l.file.Close(); err != nil {
-		return fmt.Errorf("close log file: %w", err)
+		return fmt.Errorf("%s: close log file: %w", op, err)
 	}
 
 	return nil

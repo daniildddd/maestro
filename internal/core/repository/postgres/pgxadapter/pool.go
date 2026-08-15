@@ -20,18 +20,20 @@ func NewPool(
 	ctx context.Context,
 	config Config,
 ) (*Pool, error) {
+	const op = "postgres.pgxadapter.NewPool"
+
 	pgxConfig, err := pgxpool.ParseConfig(config.DSN)
 	if err != nil {
-		return nil, fmt.Errorf("parse pgxconfig: %w", err)
+		return nil, fmt.Errorf("%s: parse pgxconfig: %w", op, err)
 	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, pgxConfig)
 	if err != nil {
-		return nil, fmt.Errorf("create pgxpool: %w", err)
+		return nil, fmt.Errorf("%s: create pgxpool: %w", op, err)
 	}
 
 	if err = pool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("pgxpool ping: %w", err)
+		return nil, fmt.Errorf("%s: pgxpool ping: %w", op, err)
 	}
 
 	return &Pool{

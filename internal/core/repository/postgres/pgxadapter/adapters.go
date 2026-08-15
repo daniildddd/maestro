@@ -51,6 +51,8 @@ type PgxCommandTag struct {
 }
 
 func mapErrors(err error) error {
+	const op = "postgres.pgxadapter.mapErrors"
+
 	if err == nil {
 		return nil
 	}
@@ -72,28 +74,32 @@ func mapErrors(err error) error {
 		switch pgErr.Code {
 		case pgxForeignKeyViolation:
 			return fmt.Errorf(
-				"%w: %w",
+				"%s: %w: %w",
+				op,
 				core_postgres_pool.ErrViolatesForeignKey,
 				err,
 			)
 
 		case pgxUniqueViolation:
 			return fmt.Errorf(
-				"%w: %w",
+				"%s: %w: %w",
+				op,
 				core_postgres_pool.ErrDuplicate,
 				err,
 			)
 
 		case pgxCheckViolation:
 			return fmt.Errorf(
-				"%w: %w",
+				"%s: %w: %w",
+				op,
 				core_postgres_pool.ErrValidation,
 				err,
 			)
 
 		case pgxDeadlockDetected:
 			return fmt.Errorf(
-				"%w: %w",
+				"%s: %w: %w",
+				op,
 				core_postgres_pool.ErrDeadlock,
 				err,
 			)
@@ -104,5 +110,5 @@ func mapErrors(err error) error {
 		return err
 	}
 
-	return fmt.Errorf("%w: %w", core_postgres_pool.ErrUnknown, err)
+	return fmt.Errorf("%s: %w: %w", op, core_postgres_pool.ErrUnknown, err)
 }

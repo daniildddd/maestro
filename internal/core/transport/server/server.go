@@ -48,6 +48,8 @@ func (s *HTTPServer) RegisterRoute(route ...Route) {
 }
 
 func (s *HTTPServer) Run(ctx context.Context) error {
+	const op = "transport.server.Run"
+
 	mux := middleware.ChainMiddleware(s.mux, s.middlewares...)
 
 	server := http.Server{
@@ -93,15 +95,15 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 
 			if closeErr := server.Close(); closeErr != nil {
 				return errors.Join(
-					fmt.Errorf("graceful shutdown: %w", err),
-					fmt.Errorf("force close: %w", closeErr),
+					fmt.Errorf("%s: graceful shutdown: %w", op, err),
+					fmt.Errorf("%s: force close: %w", op, closeErr),
 				)
 			}
 
-			return fmt.Errorf("graceful shutdown: %w", err)
+			return fmt.Errorf("%s: graceful shutdown: %w", op, err)
 		}
 	case err := <-ch:
-		return fmt.Errorf("listen and serve HTTP: %w", err)
+		return fmt.Errorf("%s: listen and serve HTTP: %w", op, err)
 	}
 
 	return nil

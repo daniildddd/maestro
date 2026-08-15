@@ -36,6 +36,8 @@ func (m *Manager) Generate(
 	userID uuid.UUID,
 	role string,
 ) (string, error) {
+	const op = "security.access.Generate"
+
 	now := time.Now()
 
 	claims := jwtClaims{
@@ -52,7 +54,7 @@ func (m *Manager) Generate(
 
 	signed, err := token.SignedString([]byte(m.cfg.Secret))
 	if err != nil {
-		return "", fmt.Errorf("sign token: %w", err)
+		return "", fmt.Errorf("%s: sign token: %w", op, err)
 	}
 
 	return signed, nil
@@ -61,6 +63,8 @@ func (m *Manager) Generate(
 func (m *Manager) Verify(
 	tokenStr string,
 ) (AuthUser, error) {
+	const op = "security.access.Verify"
+
 	var claims jwtClaims
 
 	_, err := jwt.ParseWithClaims(
@@ -69,7 +73,10 @@ func (m *Manager) Verify(
 		func(t *jwt.Token) (any, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf(
-					"unexpected method: %s", t.Header["alg"])
+					"%s: unexpected method: %s",
+					op,
+					t.Header["alg"],
+				)
 			}
 
 			return []byte(m.cfg.Secret), nil
@@ -78,25 +85,25 @@ func (m *Manager) Verify(
 	if err != nil {
 		switch {
 		case errors.Is(err, jwt.ErrTokenExpired):
-			return AuthUser{}, fmt.Errorf("token is expired: %w", errs.ErrAccessTokenExpired)
+			return AuthUser{}, fmt.Errorf("%s: token is expired: %w", op, errs.ErrAccessTokenExpired)
 		case errors.Is(err, jwt.ErrTokenSignatureInvalid):
-			return AuthUser{}, fmt.Errorf("token signature: %w", errs.ErrAccessTokenInvalid)
+			return AuthUser{}, fmt.Errorf("%s: token signature: %w", op, errs.ErrAccessTokenInvalid)
 		default:
-			return AuthUser{}, fmt.Errorf("verify token: %w", errs.ErrAccessTokenInvalid)
+			return AuthUser{}, fmt.Errorf("%s: verify token: %w", op, errs.ErrAccessTokenInvalid)
 		}
 	}
 
 	userId, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return AuthUser{}, fmt.Errorf("invalid subject(uuid parse): %w", errs.ErrAccessTokenInvalid)
+		return AuthUser{}, fmt.Errorf("%s: invalid subject(uuid parse): %w", op, errs.ErrAccessTokenInvalid)
 	}
 
 	if userId == uuid.Nil {
-		return AuthUser{}, fmt.Errorf("subject is nil uuid: %w", errs.ErrAccessTokenInvalid)
+		return AuthUser{}, fmt.Errorf("%s: subject is nil uuid: %w", op, errs.ErrAccessTokenInvalid)
 	}
 
 	if claims.Role == "" {
-		return AuthUser{}, fmt.Errorf("user role is missing: %w", errs.ErrAccessTokenInvalid)
+		return AuthUser{}, fmt.Errorf("%s: user role is missing: %w", op, errs.ErrAccessTokenInvalid)
 	}
 
 	return AuthUser{

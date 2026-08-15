@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -30,13 +28,7 @@ func newLoginRequest(t *testing.T, body, contentType string) *http.Request {
 		req.Header.Set("Content-Type", contentType)
 	}
 
-	ctx := logger.ToContext(req.Context(), &logger.Logger{Logger: zap.NewNop()})
-
-	return req.WithContext(ctx)
-}
-
-func newTestHandler(authService transport.AuthService, cfg transport.Config) *transport.AuthHTTPHandler {
-	return transport.NewAuthHTTPHandler(authService, cfg)
+	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
 func TestLogin(t *testing.T) {
@@ -144,10 +136,7 @@ func TestLogin(t *testing.T) {
 			must.Equal(tt.wantStatus, rec.Code)
 
 			if tt.wantCode != "" {
-				var body struct {
-					Code    string `json:"code"`
-					Message string `json:"message"`
-				}
+				var body errorResponseBody
 
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
 				is.Equal(tt.wantCode, body.Code)
@@ -168,7 +157,7 @@ func TestLogin(t *testing.T) {
 			is.True(cookies[0].HttpOnly)
 			is.Equal(http.SameSiteLaxMode, cookies[0].SameSite)
 			is.True(cookies[0].Expires.Equal(expiresAt))
-			is.True(cookies[0].Secure)
+			is.Equal(tt.cfg.CookieSecure, cookies[0].Secure)
 			is.Equal(tt.cfg.CookieDomain, cookies[0].Domain)
 		})
 	}

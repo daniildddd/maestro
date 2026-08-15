@@ -6,8 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -33,9 +31,7 @@ func newLogoutRequest(t *testing.T, cookieValue string) *http.Request {
 		})
 	}
 
-	ctx := logger.ToContext(req.Context(), &logger.Logger{Logger: zap.NewNop()})
-
-	return req.WithContext(ctx)
+	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
 func TestLogout(t *testing.T) {
@@ -104,15 +100,10 @@ func TestLogout(t *testing.T) {
 			must.Equal(tt.wantStatus, rec.Code)
 
 			if tt.wantCode != "" {
-				var body struct {
-					Code    string `json:"code"`
-					Message string `json:"message"`
-				}
+				var body errorResponseBody
 
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
 				is.Equal(tt.wantCode, body.Code)
-
-				return
 			}
 
 			if tt.wantClear {
@@ -122,15 +113,13 @@ func TestLogout(t *testing.T) {
 				is.Empty(cookies[0].Value)
 				is.Equal("/", cookies[0].Path)
 				is.True(cookies[0].HttpOnly)
-				is.Equal(tt.cfg.CookieSecure, cookies[0].Secure)
 				is.Equal(http.SameSiteLaxMode, cookies[0].SameSite)
+				is.Equal(tt.cfg.CookieSecure, cookies[0].Secure)
 				is.Equal(tt.cfg.CookieDomain, cookies[0].Domain)
 				is.Contains(rec.Header().Get("Set-Cookie"), "Max-Age=0")
-
-				return
+			} else {
+				is.Empty(rec.Header().Get("Set-Cookie"))
 			}
-
-			is.Empty(rec.Header().Get("Set-Cookie"))
 		})
 	}
 }

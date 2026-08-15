@@ -16,7 +16,7 @@ func (r *AuthRepository) GetUserById(
 	ctx context.Context,
 	id uuid.UUID,
 ) (domain.User, error) {
-	const op = "auth.repository.GetById"
+	const op = "auth.repository.GetUserById"
 
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()

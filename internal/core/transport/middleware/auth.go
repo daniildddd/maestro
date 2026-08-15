@@ -22,6 +22,8 @@ type TokenVerifier interface {
 }
 
 func Auth(tv TokenVerifier) Middleware {
+	const op = "transport.middleware.Auth"
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -29,14 +31,14 @@ func Auth(tv TokenVerifier) Middleware {
 
 			token, ok := stripBearer(r.Header.Get("Authorization"))
 			if !ok {
-				writeUnauthorized(ctx, w, errs.ErrAccessTokenMissing)
+				writeUnauthorized(ctx, w, fmt.Errorf("%s: %w", op, errs.ErrAccessTokenMissing))
 
 				return
 			}
 
 			claims, err := tv.Verify(token)
 			if err != nil {
-				writeUnauthorized(ctx, w, fmt.Errorf("middleware auth: %w", err))
+				writeUnauthorized(ctx, w, fmt.Errorf("%s: verify token: %w", op, err))
 
 				return
 			}

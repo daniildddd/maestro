@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 
@@ -11,6 +12,8 @@ import (
 )
 
 func RequireRole(roles ...string) Middleware {
+	const op = "transport.middleware.RequireRole"
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -24,7 +27,9 @@ func RequireRole(roles ...string) Middleware {
 
 			log := core_logger.FromContext(ctx)
 			responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
-			responseHandler.ErrorResponse(errs.ErrForbidden)
+			responseHandler.ErrorResponse(
+				fmt.Errorf("%s: %w", op, errs.ErrForbidden),
+			)
 		})
 	}
 }

@@ -10,3 +10,15 @@ packages:
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       AuthService:
+
+  github.com/daniildddd/maestro/internal/features/auth/service:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "service_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      AuthRepository:
+      PasswordHasher:
+      AccessTokenGenerator:
+      RefreshTokenManager:

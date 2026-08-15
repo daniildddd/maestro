@@ -35,12 +35,30 @@ func TestRWriter_WriteHeader(t *testing.T) {
 		name       string
 		statusCode int
 	}{
-		{name: "200 OK", statusCode: http.StatusOK},
-		{name: "201 Created", statusCode: http.StatusCreated},
-		{name: "204 No Content", statusCode: http.StatusNoContent},
-		{name: "400 Bad Request", statusCode: http.StatusBadRequest},
-		{name: "404 Not Found", statusCode: http.StatusNotFound},
-		{name: "500 Internal Server Error", statusCode: http.StatusInternalServerError},
+		{
+			name:       "200 OK",
+			statusCode: http.StatusOK,
+		},
+		{
+			name:       "201 Created",
+			statusCode: http.StatusCreated,
+		},
+		{
+			name:       "204 No Content",
+			statusCode: http.StatusNoContent,
+		},
+		{
+			name:       "400 Bad Request",
+			statusCode: http.StatusBadRequest,
+		},
+		{
+			name:       "404 Not Found",
+			statusCode: http.StatusNotFound,
+		},
+		{
+			name:       "500 Internal Server Error",
+			statusCode: http.StatusInternalServerError,
+		},
 	}
 
 	for _, tt := range tests {

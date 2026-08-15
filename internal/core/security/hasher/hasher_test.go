@@ -18,13 +18,41 @@ func TestNewBcryptHasher(t *testing.T) {
 		cost    int
 		wantErr bool
 	}{
-		{"min cost 4 is valid", bcrypt.MinCost, false},
-		{"max practical cost 14 is valid", 14, false},
-		{"default cost 10 is valid", 10, false},
-		{"cost below min fails", bcrypt.MinCost - 1, true},
-		{"cost above max practical fails", 15, true},
-		{"zero cost fails", 0, true},
-		{"negative cost fails", -1, true},
+		{
+			name:    "min cost 4 is valid",
+			cost:    bcrypt.MinCost,
+			wantErr: false,
+		},
+		{
+			name:    "max practical cost 14 is valid",
+			cost:    14,
+			wantErr: false,
+		},
+		{
+			name:    "default cost 10 is valid",
+			cost:    10,
+			wantErr: false,
+		},
+		{
+			name:    "cost below min fails",
+			cost:    bcrypt.MinCost - 1,
+			wantErr: true,
+		},
+		{
+			name:    "cost above max practical fails",
+			cost:    15,
+			wantErr: true,
+		},
+		{
+			name:    "zero cost fails",
+			cost:    0,
+			wantErr: true,
+		},
+		{
+			name:    "negative cost fails",
+			cost:    -1,
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -70,10 +98,30 @@ func TestBcryptHasher_Verify(t *testing.T) {
 		plain   string
 		wantErr bool
 	}{
-		{"correct password verifies", validHash(t, h, "correct-password"), "correct-password", false},
-		{"wrong password fails", validHash(t, h, "correct-password"), "wrong-password", true},
-		{"malformed hash fails", "not-a-bcrypt-hash", "any-password", true},
-		{"empty hash fails", "", "any-password", true},
+		{
+			name:    "correct password verifies",
+			hash:    validHash(t, h, "correct-password"),
+			plain:   "correct-password",
+			wantErr: false,
+		},
+		{
+			name:    "wrong password fails",
+			hash:    validHash(t, h, "correct-password"),
+			plain:   "wrong-password",
+			wantErr: true,
+		},
+		{
+			name:    "malformed hash fails",
+			hash:    "not-a-bcrypt-hash",
+			plain:   "any-password",
+			wantErr: true,
+		},
+		{
+			name:    "empty hash fails",
+			hash:    "",
+			plain:   "any-password",
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

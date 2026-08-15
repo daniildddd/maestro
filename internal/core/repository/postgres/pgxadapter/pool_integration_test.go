@@ -116,8 +116,16 @@ func TestPool_Query(t *testing.T) {
 		sql    string
 		target error
 	}{
-		{"success returns rows", "SELECT 1", nil},
-		{"syntax error maps to ErrUnknown", "SELECT FROM", core_postgres_pool.ErrUnknown},
+		{
+			name:   "success returns rows",
+			sql:    "SELECT 1",
+			target: nil,
+		},
+		{
+			name:   "syntax error maps to ErrUnknown",
+			sql:    "SELECT FROM",
+			target: core_postgres_pool.ErrUnknown,
+		},
 	}
 
 	for _, tt := range tests {
@@ -151,8 +159,16 @@ func TestPool_Exec(t *testing.T) {
 		sql    string
 		target error
 	}{
-		{"success returns command tag", "SELECT 1", nil},
-		{"nonexistent table maps to ErrUnknown", "INSERT INTO nonexistent_table VALUES (1)", core_postgres_pool.ErrUnknown},
+		{
+			name:   "success returns command tag",
+			sql:    "SELECT 1",
+			target: nil,
+		},
+		{
+			name:   "nonexistent table maps to ErrUnknown",
+			sql:    "INSERT INTO nonexistent_table VALUES (1)",
+			target: core_postgres_pool.ErrUnknown,
+		},
 	}
 
 	for _, tt := range tests {
@@ -186,9 +202,21 @@ func TestPool_QueryRow(t *testing.T) {
 		sql    string
 		target error
 	}{
-		{"success scans value", "SELECT 1", nil},
-		{"no rows maps to ErrNoRows", "SELECT 1 WHERE false", core_postgres_pool.ErrNoRows},
-		{"pg error maps to ErrUnknown", "SELECT nextval('nonexistent_seq')", core_postgres_pool.ErrUnknown},
+		{
+			name:   "success scans value",
+			sql:    "SELECT 1",
+			target: nil,
+		},
+		{
+			name:   "no rows maps to ErrNoRows",
+			sql:    "SELECT 1 WHERE false",
+			target: core_postgres_pool.ErrNoRows,
+		},
+		{
+			name:   "pg error maps to ErrUnknown",
+			sql:    "SELECT nextval('nonexistent_seq')",
+			target: core_postgres_pool.ErrUnknown,
+		},
 	}
 
 	for _, tt := range tests {

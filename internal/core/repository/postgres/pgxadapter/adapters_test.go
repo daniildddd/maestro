@@ -22,12 +22,42 @@ type mapErrorsCase struct {
 }
 
 var mapErrorsTable = []mapErrorsCase{
-	{"nil error returns nil", nil, nil, ""},
-	{"foreign key violation", &pgconn.PgError{Code: "23503"}, core_postgres_pool.ErrViolatesForeignKey, "23503"},
-	{"unique violation", &pgconn.PgError{Code: "23505"}, core_postgres_pool.ErrDuplicate, "23505"},
-	{"check violation", &pgconn.PgError{Code: "23514"}, core_postgres_pool.ErrValidation, "23514"},
-	{"deadlock detected", &pgconn.PgError{Code: "40P01"}, core_postgres_pool.ErrDeadlock, "40P01"},
-	{"unknown pg error code maps to ErrUnknown", &pgconn.PgError{Code: "42601"}, core_postgres_pool.ErrUnknown, "42601"},
+	{
+		name:   "nil error returns nil",
+		source: nil,
+		target: nil,
+		code:   "",
+	},
+	{
+		name:   "foreign key violation",
+		source: &pgconn.PgError{Code: "23503"},
+		target: core_postgres_pool.ErrViolatesForeignKey,
+		code:   "23503",
+	},
+	{
+		name:   "unique violation",
+		source: &pgconn.PgError{Code: "23505"},
+		target: core_postgres_pool.ErrDuplicate,
+		code:   "23505",
+	},
+	{
+		name:   "check violation",
+		source: &pgconn.PgError{Code: "23514"},
+		target: core_postgres_pool.ErrValidation,
+		code:   "23514",
+	},
+	{
+		name:   "deadlock detected",
+		source: &pgconn.PgError{Code: "40P01"},
+		target: core_postgres_pool.ErrDeadlock,
+		code:   "40P01",
+	},
+	{
+		name:   "unknown pg error code maps to ErrUnknown",
+		source: &pgconn.PgError{Code: "42601"},
+		target: core_postgres_pool.ErrUnknown,
+		code:   "42601",
+	},
 }
 
 type passthroughCase struct {
@@ -37,9 +67,21 @@ type passthroughCase struct {
 }
 
 var passthroughTable = []passthroughCase{
-	{"no rows maps to ErrNoRows", pgx.ErrNoRows, core_postgres_pool.ErrNoRows},
-	{"context canceled returned as-is", context.Canceled, context.Canceled},
-	{"context deadline exceeded returned as-is", context.DeadlineExceeded, context.DeadlineExceeded},
+	{
+		name:   "no rows maps to ErrNoRows",
+		source: pgx.ErrNoRows,
+		target: core_postgres_pool.ErrNoRows,
+	},
+	{
+		name:   "context canceled returned as-is",
+		source: context.Canceled,
+		target: context.Canceled,
+	},
+	{
+		name:   "context deadline exceeded returned as-is",
+		source: context.DeadlineExceeded,
+		target: context.DeadlineExceeded,
+	},
 }
 
 type fakeRows struct {

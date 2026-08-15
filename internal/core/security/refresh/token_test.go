@@ -19,10 +19,26 @@ func TestNewManager(t *testing.T) {
 		ttl     time.Duration
 		wantErr bool
 	}{
-		{"positive ttl is valid", time.Hour, false},
-		{"small positive ttl is valid", time.Second, false},
-		{"zero ttl fails", 0, true},
-		{"negative ttl fails", -time.Second, true},
+		{
+			name:    "positive ttl is valid",
+			ttl:     time.Hour,
+			wantErr: false,
+		},
+		{
+			name:    "small positive ttl is valid",
+			ttl:     time.Second,
+			wantErr: false,
+		},
+		{
+			name:    "zero ttl fails",
+			ttl:     0,
+			wantErr: true,
+		},
+		{
+			name:    "negative ttl fails",
+			ttl:     -time.Second,
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

@@ -8,7 +8,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func (h *AuthHTTPHandler) logout(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHTTPHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	const op = "auth.transport.logout"
 
 	ctx := r.Context()

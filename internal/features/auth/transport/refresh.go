@@ -13,7 +13,7 @@ type refreshResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-func (h *AuthHTTPHandler) refresh(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHTTPHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	const op = "auth.transport.refresh"
 
 	ctx := r.Context()

@@ -2,7 +2,7 @@
 export
 
 .DEFAULT_GOAL := help
-.PHONY: build run migrate-create docker-up docker-down lint lint-fix help test
+.PHONY: build run migrate-create docker-up docker-down lint lint-fix mocks test
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -31,6 +31,9 @@ lint: ## Run the linter
 
 lint-fix: ## Auto-fix linter issues
 	@golangci-lint run --fix ./...
+
+mocks: ## Generate mocks with mockery
+	@mockery
 
 test: ## Run unit tests with race detection and coverage
 	@go test -race -cover ./...

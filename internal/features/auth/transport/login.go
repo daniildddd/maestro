@@ -20,8 +20,8 @@ type LoginUserResponse struct {
 	Username    string `json:"username"`
 }
 
-func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
-	const op = "auth.transport.login"
+func (h *AuthHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
+	const op = "auth.transport.Login"
 
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
@@ -49,7 +49,7 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		responseHandler.ErrorResponse(
 			fmt.Errorf(
-				"%s: login: %w",
+				"%s: Login: %w",
 				op,
 				err,
 			),

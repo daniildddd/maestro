@@ -14,7 +14,7 @@ func (s *AuthService) Login(
 	username string,
 	password string,
 ) (domain.TokenPair, error) {
-	const op = "auth.service.login"
+	const op = "auth.service.Login"
 
 	user, err := s.authRepository.GetUserByName(ctx, username)
 	if err != nil {

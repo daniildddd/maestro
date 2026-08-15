@@ -76,18 +76,18 @@ func TestDecodeAndValidate(t *testing.T) {
 		wantErr     error
 	}{
 		{
-			name:        "missing Content-Type returns ErrInvalidRequestBody",
+			name:        "missing Content-Type returns ErrInvalidContentType",
 			contentType: "",
 			body:        `{"username":"alice","password":"secret123"}`,
 			dest:        &userReq{},
-			wantErr:     errs.ErrInvalidRequestBody,
+			wantErr:     errs.ErrInvalidContentType,
 		},
 		{
-			name:        "invalid Content-Type returns ErrInvalidRequestBody",
+			name:        "invalid Content-Type returns ErrInvalidContentType",
 			contentType: "text/plain",
 			body:        `{"username":"alice","password":"secret123"}`,
 			dest:        &userReq{},
-			wantErr:     errs.ErrInvalidRequestBody,
+			wantErr:     errs.ErrInvalidContentType,
 		},
 		{
 			name:        "invalid JSON syntax returns ErrInvalidRequestBody",

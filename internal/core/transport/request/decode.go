@@ -32,7 +32,7 @@ func DecodeAndValidate(
 		return fmt.Errorf(
 			"%s: parse content type: %w: %w",
 			op,
-			errs.ErrInvalidRequestBody,
+			errs.ErrInvalidContentType,
 			err,
 		)
 	}
@@ -41,7 +41,7 @@ func DecodeAndValidate(
 		return fmt.Errorf(
 			"%s: invalid content type: %w: %v",
 			op,
-			errs.ErrInvalidRequestBody,
+			errs.ErrInvalidContentType,
 			mediaType,
 		)
 	}

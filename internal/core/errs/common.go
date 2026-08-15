@@ -107,6 +107,13 @@ var ErrInvalidRequestBody = &AppError{
 	LogLevel:   zapcore.WarnLevel,
 }
 
+var ErrInvalidContentType = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "INVALID_CONTENT_TYPE",
+	Message:    "Invalid content type",
+	LogLevel:   zapcore.WarnLevel,
+}
+
 var ErrValidationFailed = &AppError{
 	HTTPStatus: http.StatusBadRequest,
 	Code:       "VALIDATION_FAILED",

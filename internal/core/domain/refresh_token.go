@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,16 +20,18 @@ func CreateRefreshToken(
 	token string,
 	expiresAt time.Time,
 ) (RefreshToken, error) {
+	const op = "core.domain.CreateRefreshToken"
+
 	if userId == uuid.Nil {
-		return RefreshToken{}, errors.New("userId must not be nil")
+		return RefreshToken{}, fmt.Errorf("%s: userId must not be nil", op)
 	}
 
 	if token == "" {
-		return RefreshToken{}, errors.New("rawToken must not be empty")
+		return RefreshToken{}, fmt.Errorf("%s: rawToken must not be empty", op)
 	}
 
 	if !expiresAt.After(time.Now()) {
-		return RefreshToken{}, errors.New("expiresAt must be after now")
+		return RefreshToken{}, fmt.Errorf("%s: expiresAt must be after now", op)
 	}
 
 	return RefreshToken{

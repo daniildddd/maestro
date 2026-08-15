@@ -117,9 +117,11 @@ func TestLogout(t *testing.T) {
 				is.Equal(tt.cfg.CookieSecure, cookies[0].Secure)
 				is.Equal(tt.cfg.CookieDomain, cookies[0].Domain)
 				is.Contains(rec.Header().Get("Set-Cookie"), "Max-Age=0")
-			} else {
-				is.Empty(rec.Header().Get("Set-Cookie"))
+
+				return
 			}
+
+			is.Empty(rec.Header().Get("Set-Cookie"))
 		})
 	}
 }

@@ -12,10 +12,12 @@ type Config struct {
 }
 
 func NewConfig() (Config, error) {
+	const op = "auth.transport.NewConfig"
+
 	var cfg Config
 
 	if err := envconfig.Process("AUTH", &cfg); err != nil {
-		return Config{}, fmt.Errorf("process cookie config: %w", err)
+		return Config{}, fmt.Errorf("%s: process cookie config: %w", op, err)
 	}
 
 	return cfg, nil

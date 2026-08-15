@@ -67,22 +67,29 @@ func (rh *HTTPResponseHandler) JSONResponse(
 	responseBody any,
 	statusCode int,
 ) {
+	const op = "transport.response.JSONResponse"
+
 	rh.w.Header().Set("Content-Type", "application/json")
 
 	rh.w.WriteHeader(statusCode)
 
 	if err := json.NewEncoder(rh.w).Encode(responseBody); err != nil {
-		rh.log.Error("write HTTP response", zap.Error(err))
+		rh.log.Error(
+			"write HTTP response",
+			zap.Error(fmt.Errorf("%s: encode response body: %w", op, err)),
+		)
 	}
 }
 
 func (rh *HTTPResponseHandler) PanicResponse(p any) {
+	const op = "transport.response.PanicResponse"
+
 	rw, ok := rh.w.(*RWriter)
 	if !ok {
-		panic("response: underlying ResponseWriter must be *RWriter.")
+		panic("response: underlying ResponseWriter must be *RWriter")
 	}
 
-	err := fmt.Errorf("unexpected panic: %v", p)
+	err := fmt.Errorf("%s: unexpected panic: %v", op, p)
 
 	rw.RawErr = err
 	rw.AppErr = errs.ErrInternal

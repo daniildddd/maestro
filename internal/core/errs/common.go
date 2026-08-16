@@ -114,6 +114,13 @@ var ErrInvalidContentType = &AppError{
 	LogLevel:   zapcore.WarnLevel,
 }
 
+var ErrInvalidQueryParam = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "INVALID_QUERY_PARAM",
+	Message:    "Invalid query parameter",
+	LogLevel:   zapcore.WarnLevel,
+}
+
 var ErrValidationFailed = &AppError{
 	HTTPStatus: http.StatusBadRequest,
 	Code:       "VALIDATION_FAILED",

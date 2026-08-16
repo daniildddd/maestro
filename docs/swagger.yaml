@@ -76,7 +76,7 @@ paths:
                   summary: Validation error
                   value:
                     code: VALIDATION_FAILED
-                    message: "Validation failed: missing required fields"
+                    message: "Validation failed"
         '401':
           description: Unauthorized
           content:
@@ -132,7 +132,17 @@ paths:
                   summary: Invalid refresh token
                   value:
                     code: INVALID_REFRESH_TOKEN
-                    message: "Refresh token is expired, missing or invalid"
+                    message: "Invalid refresh token"
+                expired_token:
+                  summary: Expired refresh token
+                  value:
+                    code: INVALID_REFRESH_TOKEN
+                    message: "Session expired"
+                missing_token:
+                  summary: Missing refresh token
+                  value:
+                    code: INVALID_REFRESH_TOKEN
+                    message: "Refresh token is required"
   /api/v1/logout:
     post:
       tags:
@@ -416,7 +426,7 @@ paths:
                   summary: Validation error
                   value:
                     code: VALIDATION_FAILED
-                    message: "Validation failed: missing required fields"
+                    message: "Validation failed"
         '401':
           description: Unauthorized
           content:
@@ -812,7 +822,7 @@ paths:
                   summary: Validation error
                   value:
                     code: VALIDATION_FAILED
-                    message: "Validation failed: missing required fields"
+                    message: "Validation failed"
         '401':
           description: Unauthorized
           content:
@@ -903,7 +913,7 @@ paths:
                   summary: Validation error
                   value:
                     code: VALIDATION_FAILED
-                    message: "Validation failed or incorrect old password"
+                    message: "Validation failed"
         '401':
           description: Unauthorized
           content:

@@ -40,7 +40,7 @@ var ErrInvalidRefreshToken = &AppError{
 var ErrExpiredRefreshToken = &AppError{
 	HTTPStatus: http.StatusUnauthorized,
 	Code:       codeInvalidRefreshToken,
-	Message:    "Expired refresh token",
+	Message:    "Session expired",
 	LogLevel:   zapcore.InfoLevel,
 }
 
@@ -75,7 +75,7 @@ var ErrAccessTokenMissing = &AppError{
 var ErrUserNotFound = &AppError{
 	HTTPStatus: http.StatusNotFound,
 	Code:       "USER_NOT_FOUND",
-	Message:    "User not found",
+	Message:    "User with provided ID not found",
 	LogLevel:   zapcore.InfoLevel,
 }
 

@@ -65,6 +65,7 @@ func TestRequireRole(t *testing.T) {
 				must.Equal(http.StatusForbidden, rec.Code)
 
 				var body core_http_response.ErrorResponse
+
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
 				must.Equal("FORBIDDEN", body.Code)
 				must.Equal("Forbidden", body.Message)

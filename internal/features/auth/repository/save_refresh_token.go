@@ -33,9 +33,10 @@ func (r *AuthRepository) SaveRefreshToken(
 	)
 	if err != nil {
 		if errors.Is(err, postgres.ErrViolatesForeignKey) {
-			return fmt.Errorf("%s: save refresh token for user_id= %s: FK violation %w",
+			return fmt.Errorf("%s: save refresh token for user_id=%s: %w: %v",
 				op,
 				token.UserId,
+				postgres.ErrViolatesForeignKey,
 				err,
 			)
 		}

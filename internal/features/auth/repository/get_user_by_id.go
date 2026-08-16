@@ -32,10 +32,11 @@ func (r *AuthRepository) GetUserById(
 	if err := dbUser.Scan(row); err != nil {
 		if errors.Is(err, postgres.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(
-				"%s: scan user(user_id=%s): %w",
+				"%s: scan user(user_id=%s): %w: %v",
 				op,
 				id,
 				errs.ErrUserNotFound,
+				err,
 			)
 		}
 

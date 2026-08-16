@@ -31,10 +31,11 @@ func (r *AuthRepository) GetUserByName(
 	if err := dbUser.Scan(row); err != nil {
 		if errors.Is(err, core_postgres_pool.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(
-				"%s: scan row (username=%s): %w",
+				"%s: scan row (username=%s): %w: %v",
 				op,
 				username,
 				errs.ErrUserNotFound,
+				err,
 			)
 		}
 

@@ -34,3 +34,7 @@ packages:
         config:
           dir: internal/features/auth/repository
           pkgname: repository_test
+      Row:
+        config:
+          dir: internal/features/auth/repository
+          pkgname: repository_test

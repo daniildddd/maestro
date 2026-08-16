@@ -20,8 +20,9 @@ func (s *AuthService) Login(
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(
-				"%s: get user: %w: %w",
+				"%s: user not found for username=%s: %w: %v",
 				op,
+				username,
 				errs.ErrInvalidCredentials,
 				err,
 			)
@@ -37,10 +38,10 @@ func (s *AuthService) Login(
 	err = s.passwordHasher.Verify(user.PasswordHash, password)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"%s: verify password: %w: %w",
+			"%s: verify password: %w: %v",
 			op,
-			err,
 			errs.ErrInvalidCredentials,
+			err,
 		)
 	}
 

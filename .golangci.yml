@@ -28,6 +28,11 @@ linters:
       # Default: 10
       max-complexity: 15
 
+    errorlint:
+      # Контекст ошибки остаётся в тексте сообщения (%v), в цепочку (%w) попадает
+      # только контрактная ошибка, за которую цепляются верхние слои.
+      errorf: false
+
     forbidigo:
       analyze-types: true
       forbid:

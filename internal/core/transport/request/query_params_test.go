@@ -46,16 +46,16 @@ func TestGetIntQueryParam(t *testing.T) {
 			wantVal: 0,
 		},
 		{
-			name:   "non-integer returns ErrInvalidCredentials",
+			name:   "non-integer returns ErrInvalidQueryParam",
 			query:  "page=abc",
 			key:    "page",
-			wantIs: errs.ErrInvalidCredentials,
+			wantIs: errs.ErrInvalidQueryParam,
 		},
 		{
-			name:   "overflowing integer returns ErrInvalidCredentials",
+			name:   "overflowing integer returns ErrInvalidQueryParam",
 			query:  "page=999999999999999999999",
 			key:    "page",
-			wantIs: errs.ErrInvalidCredentials,
+			wantIs: errs.ErrInvalidQueryParam,
 		},
 	}
 

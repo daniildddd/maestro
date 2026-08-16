@@ -75,7 +75,7 @@ paths:
                 validation_error:
                   summary: Validation error
                   value:
-                    code: BAD_REQUEST
+                    code: VALIDATION_FAILED
                     message: "Validation failed: missing required fields"
         '401':
           description: Unauthorized
@@ -88,7 +88,7 @@ paths:
                   summary: Invalid credentials
                   value:
                     code: INVALID_CREDENTIALS
-                    message: "Invalid email or password"
+                    message: "Invalid credentials"
   /api/v1/refresh:
     post:
       tags:
@@ -131,7 +131,7 @@ paths:
                 invalid_token:
                   summary: Invalid refresh token
                   value:
-                    code: INVALID_TOKEN
+                    code: INVALID_REFRESH_TOKEN
                     message: "Refresh token is expired, missing or invalid"
   /api/v1/logout:
     post:
@@ -147,7 +147,7 @@ paths:
           required: true
           description: The refresh token cookie
       responses:
-        '200':
+        '204':
           description: Successful logout
           headers:
             Set-Cookie:
@@ -155,18 +155,6 @@ paths:
               schema:
                 type: string
               example: refresh_token=; Max-Age=0; HttpOnly; Path=/; Secure; SameSite=Strict
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                bad_request:
-                  summary: Missing refresh_token cookie
-                  value:
-                    code: BAD_REQUEST
-                    message: "Missing refresh_token cookie"
         '401':
           description: Unauthorized
           content:
@@ -174,11 +162,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Missing or invalid access token
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
   /api/v1/audit-logs:
     get:
       tags:
@@ -252,8 +250,6 @@ paths:
                   meta:
                     type: object
                     properties:
-                      total:
-                        type: integer
                       page:
                         type: integer
                       limit:
@@ -277,11 +273,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -340,11 +346,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -399,7 +415,7 @@ paths:
                 validation_error:
                   summary: Validation error
                   value:
-                    code: BAD_REQUEST
+                    code: VALIDATION_FAILED
                     message: "Validation failed: missing required fields"
         '401':
           description: Unauthorized
@@ -408,11 +424,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -472,8 +498,6 @@ paths:
                   meta:
                     type: object
                     properties:
-                      total:
-                        type: integer
                       page:
                         type: integer
                       limit:
@@ -497,11 +521,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -542,11 +576,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -569,7 +613,7 @@ paths:
                 not_found:
                   summary: User not found
                   value:
-                    code: NOT_FOUND
+                    code: USER_NOT_FOUND
                     message: "User with provided ID not found"
     patch:
       tags:
@@ -614,7 +658,7 @@ paths:
                 validation_error:
                   summary: Validation error
                   value:
-                    code: BAD_REQUEST
+                    code: VALIDATION_FAILED
                     message: "Validation failed"
         '401':
           description: Unauthorized
@@ -623,11 +667,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -650,7 +704,7 @@ paths:
                 not_found:
                   summary: User not found
                   value:
-                    code: NOT_FOUND
+                    code: USER_NOT_FOUND
                     message: "User with provided ID not found"
     delete:
       tags:
@@ -675,11 +729,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -702,7 +766,7 @@ paths:
                 not_found:
                   summary: User not found
                   value:
-                    code: NOT_FOUND
+                    code: USER_NOT_FOUND
                     message: "User with provided ID not found"
   /api/v1/users/{id}/password:
     patch:
@@ -747,7 +811,7 @@ paths:
                 validation_error:
                   summary: Validation error
                   value:
-                    code: BAD_REQUEST
+                    code: VALIDATION_FAILED
                     message: "Validation failed: missing required fields"
         '401':
           description: Unauthorized
@@ -756,11 +820,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -783,8 +857,8 @@ paths:
                 not_found:
                   summary: User not found
                   value:
-                    code: NOT_FOUND
-                    message: "User not found"
+                    code: USER_NOT_FOUND
+                    message: "User with provided ID not found"
   /api/v1/users/me/password:
     patch:
       tags:
@@ -828,7 +902,7 @@ paths:
                 validation_error:
                   summary: Validation error
                   value:
-                    code: BAD_REQUEST
+                    code: VALIDATION_FAILED
                     message: "Validation failed or incorrect old password"
         '401':
           description: Unauthorized
@@ -837,11 +911,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -899,11 +983,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -979,8 +1073,6 @@ paths:
                   meta:
                     type: object
                     properties:
-                      total:
-                        type: integer
                       page:
                         type: integer
                       limit:
@@ -1015,11 +1107,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1130,11 +1232,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1198,11 +1310,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1298,13 +1420,6 @@ paths:
                   value:
                     code: IMMUTABLE_FIELD_VIOLATION
                     message: "Modifying these fields will trigger offset reset. It is recommended to create a new connector."
-                    details:
-                      - field: "config.topic.prefix"
-                        reason: "This field is immutable for the given connector."
-                        metadata:
-                          suggest_new_connector: true
-                          current_value: "old_prefix"
-                          rejected_value: "new_prefix"
         '401':
           description: Unauthorized
           content:
@@ -1312,11 +1427,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1363,11 +1488,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1458,11 +1593,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1547,11 +1692,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1625,11 +1780,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1693,11 +1858,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1763,11 +1938,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1820,11 +2005,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1879,11 +2074,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -1955,11 +2160,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -2017,11 +2232,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -2109,11 +2334,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -2160,11 +2395,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -2237,11 +2482,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                unauthorized:
-                  summary: Unauthorized
+                access_token_missing:
+                  summary: Access token missing
                   value:
-                    code: UNAUTHORIZED
-                    message: "Missing or invalid token"
+                    code: ACCESS_TOKEN_MISSING
+                    message: "Access token missing"
+                access_token_expired:
+                  summary: Access token expired
+                  value:
+                    code: ACCESS_TOKEN_EXPIRED
+                    message: "Access token expired"
+                access_token_invalid:
+                  summary: Invalid access token
+                  value:
+                    code: ACCESS_TOKEN_INVALID
+                    message: "Invalid access token"
         '403':
           description: Forbidden
           content:
@@ -2283,31 +2538,6 @@ components:
           type: string
           description: Human-readable error description to display to the user.
           example: "Provided configuration is invalid."
-        details:
-          type: array
-          description: Optional array containing detailed information about specific fields (populated during validation errors).
-          items:
-            $ref: '#/components/schemas/ErrorDetail'
-    ErrorDetail:
-      type: object
-      required:
-        - field
-        - reason
-      properties:
-        field:
-          type: string
-          description: Path to the JSON field that caused the error.
-          example: "config.topic.prefix"
-        reason:
-          type: string
-          description: Description of the issue with this specific field.
-          example: "Field cannot be changed after the connector is started."
-        metadata:
-          type: object
-          description: Arbitrary additional metadata for frontend logic.
-          additionalProperties: true
-          example:
-            suggest_new_connector: true
     User:
       type: object
       description: User record as stored in the users table.

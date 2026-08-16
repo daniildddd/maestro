@@ -23,7 +23,7 @@ func GetIntQueryParam(r *http.Request, key string) (int, error) {
 			op,
 			param,
 			key,
-			errs.ErrInvalidCredentials,
+			errs.ErrInvalidQueryParam,
 			err,
 		)
 	}

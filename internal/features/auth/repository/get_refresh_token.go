@@ -31,9 +31,10 @@ func (r *AuthRepository) GetRefreshTokenByHash(
 	if err := dbToken.Scan(row); err != nil {
 		if errors.Is(err, postgres.ErrNoRows) {
 			return domain.RefreshToken{}, fmt.Errorf(
-				"%s: scan row: %w",
+				"%s: scan row: %w: %v",
 				op,
 				errs.ErrRefreshTokenNotFound,
+				err,
 			)
 		}
 

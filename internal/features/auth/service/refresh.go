@@ -29,7 +29,7 @@ func (s *AuthService) Refresh(
 
 	if storedToken.IsExpired(time.Now()) {
 		return domain.TokenPair{}, fmt.Errorf(
-			"%s: user_id %s: %w",
+			"%s: user_id=%s: %w",
 			op,
 			storedToken.UserId,
 			errs.ErrExpiredRefreshToken,
@@ -40,7 +40,7 @@ func (s *AuthService) Refresh(
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(
-				"%s: user not found for refresh token(user_id='%s'): %w",
+				"%s: user not found for refresh token(user_id=%s): %w",
 				op,
 				storedToken.UserId,
 				errs.ErrInvalidRefreshToken,
@@ -48,7 +48,7 @@ func (s *AuthService) Refresh(
 		}
 
 		return domain.TokenPair{}, fmt.Errorf(
-			"%s: get user by id(user_id='%s'): %w",
+			"%s: get user by id(user_id=%s): %w",
 			op,
 			storedToken.UserId,
 			err,

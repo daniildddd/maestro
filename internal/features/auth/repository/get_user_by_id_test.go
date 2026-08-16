@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 )
 
-//nolint:gocognit // table-driven test: complexity comes from mock setup Run blocks
+//nolint:gocognit,cyclop,revive,maintidx // table-driven test: complexity comes from mock setup Run blocks
 func TestGetUserById(t *testing.T) {
 	t.Parallel()
 
@@ -114,6 +114,71 @@ func TestGetUserById(t *testing.T) {
 				"admin",
 				createdAt,
 				&updatedAt,
+			),
+		},
+		{
+			name:   "success scans user with nil updated_at",
+			userID: id,
+			setup: func(pool *MockPool, row *MockRow) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					QueryRow(mock.Anything, mock.Anything, []any{id}).
+					Return(row).
+					Once()
+
+				row.EXPECT().
+					Scan(mock.Anything).
+					Run(func(dest ...any) {
+						ptrs, ok := dest[0].([]any)
+						if !ok {
+							return
+						}
+
+						idPtr, ok := ptrs[0].(*uuid.UUID)
+						if !ok {
+							return
+						}
+
+						usernamePtr, ok := ptrs[1].(*string)
+						if !ok {
+							return
+						}
+
+						passwordHashPtr, ok := ptrs[2].(*string)
+						if !ok {
+							return
+						}
+
+						rolePtr, ok := ptrs[3].(*string)
+						if !ok {
+							return
+						}
+
+						createdAtPtr, ok := ptrs[4].(*time.Time)
+						if !ok {
+							return
+						}
+
+						*idPtr = id
+						*usernamePtr = "alice"
+						*passwordHashPtr = "hash"
+						*rolePtr = "admin"
+						*createdAtPtr = createdAt
+					}).
+					Return(nil).
+					Once()
+			},
+			wantUser: domain.NewUser(
+				id,
+				"alice",
+				"hash",
+				"admin",
+				createdAt,
+				nil,
 			),
 		},
 		{

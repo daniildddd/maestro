@@ -32,8 +32,8 @@ func TestLogin(t *testing.T) {
 			refreshGen *MockRefreshTokenManager,
 		)
 		wantErr      bool
-		wantErrIs    []error
-		wantNotErrIs []error
+		wantErrIs    error
+		wantNotErrIs error
 		wantPair     domain.TokenPair
 	}{
 		{
@@ -103,8 +103,8 @@ func TestLogin(t *testing.T) {
 					Once()
 			},
 			wantErr:      true,
-			wantErrIs:    []error{errs.ErrInvalidCredentials},
-			wantNotErrIs: []error{errs.ErrUserNotFound},
+			wantErrIs:    errs.ErrInvalidCredentials,
+			wantNotErrIs: errs.ErrUserNotFound,
 		},
 		{
 			name:     "non user-not-found error is not mapped to ErrInvalidCredentials",
@@ -122,8 +122,8 @@ func TestLogin(t *testing.T) {
 					Once()
 			},
 			wantErr:      true,
-			wantErrIs:    []error{errs.ErrInternal},
-			wantNotErrIs: []error{errs.ErrInvalidCredentials},
+			wantErrIs:    errs.ErrInternal,
+			wantNotErrIs: errs.ErrInvalidCredentials,
 		},
 		{
 			name:     "password verification error maps to ErrInvalidCredentials",
@@ -146,7 +146,7 @@ func TestLogin(t *testing.T) {
 					Once()
 			},
 			wantErr:   true,
-			wantErrIs: []error{errs.ErrInvalidCredentials},
+			wantErrIs: errs.ErrInvalidCredentials,
 		},
 		{
 			name:     "access token generation error is wrapped",
@@ -174,7 +174,7 @@ func TestLogin(t *testing.T) {
 					Once()
 			},
 			wantErr:   true,
-			wantErrIs: []error{errs.ErrInternal},
+			wantErrIs: errs.ErrInternal,
 		},
 		{
 			name:     "refresh token generation error is wrapped",
@@ -207,7 +207,7 @@ func TestLogin(t *testing.T) {
 					Once()
 			},
 			wantErr:   true,
-			wantErrIs: []error{errs.ErrInternal},
+			wantErrIs: errs.ErrInternal,
 		},
 		{
 			name:     "create refresh token error is wrapped",
@@ -287,7 +287,7 @@ func TestLogin(t *testing.T) {
 					Once()
 			},
 			wantErr:   true,
-			wantErrIs: []error{errs.ErrInternal},
+			wantErrIs: errs.ErrInternal,
 		},
 	}
 
@@ -310,12 +310,12 @@ func TestLogin(t *testing.T) {
 			if tt.wantErr {
 				must.Error(err)
 
-				for _, target := range tt.wantErrIs {
-					must.ErrorIs(err, target)
+				if tt.wantErrIs != nil {
+					must.ErrorIs(err, tt.wantErrIs)
 				}
 
-				for _, target := range tt.wantNotErrIs {
-					must.NotErrorIs(err, target)
+				if tt.wantNotErrIs != nil {
+					must.NotErrorIs(err, tt.wantNotErrIs)
 				}
 
 				return

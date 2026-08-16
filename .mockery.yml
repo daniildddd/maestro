@@ -22,3 +22,15 @@ packages:
       PasswordHasher:
       AccessTokenGenerator:
       RefreshTokenManager:
+
+  github.com/daniildddd/maestro/internal/core/repository/postgres:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "postgres_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      Pool:
+        config:
+          dir: internal/features/auth/repository
+          pkgname: repository_test

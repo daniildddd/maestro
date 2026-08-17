@@ -41,5 +41,10 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Path:    "/users",
 			Handler: h.GetUsers,
 		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/users/{id}",
+			Handler: h.GetUserByID,
+		},
 	}
 }

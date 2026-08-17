@@ -19,11 +19,11 @@ type GetUsersResponse struct {
 }
 
 type UserResponse struct {
-	ID        string    `json:"id"`
-	Username  string    `json:"username"`
-	Role      string    `json:"role"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string     `json:"id"`
+	Username  string     `json:"username"`
+	Role      string     `json:"role"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type Meta struct {
@@ -81,7 +81,7 @@ func (h *UsersHTTPHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := h.usersService.GetUsers(ctx, *filter)
+	users, err := h.usersService.GetUsers(ctx, filter)
 	if err != nil {
 		responseHandler.ErrorResponse(
 			fmt.Errorf("%s: get users: %w", op, err),
@@ -106,19 +106,18 @@ func usersResponseFromDomain(users []domain.User) []UserResponse {
 	resp := make([]UserResponse, 0, len(users))
 
 	for _, u := range users {
-		userResp := UserResponse{
-			ID:        u.ID.String(),
-			Username:  u.Username,
-			Role:      u.Role,
-			CreatedAt: u.CreatedAt,
-		}
-
-		if u.UpdatedAt != nil {
-			userResp.UpdatedAt = *u.UpdatedAt
-		}
-
-		resp = append(resp, userResp)
+		resp = append(resp, userResponseFromDomain(u))
 	}
 
 	return resp
+}
+
+func userResponseFromDomain(u domain.User) UserResponse {
+	return UserResponse{
+		ID:        u.ID.String(),
+		Username:  u.Username,
+		Role:      u.Role,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
 }

@@ -2608,7 +2608,7 @@ components:
           type: string
           format: date-time
           nullable: true
-          description: Last update timestamp (users.updated_at, TIMESTAMPTZ, nullable).
+          description: Last update timestamp (users.updated_at, TIMESTAMPTZ, nullable). null when the user was never updated.
     UserCreate:
       type: object
       required:

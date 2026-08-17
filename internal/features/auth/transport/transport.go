@@ -44,13 +44,7 @@ func NewAuthHTTPHandler(
 }
 
 func (h *AuthHTTPHandler) PrivateRoutes() []core_http_server.Route {
-	return []core_http_server.Route{
-		{
-			Method:  http.MethodPost,
-			Path:    "/logout",
-			Handler: h.Logout,
-		},
-	}
+	return nil
 }
 
 func (h *AuthHTTPHandler) PublicRoutes() []core_http_server.Route {
@@ -59,6 +53,11 @@ func (h *AuthHTTPHandler) PublicRoutes() []core_http_server.Route {
 			Method:  http.MethodPost,
 			Path:    "/Login",
 			Handler: h.Login,
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/logout",
+			Handler: h.Logout,
 		},
 		{
 			Method:  http.MethodPost,

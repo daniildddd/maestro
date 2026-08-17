@@ -519,11 +519,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                bad_request:
-                  summary: Invalid query parameters
+                validation_error:
+                  summary: Validation error
                   value:
-                    code: BAD_REQUEST
-                    message: "Invalid query parameters provided"
+                    code: VALIDATION_FAILED
+                    message: "Validation failed"
+                invalid_query_param:
+                  summary: Invalid query parameter
+                  value:
+                    code: INVALID_QUERY_PARAM
+                    message: "Invalid query parameter"
         '401':
           description: Unauthorized
           content:
@@ -558,6 +563,18 @@ paths:
                   value:
                     code: FORBIDDEN
                     message: "Forbidden"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: User not found
+                  value:
+                    code: USER_NOT_FOUND
+                    message: "User with provided ID not found"
   /api/v1/users/{id}:
     get:
       tags:
@@ -579,6 +596,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_path_param:
+                  summary: Invalid path parameter
+                  value:
+                    code: INVALID_PATH_PARAM
+                    message: "Invalid path parameter"
         '401':
           description: Unauthorized
           content:
@@ -670,6 +699,11 @@ paths:
                   value:
                     code: VALIDATION_FAILED
                     message: "Validation failed"
+                invalid_path_param:
+                  summary: Invalid path parameter
+                  value:
+                    code: INVALID_PATH_PARAM
+                    message: "Invalid path parameter"
         '401':
           description: Unauthorized
           content:

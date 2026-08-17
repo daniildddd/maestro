@@ -49,10 +49,16 @@ packages:
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       Pool:
-        config:
-          dir: internal/features/auth/repository
-          pkgname: repository_test
+        configs:
+          - dir: internal/features/auth/repository
+            pkgname: repository_test
+          - dir: internal/features/users/repository
+            pkgname: repository_test
       Row:
         config:
           dir: internal/features/auth/repository
+          pkgname: repository_test
+      Rows:
+        config:
+          dir: internal/features/users/repository
           pkgname: repository_test

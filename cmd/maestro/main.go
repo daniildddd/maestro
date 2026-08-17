@@ -106,7 +106,8 @@ func run() int {
 		baseMW...,
 	)
 
-	privateMW := append([]middleware.Middleware{}, baseMW...)
+	privateMW := make([]middleware.Middleware, len(baseMW), len(baseMW)+2)
+	copy(privateMW, baseMW)
 
 	privateMW = append(
 		privateMW,

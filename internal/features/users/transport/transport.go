@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/domain"
 	core_http_server "github.com/daniildddd/maestro/internal/core/transport/server"
 )
@@ -17,6 +19,11 @@ type UsersService interface {
 		ctx context.Context,
 		filter domain.UserFilter,
 	) ([]domain.User, error)
+
+	GetUserByID(
+		ctx context.Context,
+		id uuid.UUID,
+	) (domain.User, error)
 }
 
 func NewUsersHTTPHandler(

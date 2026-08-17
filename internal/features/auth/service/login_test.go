@@ -48,7 +48,7 @@ func TestLogin(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{Id: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -75,7 +75,7 @@ func TestLogin(t *testing.T) {
 					SaveRefreshToken(
 						mock.Anything,
 						mock.MatchedBy(func(token domain.RefreshToken) bool {
-							return token.UserId == userID && token.TokenHash == "hashed-refresh"
+							return token.UserID == userID && token.TokenHash == "hashed-refresh"
 						}),
 					).
 					Return(nil).
@@ -137,7 +137,7 @@ func TestLogin(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{Id: userID, PasswordHash: "hash"}, nil).
+					Return(domain.User{ID: userID, PasswordHash: "hash"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -160,7 +160,7 @@ func TestLogin(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{Id: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -188,7 +188,7 @@ func TestLogin(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{Id: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -221,7 +221,7 @@ func TestLogin(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{Id: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -258,7 +258,7 @@ func TestLogin(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{Id: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().

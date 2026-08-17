@@ -427,12 +427,12 @@ func (_c *MockAuthRepository_GetRefreshTokenByHash_Call) RunAndReturn(run func(c
 	return _c
 }
 
-// GetUserById provides a mock function for the type MockAuthRepository
-func (_mock *MockAuthRepository) GetUserById(ctx context.Context, id uuid.UUID) (domain.User, error) {
+// GetUserByID provides a mock function for the type MockAuthRepository
+func (_mock *MockAuthRepository) GetUserByID(ctx context.Context, id uuid.UUID) (domain.User, error) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetUserById")
+		panic("no return value specified for GetUserByID")
 	}
 
 	var r0 domain.User
@@ -453,31 +453,31 @@ func (_mock *MockAuthRepository) GetUserById(ctx context.Context, id uuid.UUID) 
 	return r0, r1
 }
 
-// MockAuthRepository_GetUserById_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserById'
-type MockAuthRepository_GetUserById_Call struct {
+// MockAuthRepository_GetUserByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserByID'
+type MockAuthRepository_GetUserByID_Call struct {
 	*mock.Call
 }
 
-// GetUserById is a helper method to define mock.On call
+// GetUserByID is a helper method to define mock.On call
 //   - ctx
 //   - id
-func (_e *MockAuthRepository_Expecter) GetUserById(ctx interface{}, id interface{}) *MockAuthRepository_GetUserById_Call {
-	return &MockAuthRepository_GetUserById_Call{Call: _e.mock.On("GetUserById", ctx, id)}
+func (_e *MockAuthRepository_Expecter) GetUserByID(ctx interface{}, id interface{}) *MockAuthRepository_GetUserByID_Call {
+	return &MockAuthRepository_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
-func (_c *MockAuthRepository_GetUserById_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockAuthRepository_GetUserById_Call {
+func (_c *MockAuthRepository_GetUserByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockAuthRepository_GetUserByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *MockAuthRepository_GetUserById_Call) Return(user domain.User, err error) *MockAuthRepository_GetUserById_Call {
+func (_c *MockAuthRepository_GetUserByID_Call) Return(user domain.User, err error) *MockAuthRepository_GetUserByID_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *MockAuthRepository_GetUserById_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (domain.User, error)) *MockAuthRepository_GetUserById_Call {
+func (_c *MockAuthRepository_GetUserByID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (domain.User, error)) *MockAuthRepository_GetUserByID_Call {
 	_c.Call.Return(run)
 	return _c
 }

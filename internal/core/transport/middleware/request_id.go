@@ -31,7 +31,7 @@ func RequestID() Middleware {
 				id = uuid.New()
 			}
 
-			ctx = reqctx.WithRequestId(ctx, id)
+			ctx = reqctx.WithRequestID(ctx, id)
 			w.Header().Set(requestIDHeader, id.String())
 
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -39,8 +39,8 @@ func RequestID() Middleware {
 	}
 }
 
-func isValidRequestID(requestId string) (uuid.UUID, bool) {
-	v, err := uuid.Parse(requestId)
+func isValidRequestID(requestID string) (uuid.UUID, bool) {
+	v, err := uuid.Parse(requestID)
 	if err != nil {
 		return uuid.Nil, false
 	}

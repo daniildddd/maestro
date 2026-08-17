@@ -45,7 +45,7 @@ func (s *AuthService) Login(
 		)
 	}
 
-	accessToken, err := s.accessGen.Generate(user.Id, user.Role)
+	accessToken, err := s.accessGen.Generate(user.ID, user.Role)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: generate access token: %w",
@@ -65,7 +65,7 @@ func (s *AuthService) Login(
 
 	token := s.refreshGen.Hash(rawToken)
 
-	refreshToken, err := domain.CreateRefreshToken(user.Id, token, expiresAt)
+	refreshToken, err := domain.CreateRefreshToken(user.ID, token, expiresAt)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: create refresh token: %w",

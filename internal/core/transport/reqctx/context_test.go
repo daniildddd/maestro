@@ -62,36 +62,36 @@ func TestRole(t *testing.T) {
 func TestUserId(t *testing.T) {
 	t.Parallel()
 
-	t.Run("returns userId when set in context", func(t *testing.T) {
+	t.Run("returns userID when set in context", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
-		userId := uuid.New()
-		ctx := reqctx.WithUserId(context.Background(), userId)
+		userID := uuid.New()
+		ctx := reqctx.WithUserID(context.Background(), userID)
 
-		is.Equal(userId, reqctx.UserId(ctx))
+		is.Equal(userID, reqctx.UserID(ctx))
 	})
 
-	t.Run("overwrites userId when set multiple times", func(t *testing.T) {
+	t.Run("overwrites userID when set multiple times", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
 		firstId := uuid.New()
-		secondId := uuid.New()
-		ctx := reqctx.WithUserId(context.Background(), firstId)
-		ctx = reqctx.WithUserId(ctx, secondId)
+		secondID := uuid.New()
+		ctx := reqctx.WithUserID(context.Background(), firstId)
+		ctx = reqctx.WithUserID(ctx, secondID)
 
-		is.Equal(secondId, reqctx.UserId(ctx))
+		is.Equal(secondID, reqctx.UserID(ctx))
 	})
 
-	t.Run("panics when userId not in context", func(t *testing.T) {
+	t.Run("panics when userID not in context", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
 		ctx := context.Background()
 
-		is.PanicsWithValue("userId not found in context", func() {
-			reqctx.UserId(ctx)
+		is.PanicsWithValue("userID not found in context", func() {
+			reqctx.UserID(ctx)
 		})
 	})
 
@@ -101,8 +101,8 @@ func TestUserId(t *testing.T) {
 
 		ctx := context.WithValue(context.Background(), wrongKey, "not-a-uuid")
 
-		is.PanicsWithValue("userId not found in context", func() {
-			reqctx.UserId(ctx)
+		is.PanicsWithValue("userID not found in context", func() {
+			reqctx.UserID(ctx)
 		})
 	})
 }
@@ -110,36 +110,36 @@ func TestUserId(t *testing.T) {
 func TestRequestId(t *testing.T) {
 	t.Parallel()
 
-	t.Run("returns requestId when set in context", func(t *testing.T) {
+	t.Run("returns requestID when set in context", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
-		requestId := uuid.New()
-		ctx := reqctx.WithRequestId(context.Background(), requestId)
+		requestID := uuid.New()
+		ctx := reqctx.WithRequestID(context.Background(), requestID)
 
-		is.Equal(requestId, reqctx.RequestId(ctx))
+		is.Equal(requestID, reqctx.RequestID(ctx))
 	})
 
-	t.Run("overwrites requestId when set multiple times", func(t *testing.T) {
+	t.Run("overwrites requestID when set multiple times", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
 		firstId := uuid.New()
-		secondId := uuid.New()
-		ctx := reqctx.WithRequestId(context.Background(), firstId)
-		ctx = reqctx.WithRequestId(ctx, secondId)
+		secondID := uuid.New()
+		ctx := reqctx.WithRequestID(context.Background(), firstId)
+		ctx = reqctx.WithRequestID(ctx, secondID)
 
-		is.Equal(secondId, reqctx.RequestId(ctx))
+		is.Equal(secondID, reqctx.RequestID(ctx))
 	})
 
-	t.Run("panics when requestId not in context", func(t *testing.T) {
+	t.Run("panics when requestID not in context", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
 		ctx := context.Background()
 
-		is.PanicsWithValue("requestId not found in context", func() {
-			reqctx.RequestId(ctx)
+		is.PanicsWithValue("requestID not found in context", func() {
+			reqctx.RequestID(ctx)
 		})
 	})
 
@@ -149,8 +149,8 @@ func TestRequestId(t *testing.T) {
 
 		ctx := context.WithValue(context.Background(), wrongKey, 123)
 
-		is.PanicsWithValue("requestId not found in context", func() {
-			reqctx.RequestId(ctx)
+		is.PanicsWithValue("requestID not found in context", func() {
+			reqctx.RequestID(ctx)
 		})
 	})
 }

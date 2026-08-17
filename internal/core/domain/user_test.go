@@ -29,7 +29,7 @@ func TestNewUser(t *testing.T) {
 		&updatedAt,
 	)
 
-	is.Equal(id, got.Id)
+	is.Equal(id, got.ID)
 	is.Equal("alice", got.Username)
 	is.Equal("hashed-password-123", got.PasswordHash)
 	is.Equal("admin", got.Role)

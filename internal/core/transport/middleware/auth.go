@@ -44,11 +44,11 @@ func Auth(tv TokenVerifier) Middleware {
 			}
 
 			l := log.With(
-				zap.String("user_id", claims.UserId.String()),
+				zap.String("user_id", claims.UserID.String()),
 				zap.String("role", claims.Role),
 			)
 
-			ctx = reqctx.WithUserId(ctx, claims.UserId)
+			ctx = reqctx.WithUserID(ctx, claims.UserID)
 			ctx = reqctx.WithRole(ctx, claims.Role)
 
 			ctx = core_logger.ToContext(ctx, l)

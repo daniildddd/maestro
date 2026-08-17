@@ -10,7 +10,7 @@ import (
 )
 
 type userModel struct {
-	Id           uuid.UUID
+	ID           uuid.UUID
 	Username     string
 	PasswordHash string
 	Role         string
@@ -20,7 +20,7 @@ type userModel struct {
 
 func (u *userModel) Scan(row core_postgres_pool.Row) error {
 	return row.Scan(
-		&u.Id,
+		&u.ID,
 		&u.Username,
 		&u.PasswordHash,
 		&u.Role,
@@ -31,7 +31,7 @@ func (u *userModel) Scan(row core_postgres_pool.Row) error {
 
 func (u *userModel) toDomain() domain.User {
 	return domain.NewUser(
-		u.Id,
+		u.ID,
 		u.Username,
 		u.PasswordHash,
 		u.Role,

@@ -13,7 +13,7 @@ func Logger(log *core_logger.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			requestID := reqctx.RequestId(ctx)
+			requestID := reqctx.RequestID(ctx)
 
 			l := log.With(
 				zap.String("request_id", requestID.String()),

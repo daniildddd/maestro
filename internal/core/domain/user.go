@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	Id           uuid.UUID
+	ID           uuid.UUID
 	Username     string
 	PasswordHash string
 	Role         string
@@ -24,7 +24,7 @@ func NewUser(
 	updatedAt *time.Time,
 ) User {
 	return User{
-		Id:           id,
+		ID:           id,
 		Username:     username,
 		PasswordHash: passwordHash,
 		Role:         role,

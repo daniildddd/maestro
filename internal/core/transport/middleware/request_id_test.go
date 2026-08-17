@@ -53,10 +53,10 @@ func TestRequestID(t *testing.T) {
 			t.Parallel()
 			must := require.New(t)
 
-			var capturedId uuid.UUID
+			var capturedID uuid.UUID
 
 			nextHandler := http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-				capturedId = reqctx.RequestId(r.Context())
+				capturedID = reqctx.RequestID(r.Context())
 			})
 
 			headers := http.Header{"X-Request-ID": []string{tt.headerValue}}
@@ -70,7 +70,7 @@ func TestRequestID(t *testing.T) {
 			requestHeader := rec.Header().Get("X-Request-ID")
 
 			must.NotEmpty(requestHeader)
-			must.Equal(capturedId.String(), requestHeader)
+			must.Equal(capturedID.String(), requestHeader)
 
 			parsed, err := uuid.Parse(requestHeader)
 			must.NoError(err)

@@ -55,7 +55,7 @@ type AuthRepository interface {
 		username string,
 	) (domain.User, error)
 
-	GetUserById(
+	GetUserByID(
 		ctx context.Context,
 		id uuid.UUID,
 	) (domain.User, error)

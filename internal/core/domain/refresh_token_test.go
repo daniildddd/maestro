@@ -16,42 +16,42 @@ func TestCreateRefreshToken(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		userId     uuid.UUID
+		userID     uuid.UUID
 		token      string
 		expiresAt  time.Time
 		wantErrMsg string
 	}{
 		{
 			name:       "valid inputs returns token",
-			userId:     uuid.New(),
+			userID:     uuid.New(),
 			token:      "validTokenHash",
 			expiresAt:  time.Now().Add(time.Hour),
 			wantErrMsg: "",
 		},
 		{
 			name:       "nil user id rejected",
-			userId:     uuid.Nil,
+			userID:     uuid.Nil,
 			token:      "validTokenHash",
 			expiresAt:  time.Now().Add(time.Hour),
-			wantErrMsg: "userId must not be nil",
+			wantErrMsg: "userID must not be nil",
 		},
 		{
 			name:       "empty token rejected",
-			userId:     uuid.New(),
+			userID:     uuid.New(),
 			token:      "",
 			expiresAt:  time.Now().Add(time.Hour),
 			wantErrMsg: "rawToken must not be empty",
 		},
 		{
 			name:       "past expiry rejected",
-			userId:     uuid.New(),
+			userID:     uuid.New(),
 			token:      "validTokenHash",
 			expiresAt:  time.Now().Add(-time.Hour),
 			wantErrMsg: "expiresAt must be after now",
 		},
 		{
 			name:       "now expiry rejected",
-			userId:     uuid.New(),
+			userID:     uuid.New(),
 			token:      "validTokenHash",
 			expiresAt:  time.Now(),
 			wantErrMsg: "expiresAt must be after now",
@@ -65,7 +65,7 @@ func TestCreateRefreshToken(t *testing.T) {
 			is := assert.New(t)
 			must := require.New(t)
 
-			got, err := domain.CreateRefreshToken(tt.userId, tt.token, tt.expiresAt)
+			got, err := domain.CreateRefreshToken(tt.userID, tt.token, tt.expiresAt)
 
 			if tt.wantErrMsg != "" {
 				must.Error(err)
@@ -77,10 +77,10 @@ func TestCreateRefreshToken(t *testing.T) {
 
 			must.NoError(err)
 
-			is.Equal(tt.userId, got.UserId)
+			is.Equal(tt.userID, got.UserID)
 			is.Equal(tt.token, got.TokenHash)
 			is.True(got.ExpiresAt.Equal(tt.expiresAt))
-			is.NotEqual(uuid.Nil, got.Id)
+			is.NotEqual(uuid.Nil, got.ID)
 			is.True(got.CreatedAt.Before(time.Now().Add(time.Second)))
 		})
 	}
@@ -92,21 +92,21 @@ func TestNewRefreshToken(t *testing.T) {
 	is := assert.New(t)
 
 	id := uuid.New()
-	userId := uuid.New()
+	userID := uuid.New()
 	tokenHash := "valid-hash"
 	createdAt := time.Now()
 	expiresAt := time.Now().Add(time.Hour)
 
 	got := domain.NewRefreshToken(
 		id,
-		userId,
+		userID,
 		tokenHash,
 		createdAt,
 		expiresAt,
 	)
 
-	is.Equal(id, got.Id)
-	is.Equal(userId, got.UserId)
+	is.Equal(id, got.ID)
+	is.Equal(userID, got.UserID)
 	is.Equal(tokenHash, got.TokenHash)
 	is.True(createdAt.Equal(got.CreatedAt))
 	is.True(expiresAt.Equal(got.ExpiresAt))

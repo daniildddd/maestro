@@ -12,8 +12,8 @@ type ctxKey struct {
 
 var (
 	keyRole      = ctxKey{name: "role"}
-	keyUserId    = ctxKey{name: "user_id"}
-	keyRequestId = ctxKey{name: "request_id"}
+	keyUserID    = ctxKey{name: "user_id"}
+	keyRequestID = ctxKey{name: "request_id"}
 )
 
 func WithRole(ctx context.Context, role string) context.Context {
@@ -22,8 +22,8 @@ func WithRole(ctx context.Context, role string) context.Context {
 	return ctx
 }
 
-func WithUserId(ctx context.Context, userId uuid.UUID) context.Context {
-	ctx = context.WithValue(ctx, keyUserId, userId)
+func WithUserID(ctx context.Context, userID uuid.UUID) context.Context {
+	ctx = context.WithValue(ctx, keyUserID, userID)
 
 	return ctx
 }
@@ -37,23 +37,23 @@ func Role(ctx context.Context) string {
 	return v
 }
 
-func UserId(ctx context.Context) uuid.UUID {
-	v, ok := ctx.Value(keyUserId).(uuid.UUID)
+func UserID(ctx context.Context) uuid.UUID {
+	v, ok := ctx.Value(keyUserID).(uuid.UUID)
 	if !ok {
-		panic("userId not found in context")
+		panic("userID not found in context")
 	}
 
 	return v
 }
 
-func WithRequestId(ctx context.Context, requestId uuid.UUID) context.Context {
-	return context.WithValue(ctx, keyRequestId, requestId)
+func WithRequestID(ctx context.Context, requestID uuid.UUID) context.Context {
+	return context.WithValue(ctx, keyRequestID, requestID)
 }
 
-func RequestId(ctx context.Context) uuid.UUID {
-	v, ok := ctx.Value(keyRequestId).(uuid.UUID)
+func RequestID(ctx context.Context) uuid.UUID {
+	v, ok := ctx.Value(keyRequestID).(uuid.UUID)
 	if !ok {
-		panic("requestId not found in context")
+		panic("requestID not found in context")
 	}
 
 	return v

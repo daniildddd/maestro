@@ -56,8 +56,8 @@ func TestSaveRefreshToken(t *testing.T) {
 						}),
 						mock.Anything,
 						[]any{
-							token.Id,
-							token.UserId,
+							token.ID,
+							token.UserID,
 							token.TokenHash,
 							token.CreatedAt,
 							token.ExpiresAt,

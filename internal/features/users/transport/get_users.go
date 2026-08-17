@@ -19,7 +19,7 @@ type GetUsersResponse struct {
 }
 
 type UserResponse struct {
-	Id        string    `json:"id"`
+	ID        string    `json:"id"`
 	Username  string    `json:"username"`
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"created_at"`
@@ -107,7 +107,7 @@ func usersResponseFromDomain(users []domain.User) []UserResponse {
 
 	for _, u := range users {
 		userResp := UserResponse{
-			Id:        u.Id.String(),
+			ID:        u.ID.String(),
 			Username:  u.Username,
 			Role:      u.Role,
 			CreatedAt: u.CreatedAt,

@@ -46,7 +46,7 @@ func TestAuth(t *testing.T) {
 		{
 			name:       "valid token passes through with user context",
 			authHeader: "Bearer valid",
-			verifier:   &fakeTokenVerifier{user: access.AuthUser{UserId: validUserID, Role: validRole}},
+			verifier:   &fakeTokenVerifier{user: access.AuthUser{UserID: validUserID, Role: validRole}},
 			wantStatus: http.StatusOK,
 			wantNext:   true,
 			wantUserID: validUserID,
@@ -92,7 +92,7 @@ func TestAuth(t *testing.T) {
 
 			nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				nextCalled = true
-				capturedUserID = reqctx.UserId(r.Context())
+				capturedUserID = reqctx.UserID(r.Context())
 				capturedRole = reqctx.Role(r.Context())
 				core_logger.FromContext(r.Context()).Info("test") //nolint:contextcheck // test handler: request context from httptest.NewRequest is not derived from a parent
 				w.WriteHeader(http.StatusOK)
@@ -138,7 +138,7 @@ func TestAuth(t *testing.T) {
 		t.Parallel()
 		must := require.New(t)
 
-		tv := &fakeTokenVerifier{user: access.AuthUser{UserId: uuid.New(), Role: "admin"}}
+		tv := &fakeTokenVerifier{user: access.AuthUser{UserID: uuid.New(), Role: "admin"}}
 		nextHandler := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 			t.Fatal("next handler must not be called")
 		})

@@ -8,22 +8,22 @@ import (
 )
 
 type RefreshToken struct {
-	Id        uuid.UUID
-	UserId    uuid.UUID
+	ID        uuid.UUID
+	UserID    uuid.UUID
 	TokenHash string
 	CreatedAt time.Time
 	ExpiresAt time.Time
 }
 
 func CreateRefreshToken(
-	userId uuid.UUID,
+	userID uuid.UUID,
 	token string,
 	expiresAt time.Time,
 ) (RefreshToken, error) {
 	const op = "core.domain.CreateRefreshToken"
 
-	if userId == uuid.Nil {
-		return RefreshToken{}, fmt.Errorf("%s: userId must not be nil", op)
+	if userID == uuid.Nil {
+		return RefreshToken{}, fmt.Errorf("%s: userID must not be nil", op)
 	}
 
 	if token == "" {
@@ -35,8 +35,8 @@ func CreateRefreshToken(
 	}
 
 	return RefreshToken{
-		Id:        uuid.New(),
-		UserId:    userId,
+		ID:        uuid.New(),
+		UserID:    userID,
 		TokenHash: token,
 		CreatedAt: time.Now(),
 		ExpiresAt: expiresAt,
@@ -45,14 +45,14 @@ func CreateRefreshToken(
 
 func NewRefreshToken(
 	id uuid.UUID,
-	userId uuid.UUID,
+	userID uuid.UUID,
 	tokenHash string,
 	createdAt time.Time,
 	expiresAt time.Time,
 ) RefreshToken {
 	return RefreshToken{
-		Id:        id,
-		UserId:    userId,
+		ID:        id,
+		UserID:    userID,
 		TokenHash: tokenHash,
 		CreatedAt: createdAt,
 		ExpiresAt: expiresAt,

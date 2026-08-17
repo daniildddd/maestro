@@ -28,7 +28,7 @@ type jwtClaims struct {
 }
 
 type AuthUser struct {
-	UserId uuid.UUID
+	UserID uuid.UUID
 	Role   string
 }
 
@@ -93,12 +93,12 @@ func (m *Manager) Verify(
 		}
 	}
 
-	userId, err := uuid.Parse(claims.Subject)
+	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
 		return AuthUser{}, fmt.Errorf("%s: invalid subject(uuid parse): %w", op, errs.ErrAccessTokenInvalid)
 	}
 
-	if userId == uuid.Nil {
+	if userID == uuid.Nil {
 		return AuthUser{}, fmt.Errorf("%s: subject is nil uuid: %w", op, errs.ErrAccessTokenInvalid)
 	}
 
@@ -107,7 +107,7 @@ func (m *Manager) Verify(
 	}
 
 	return AuthUser{
-		UserId: userId,
+		UserID: userID,
 		Role:   claims.Role,
 	}, nil
 }

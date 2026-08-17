@@ -12,11 +12,11 @@ import (
 	"github.com/daniildddd/maestro/internal/core/repository/postgres"
 )
 
-func (r *AuthRepository) GetUserById(
+func (r *AuthRepository) GetUserByID(
 	ctx context.Context,
 	id uuid.UUID,
 ) (domain.User, error) {
-	const op = "auth.repository.GetUserById"
+	const op = "auth.repository.GetUserByID"
 
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()

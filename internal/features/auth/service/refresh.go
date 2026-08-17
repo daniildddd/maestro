@@ -31,18 +31,18 @@ func (s *AuthService) Refresh(
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: user_id=%s: %w",
 			op,
-			storedToken.UserId,
+			storedToken.UserID,
 			errs.ErrExpiredRefreshToken,
 		)
 	}
 
-	user, err := s.authRepository.GetUserById(ctx, storedToken.UserId)
+	user, err := s.authRepository.GetUserByID(ctx, storedToken.UserID)
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(
 				"%s: user not found for refresh token(user_id=%s): %w: %v",
 				op,
-				storedToken.UserId,
+				storedToken.UserID,
 				errs.ErrInvalidRefreshToken,
 				err,
 			)
@@ -51,7 +51,7 @@ func (s *AuthService) Refresh(
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: get user by id(user_id=%s): %w",
 			op,
-			storedToken.UserId,
+			storedToken.UserID,
 			err,
 		)
 	}
@@ -77,7 +77,7 @@ func (s *AuthService) Refresh(
 	newHash := s.refreshGen.Hash(rawNewRefresh)
 
 	newRefreshToken, err := domain.CreateRefreshToken(
-		user.Id,
+		user.ID,
 		newHash,
 		expiresAt,
 	)
@@ -98,7 +98,7 @@ func (s *AuthService) Refresh(
 		)
 	}
 
-	accessToken, err := s.accessGen.Generate(user.Id, user.Role)
+	accessToken, err := s.accessGen.Generate(user.ID, user.Role)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: generate access token: %w",

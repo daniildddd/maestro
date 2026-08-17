@@ -17,7 +17,7 @@ import (
 )
 
 //nolint:gocognit,cyclop,revive,maintidx // table-driven test: complexity comes from mock setup Run blocks
-func TestGetUserById(t *testing.T) {
+func TestGetUserByID(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond
@@ -238,7 +238,7 @@ func TestGetUserById(t *testing.T) {
 
 			repo := repository.NewAuthRepository(pool)
 
-			user, err := repo.GetUserById(context.Background(), tt.userID)
+			user, err := repo.GetUserByID(context.Background(), tt.userID)
 
 			if tt.wantIs != nil {
 				must.Error(err)

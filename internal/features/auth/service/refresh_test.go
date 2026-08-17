@@ -59,8 +59,8 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
-					Return(domain.User{Id: userID, Role: "admin"}, nil).
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{ID: userID, Role: "admin"}, nil).
 					Once()
 
 				repo.EXPECT().
@@ -82,7 +82,7 @@ func TestRefresh(t *testing.T) {
 					SaveRefreshToken(
 						mock.Anything,
 						mock.MatchedBy(func(token domain.RefreshToken) bool {
-							return token.UserId == userID && token.TokenHash == "new-hash"
+							return token.UserID == userID && token.TokenHash == "new-hash"
 						}),
 					).
 					Return(nil).
@@ -172,7 +172,7 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
+					GetUserByID(mock.Anything, userID).
 					Return(domain.User{}, errs.ErrUserNotFound).
 					Once()
 			},
@@ -205,7 +205,7 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
+					GetUserByID(mock.Anything, userID).
 					Return(domain.User{}, errs.ErrInternal).
 					Once()
 			},
@@ -237,8 +237,8 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
-					Return(domain.User{Id: userID}, nil).
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{ID: userID}, nil).
 					Once()
 
 				repo.EXPECT().
@@ -274,8 +274,8 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
-					Return(domain.User{Id: userID}, nil).
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{ID: userID}, nil).
 					Once()
 
 				repo.EXPECT().
@@ -316,8 +316,8 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
-					Return(domain.User{Id: userID}, nil).
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{ID: userID}, nil).
 					Once()
 
 				repo.EXPECT().
@@ -362,8 +362,8 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
-					Return(domain.User{Id: userID}, nil).
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{ID: userID}, nil).
 					Once()
 
 				repo.EXPECT().
@@ -414,8 +414,8 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					GetUserById(mock.Anything, userID).
-					Return(domain.User{Id: userID, Role: "admin"}, nil).
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{ID: userID, Role: "admin"}, nil).
 					Once()
 
 				repo.EXPECT().

@@ -10,7 +10,7 @@ import (
 )
 
 type userModel struct {
-	Id           uuid.UUID
+	ID           uuid.UUID
 	Username     string
 	PasswordHash string
 	Role         string
@@ -19,8 +19,8 @@ type userModel struct {
 }
 
 type refreshTokenModel struct {
-	Id        uuid.UUID
-	UserId    uuid.UUID
+	ID        uuid.UUID
+	UserID    uuid.UUID
 	TokenHash string
 	CreatedAt time.Time
 	ExpiresAt time.Time
@@ -28,7 +28,7 @@ type refreshTokenModel struct {
 
 func (u *userModel) Scan(row core_postgres_pool.Row) error {
 	return row.Scan(
-		&u.Id,
+		&u.ID,
 		&u.Username,
 		&u.PasswordHash,
 		&u.Role,
@@ -39,7 +39,7 @@ func (u *userModel) Scan(row core_postgres_pool.Row) error {
 
 func (u *userModel) toDomain() domain.User {
 	return domain.NewUser(
-		u.Id,
+		u.ID,
 		u.Username,
 		u.PasswordHash,
 		u.Role,
@@ -50,8 +50,8 @@ func (u *userModel) toDomain() domain.User {
 
 func (r *refreshTokenModel) Scan(row core_postgres_pool.Row) error {
 	return row.Scan(
-		&r.Id,
-		&r.UserId,
+		&r.ID,
+		&r.UserID,
 		&r.TokenHash,
 		&r.CreatedAt,
 		&r.ExpiresAt,
@@ -60,8 +60,8 @@ func (r *refreshTokenModel) Scan(row core_postgres_pool.Row) error {
 
 func (r *refreshTokenModel) toDomain() domain.RefreshToken {
 	return domain.NewRefreshToken(
-		r.Id,
-		r.UserId,
+		r.ID,
+		r.UserID,
 		r.TokenHash,
 		r.CreatedAt,
 		r.ExpiresAt,

@@ -49,7 +49,7 @@ func TestLogger(t *testing.T) {
 			})
 
 			req := newTestRequest(t, tt.method, tt.path, nil)
-			req = req.WithContext(reqctx.WithRequestId(req.Context(), requestID))
+			req = req.WithContext(reqctx.WithRequestID(req.Context(), requestID))
 			rec := httptest.NewRecorder()
 
 			middleware.Logger(log)(nextHandler).ServeHTTP(rec, req)

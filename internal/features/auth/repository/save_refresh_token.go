@@ -25,8 +25,8 @@ func (r *AuthRepository) SaveRefreshToken(
 	_, err := r.pool.Exec(
 		ctx,
 		query,
-		token.Id,
-		token.UserId,
+		token.ID,
+		token.UserID,
 		token.TokenHash,
 		token.CreatedAt,
 		token.ExpiresAt,
@@ -35,7 +35,7 @@ func (r *AuthRepository) SaveRefreshToken(
 		if errors.Is(err, postgres.ErrViolatesForeignKey) {
 			return fmt.Errorf("%s: save refresh token for user_id=%s: %w: %v",
 				op,
-				token.UserId,
+				token.UserID,
 				postgres.ErrViolatesForeignKey,
 				err,
 			)

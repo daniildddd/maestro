@@ -150,7 +150,7 @@ func TestManager_Verify(t *testing.T) {
 		{
 			name:     "success returns auth user",
 			token:    validToken(t, manager, validUserID, validRole),
-			wantUser: &access.AuthUser{UserId: validUserID, Role: validRole},
+			wantUser: &access.AuthUser{UserID: validUserID, Role: validRole},
 		},
 		{
 			name:   "expired token maps to ErrAccessTokenExpired",

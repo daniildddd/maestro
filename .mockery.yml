@@ -23,6 +23,24 @@ packages:
       AccessTokenGenerator:
       RefreshTokenManager:
 
+  github.com/daniildddd/maestro/internal/features/users/transport:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "transport_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      UsersService:
+
+  github.com/daniildddd/maestro/internal/features/users/service:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "service_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      UsersRepository:
+
   github.com/daniildddd/maestro/internal/core/repository/postgres:
     config:
       dir: "{{.InterfaceDir}}"

@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/daniildddd/maestro/internal/core/logger"
-	"github.com/daniildddd/maestro/internal/core/transport/response"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 func Trace() Middleware {
@@ -15,7 +15,7 @@ func Trace() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			log := logger.FromContext(ctx)
-			rw := response.NewResponseWriter(w)
+			rw := core_http_response.NewResponseWriter(w)
 
 			before := time.Now()
 

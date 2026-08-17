@@ -14,7 +14,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
-	"github.com/daniildddd/maestro/internal/core/transport/response"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 func TestTrace(t *testing.T) {
@@ -91,7 +91,7 @@ func TestTrace(t *testing.T) {
 			path:        "/api/v1/login",
 			observerLvl: zapcore.InfoLevel,
 			handler: func(w http.ResponseWriter, log *logger.Logger) {
-				rh := response.NewHTTPResponseHandler(w, log)
+				rh := core_http_response.NewHTTPResponseHandler(w, log)
 				rh.ErrorResponse(fmt.Errorf("service: %w", errs.ErrInvalidCredentials))
 			},
 			wantStatus: http.StatusBadRequest,
@@ -107,7 +107,7 @@ func TestTrace(t *testing.T) {
 			path:        "/api/v1/users",
 			observerLvl: zapcore.WarnLevel,
 			handler: func(w http.ResponseWriter, log *logger.Logger) {
-				rh := response.NewHTTPResponseHandler(w, log)
+				rh := core_http_response.NewHTTPResponseHandler(w, log)
 				rh.ErrorResponse(errs.ErrInvalidRequestBody)
 			},
 			wantStatus: http.StatusBadRequest,
@@ -123,7 +123,7 @@ func TestTrace(t *testing.T) {
 			path:        "/api/v1/crash",
 			observerLvl: zapcore.ErrorLevel,
 			handler: func(w http.ResponseWriter, log *logger.Logger) {
-				rh := response.NewHTTPResponseHandler(w, log)
+				rh := core_http_response.NewHTTPResponseHandler(w, log)
 				rh.ErrorResponse(errs.ErrInternal)
 			},
 			wantStatus: http.StatusInternalServerError,
@@ -139,7 +139,7 @@ func TestTrace(t *testing.T) {
 			path:        "/api/v1/login",
 			observerLvl: zapcore.WarnLevel,
 			handler: func(w http.ResponseWriter, log *logger.Logger) {
-				rh := response.NewHTTPResponseHandler(w, log)
+				rh := core_http_response.NewHTTPResponseHandler(w, log)
 				rh.ErrorResponse(fmt.Errorf("service: %w", errs.ErrInvalidCredentials))
 			},
 			wantStatus: http.StatusBadRequest,

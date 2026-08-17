@@ -6,7 +6,7 @@ import (
 
 	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/logger"
-	"github.com/daniildddd/maestro/internal/core/transport/response"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 type refreshResponse struct {
@@ -18,7 +18,7 @@ func (h *AuthHTTPHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	log := logger.FromContext(ctx)
-	responseHandler := response.NewHTTPResponseHandler(w, log)
+	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {

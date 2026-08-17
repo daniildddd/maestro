@@ -121,6 +121,13 @@ var ErrInvalidQueryParam = &AppError{
 	LogLevel:   zapcore.WarnLevel,
 }
 
+var ErrInvalidPathParam = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "INVALID_PATH_PARAM",
+	Message:    "Invalid path parameter",
+	LogLevel:   zapcore.WarnLevel,
+}
+
 var ErrValidationFailed = &AppError{
 	HTTPStatus: http.StatusBadRequest,
 	Code:       "VALIDATION_FAILED",

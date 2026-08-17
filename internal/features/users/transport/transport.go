@@ -24,6 +24,11 @@ type UsersService interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) (domain.User, error)
+
+	DeleteUser(
+		ctx context.Context,
+		id uuid.UUID,
+	) error
 }
 
 func NewUsersHTTPHandler(
@@ -45,6 +50,11 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/users/{id}",
 			Handler: h.GetUserByID,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/users/{id}",
+			Handler: h.DeleteUser,
 		},
 	}
 }

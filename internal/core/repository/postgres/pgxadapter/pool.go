@@ -33,6 +33,8 @@ func NewPool(
 	}
 
 	if err = pool.Ping(ctx); err != nil {
+		pool.Close()
+
 		return nil, fmt.Errorf("%s: pgxpool ping: %w", op, err)
 	}
 

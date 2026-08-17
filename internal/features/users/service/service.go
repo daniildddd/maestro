@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
@@ -23,4 +25,9 @@ type UsersRepository interface {
 		ctx context.Context,
 		filter domain.UserFilter,
 	) ([]domain.User, error)
+
+	GetUserByID(
+		ctx context.Context,
+		id uuid.UUID,
+	) (domain.User, error)
 }

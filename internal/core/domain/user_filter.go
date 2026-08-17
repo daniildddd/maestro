@@ -30,10 +30,10 @@ func NewUserFilter(
 	limit int,
 	username string,
 	userRole string,
-) (*UserFilter, error) {
+) (UserFilter, error) {
 	const op = "domain.NewUserFilter"
 
-	f := &UserFilter{
+	f := UserFilter{
 		Page:     page,
 		Limit:    limit,
 		Username: username,
@@ -42,7 +42,7 @@ func NewUserFilter(
 	f.Normalize()
 
 	if err := f.Validate(); err != nil {
-		return nil, fmt.Errorf(
+		return UserFilter{}, fmt.Errorf(
 			"%s: %w", op, err,
 		)
 	}

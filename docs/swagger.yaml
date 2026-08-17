@@ -2,14 +2,47 @@ openapi: 3.0.0
 info:
   title: Maestro API
   version: 1.0.0
-  description: API for Maestro application
+  description: |
+    API for Maestro - a management service for Debezium/Kafka Connect connectors.
+
+    ## Authentication
+    - POST /api/v1/login returns a short-lived JWT access_token (sent as "Authorization: Bearer ...")
+      and sets a refresh_token in an HttpOnly cookie.
+    - POST /api/v1/refresh exchanges the refresh-token cookie for a new token pair (rotation).
+    - POST /api/v1/logout invalidates the refresh token; requires a valid access token.
+
+    ## Errors
+    Every non-2xx JSON body follows the ErrorResponse shape: "code" (stable string for
+    programmatic handling) plus "message" (human-readable text).
+
+    ## Roles
+    The x-required-roles extension on an operation lists the roles allowed to call it
+    (admin, user). It is enforced server-side by the RequireRole middleware.
+
+servers:
+  - url: /
+
 security:
   - bearerAuth: []
+
+tags:
+  - name: auth
+    description: Login, token refresh and logout.
+  - name: users
+    description: User management and self-service operations.
+  - name: audit
+    description: Audit log of connector actions.
+  - name: connectors
+    description: Debezium/Kafka Connect connector lifecycle, metrics and statistics.
+  - name: connector-plugins
+    description: Available connector plugins and their configuration schemas.
+  - name: smt-plugins
+    description: Available Single Message Transform (SMT) plugins.
+
 paths:
   /api/v1/login:
     post:
-      tags:
-        - auth
+      tags: [auth]
       summary: User login
       operationId: login
       security: []
@@ -18,55 +51,26 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - username
-                - password
-              properties:
-                username:
-                  type: string
-                  minLength: 3
-                  maxLength: 32
-                  pattern: '^[a-zA-Z0-9_-]+$'
-                  example: jdoe
-                  description: Unique login identifier. ASCII letters, digits, underscore and hyphen only.
-                password:
-                  type: string
-                  minLength: 8
-                  maxLength: 128
-                  pattern: '^[^\x00-\x1F\x7F]+$'
-                  example: secret123
-                  description: Plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+              $ref: '#/components/schemas/UserLoginRequest'
       responses:
         '200':
           description: Successful login
           headers:
             Set-Cookie:
-              description: Cookie containing refresh_token
+              description: |
+                HttpOnly cookie carrying the refresh token.
+                Secure is controlled by AUTH_COOKIE_SECURE (true in production);
+                SameSite=Lax matches the server implementation (Strict is stronger
+                for same-origin deployments).
               schema:
                 type: string
-                example: refresh_token=abcde12345; HttpOnly; Path=/
+                example: refresh_token=abcde12345; HttpOnly; Secure; SameSite=Lax; Path=/
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                    example: eyJhb...
-                    description: |
-                        JWT. Decoded payload example:
-                        {
-                          "sub": "1234567890",
-                          "role": "admin",
-                          "iat": 1516239022,
-                          "exp": 1516242622
-                        }
-                  username:
-                    type: string
-                    example: John Doe
+                $ref: '#/components/schemas/LoginResponse'
         '400':
-          description: Invalid request
+          description: Invalid request or incorrect credentials
           content:
             application/json:
               schema:
@@ -76,329 +80,154 @@ paths:
                   summary: Validation error
                   value:
                     code: VALIDATION_FAILED
-                    message: "Validation failed"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
+                    message: Validation failed
                 invalid_credentials:
                   summary: Invalid credentials
                   value:
                     code: INVALID_CREDENTIALS
-                    message: "Invalid credentials"
+                    message: Invalid credentials
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/refresh:
     post:
-      tags:
-        - auth
+      tags: [auth]
       summary: Refresh access token
       operationId: refresh
       security:
         - cookieAuth: []
       parameters:
-        - in: cookie
-          name: refresh_token
-          schema:
-            type: string
-          required: true
-          description: The refresh token cookie
+        - $ref: '#/components/parameters/RefreshTokenCookieParam'
       responses:
         '200':
           description: Successful refresh
           headers:
             Set-Cookie:
-              description: Cookie containing new refresh_token
+              description: Cookie carrying the new refresh token.
               schema:
                 type: string
-                example: refresh_token=fghij67890; HttpOnly; Path=/
+                example: refresh_token=fghij67890; HttpOnly; Secure; SameSite=Lax; Path=/
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  access_token:
-                    type: string
-                    example: eyJhb...
+                $ref: '#/components/schemas/RefreshResponse'
         '401':
-          description: Unauthorized or invalid refresh token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalid_token:
-                  summary: Invalid refresh token
-                  value:
-                    code: INVALID_REFRESH_TOKEN
-                    message: "Invalid refresh token"
-                expired_token:
-                  summary: Expired refresh token
-                  value:
-                    code: INVALID_REFRESH_TOKEN
-                    message: "Session expired"
-                missing_token:
-                  summary: Missing refresh token
-                  value:
-                    code: INVALID_REFRESH_TOKEN
-                    message: "Refresh token is required"
+          $ref: '#/components/responses/RefreshUnauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/logout:
     post:
-      tags:
-        - auth
+      tags: [auth]
       summary: User logout
       operationId: logout
       parameters:
-        - in: cookie
-          name: refresh_token
-          schema:
-            type: string
-          required: true
-          description: The refresh token cookie
+        - $ref: '#/components/parameters/RefreshTokenCookieParam'
       responses:
         '204':
           description: Successful logout
           headers:
             Set-Cookie:
-              description: Cookie invalidating the refresh_token
+              description: Cookie invalidating the refresh_token.
               schema:
                 type: string
-              example: refresh_token=; Max-Age=0; HttpOnly; Path=/; Secure; SameSite=Strict
+                example: refresh_token=; Max-Age=0; HttpOnly; Path=/; Secure; SameSite=Lax
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-  /api/v1/audit-logs:
-    get:
-      tags:
-        - audit
-      summary: Get audit logs list
-      operationId: getAuditLogs
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/users/me:
+    delete:
+      tags: [users]
+      summary: Delete own account
+      operationId: deleteOwnAccount
       x-required-roles: [user, admin]
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-        - in: query
-          name: action
-          schema:
-            type: string
-        - in: query
-          name: connector
-          schema:
-            type: string
-        - in: query
-          name: actor
-          schema:
-            type: string
-        - in: query
-          name: start_data
-          schema:
-            type: string
-            format: date-time
-        - in: query
-          name: end_data
-          schema:
-            type: string
-            format: date-time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountDeletionRequest'
       responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        created_at:
-                          type: string
-                        action:
-                          type: string
-                        user_name:
-                          type: string
-                        user_id:
-                          type: string
-                        connector_name:
-                          type: string
-                        connector_id:
-                          type: string
-                  meta:
-                    type: object
-                    properties:
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
+        '204':
+          description: Account deleted successfully
         '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                bad_request:
-                  summary: Invalid query parameters
-                  value:
-                    code: BAD_REQUEST
-                    message: "Invalid query parameters provided"
+          $ref: '#/components/responses/InvalidCredentials'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/users/me/password:
+    patch:
+      tags: [users]
+      summary: User changes their own password
+      operationId: changeOwnPassword
+      x-required-roles: [user, admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '204':
+          description: Password changed successfully
+        '400':
+          description: Invalid request or incorrect old password
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               examples:
-                forbidden:
-                  summary: Forbidden
+                validation_error:
+                  summary: Validation error
                   value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-  /api/v1/audit-logs/{id}:
+                    code: VALIDATION_FAILED
+                    message: Validation failed
+                invalid_credentials:
+                  summary: Incorrect old password
+                  value:
+                    code: INVALID_CREDENTIALS
+                    message: Invalid credentials
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/users:
     get:
-      tags:
-        - audit
-      summary: Get specific audit log by ID
-      operationId: getAuditLogById
-      x-required-roles: [user, admin]
+      tags: [users]
+      summary: Get list of users
+      operationId: getUsers
+      x-required-roles: [admin]
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/UsernameQueryParam'
+        - $ref: '#/components/parameters/RoleQueryParam'
       responses:
         '200':
           description: Successful response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  state_before:
-                    type: object
-                  state_after:
-                    type: object
-                  action:
-                    type: string
-                  connector_name:
-                    type: string
-                  user_name:
-                    type: string
-                  user_id:
-                    type: string
-                  connector_id:
-                    type: string
-                  created_at:
-                    type: string
+                $ref: '#/components/schemas/UserListResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Log not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Audit log with provided ID not found"
-  /api/v1/users:
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
-      tags:
-        - users
+      tags: [users]
       summary: Create a new user
       operationId: createUser
       x-required-roles: [admin]
@@ -416,179 +245,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                validation_error:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_FAILED
-                    message: "Validation failed"
+          $ref: '#/components/responses/ValidationFailed'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-    get:
-      tags:
-        - users
-      summary: Get list of users
-      operationId: getUsers
-      x-required-roles: [admin]
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-        - in: query
-          name: username
-          schema:
-            type: string
-            minLength: 3
-            maxLength: 32
-            pattern: '^[a-zA-Z0-9_-]+$'
-        - in: query
-          name: role
-          schema:
-            type: string
-            enum: [admin, user]
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/User'
-                  meta:
-                    type: object
-                    properties:
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                validation_error:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_FAILED
-                    message: "Validation failed"
-                invalid_query_param:
-                  summary: Invalid query parameter
-                  value:
-                    code: INVALID_QUERY_PARAM
-                    message: "Invalid query parameter"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: User not found
-                  value:
-                    code: USER_NOT_FOUND
-                    message: "User with provided ID not found"
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/UsernameConflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/users/{id}:
     get:
-      tags:
-        - users
+      tags: [users]
       summary: Get user by ID
       operationId: getUserById
       x-required-roles: [user, admin]
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
+        - $ref: '#/components/parameters/UserIdPathParam'
       responses:
         '200':
           description: Successful response
@@ -597,89 +271,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
         '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalid_path_param:
-                  summary: Invalid path parameter
-                  value:
-                    code: INVALID_PATH_PARAM
-                    message: "Invalid path parameter"
+          $ref: '#/components/responses/InvalidPathParam'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: User not found
-                  value:
-                    code: USER_NOT_FOUND
-                    message: "User with provided ID not found"
+          $ref: '#/components/responses/UserNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
     patch:
-      tags:
-        - users
-      summary: Update user profile
+      tags: [users]
+      summary: Update user profile (admin only)
+      description: |
+        Renames a user by ID. Admin only: a regular user must not be able to
+        modify another user's profile (IDOR risk). Self-service operations live under
+        /api/v1/users/me: password change (PATCH /api/v1/users/me/password) and
+        account deletion (DELETE /api/v1/users/me).
       operationId: updateUser
-      x-required-roles: [user, admin]
+      x-required-roles: [admin]
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
+        - $ref: '#/components/parameters/UserIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  minLength: 3
-                  maxLength: 32
-                  pattern: '^[a-zA-Z0-9_-]+$'
-                  example: updateduser
+              $ref: '#/components/schemas/UsernameUpdateRequest'
       responses:
         '200':
           description: Successful update
@@ -698,489 +316,150 @@ paths:
                   summary: Validation error
                   value:
                     code: VALIDATION_FAILED
-                    message: "Validation failed"
+                    message: Validation failed
                 invalid_path_param:
                   summary: Invalid path parameter
                   value:
                     code: INVALID_PATH_PARAM
-                    message: "Invalid path parameter"
+                    message: Invalid path parameter
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: User not found
-                  value:
-                    code: USER_NOT_FOUND
-                    message: "User with provided ID not found"
+          $ref: '#/components/responses/UserNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
     delete:
-      tags:
-        - users
+      tags: [users]
       summary: Delete user
       operationId: deleteUser
       x-required-roles: [admin]
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
+        - $ref: '#/components/parameters/UserIdPathParam'
       responses:
         '204':
           description: User deleted successfully
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: User not found
-                  value:
-                    code: USER_NOT_FOUND
-                    message: "User with provided ID not found"
+          $ref: '#/components/responses/UserNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/users/{id}/password:
     patch:
-      tags:
-        - users
+      tags: [users]
       summary: Admin changes user password
       operationId: adminChangeUserPassword
       x-required-roles: [admin]
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
+        - $ref: '#/components/parameters/UserIdPathParam'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - new_password
-              properties:
-                new_password:
-                  type: string
-                  minLength: 8
-                  maxLength: 128
-                  pattern: '^[^\x00-\x1F\x7F]+$'
-                  example: newSecret123
-                  description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+              $ref: '#/components/schemas/NewPasswordRequest'
       responses:
         '204':
           description: Password changed successfully
         '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                validation_error:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_FAILED
-                    message: "Validation failed"
+          $ref: '#/components/responses/ValidationFailed'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: User not found
-                  value:
-                    code: USER_NOT_FOUND
-                    message: "User with provided ID not found"
-  /api/v1/users/me/password:
-    patch:
-      tags:
-        - users
-      summary: User changes their own password
-      operationId: changeOwnPassword
-      x-required-roles: [user, admin]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - old_password
-                - new_password
-              properties:
-                old_password:
-                  type: string
-                  minLength: 8
-                  maxLength: 128
-                  pattern: '^[^\x00-\x1F\x7F]+$'
-                  example: oldSecret123
-                new_password:
-                  type: string
-                  minLength: 8
-                  maxLength: 128
-                  pattern: '^[^\x00-\x1F\x7F]+$'
-                  example: newSecret123
-                  description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
-      responses:
-        '204':
-          description: Password changed successfully
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                validation_error:
-                  summary: Validation error
-                  value:
-                    code: VALIDATION_FAILED
-                    message: "Validation failed"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-  /api/v1/users/me:
-    delete:
-      tags:
-        - users
-      summary: Delete own account
-      operationId: deleteOwnAccount
-      x-required-roles: [user, admin]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - password
-              properties:
-                password:
-                  type: string
-                  minLength: 8
-                  maxLength: 128
-                  pattern: '^[^\x00-\x1F\x7F]+$'
-                  example: mySecret123
-                  description: Current password to confirm account deletion. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
-      responses:
-        '204':
-          description: Account deleted successfully
-        '400':
-          description: Invalid request or incorrect password
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalid_credentials:
-                  summary: Incorrect password
-                  value:
-                    code: INVALID_CREDENTIALS
-                    message: "Invalid credentials"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-  /api/v1/connectors:
+          $ref: '#/components/responses/UserNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/audit-logs:
     get:
-      tags:
-        - connectors
-      summary: Get connectors list
-      operationId: getConnectors
-      x-required-roles: [user]
+      tags: [audit]
+      summary: Get audit logs list
+      operationId: getAuditLogs
+      x-required-roles: [user, admin]
       parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-        - in: query
-          name: status
-          schema:
-            type: string
-        - in: query
-          name: search
-          schema:
-            type: string
-        - in: query
-          name: source_db
-          schema:
-            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/ActionQueryParam'
+        - $ref: '#/components/parameters/ConnectorQueryParam'
+        - $ref: '#/components/parameters/ActorQueryParam'
+        - $ref: '#/components/parameters/StartAtQueryParam'
+        - $ref: '#/components/parameters/EndAtQueryParam'
       responses:
         '200':
           description: Successful response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        name:
-                          type: string
-                        source_db:
-                          type: string
-                        status:
-                          type: string
-                        lag_ms:
-                          type: integer
-                        tasks_count:
-                          type: integer
-                        created_at:
-                          type: string
-                  meta:
-                    type: object
-                    properties:
-                      page:
-                        type: integer
-                      limit:
-                        type: integer
-                  cluster_stats:
-                    type: object
-                    properties:
-                      failed_connectors:
-                        type: integer
-                      running_connectors:
-                        type: integer
-                      paused_connectors:
-                        type: integer
-                      records_second:
-                        type: integer
+                $ref: '#/components/schemas/AuditLogListResponse'
         '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                bad_request:
-                  summary: Invalid query parameters
-                  value:
-                    code: BAD_REQUEST
-                    message: "Invalid query parameters provided"
+          $ref: '#/components/responses/InvalidQueryParam'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/audit-logs/{id}:
+    get:
+      tags: [audit]
+      summary: Get specific audit log by ID
+      operationId: getAuditLogById
+      x-required-roles: [user, admin]
+      parameters:
+        - $ref: '#/components/parameters/AuditLogIdPathParam'
+      responses:
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+                $ref: '#/components/schemas/AuditLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/AuditLogNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors:
+    get:
+      tags: [connectors]
+      summary: Get connectors list
+      operationId: getConnectors
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/ConnectorStatusQueryParam'
+        - $ref: '#/components/parameters/SearchQueryParam'
+        - $ref: '#/components/parameters/SourceDbQueryParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorListResponse'
+        '400':
+          $ref: '#/components/responses/InvalidQueryParam'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
-      tags:
-        - connectors
+      tags: [connectors]
       summary: Create a new connector
       operationId: createConnector
       x-required-roles: [user]
@@ -1189,1125 +468,59 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - name
-                - plugin_type
-                - config
-              properties:
-                name:
-                  type: string
-                plugin_type:
-                  type: string
-                config:
-                  type: object
-                  description: Connector configuration including DB connection properties, converters, and optional SMTs.
+              $ref: '#/components/schemas/ConnectorCreateRequest'
             examples:
               postgres_example:
                 summary: PostgreSQL Connector with JSON Converter and SMT
                 value:
-                  name: "pg-connector"
-                  plugin_type: "io.debezium.connector.postgresql.PostgresConnector"
+                  name: pg-connector
+                  plugin_type: io.debezium.connector.postgresql.PostgresConnector
                   config:
-                    "database.hostname": "localhost"
-                    "database.port": "5432"
-                    "database.user": "postgres"
-                    "database.password": "postgres"
-                    "database.dbname": "testdb"
-                    "plugin.name": "pgoutput"
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter"
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter"
-                    "transforms": "unwrap"
-                    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
+                    database.hostname: localhost
+                    database.port: "5432"
+                    database.user: postgres
+                    database.password: postgres
+                    database.dbname: testdb
+                    plugin.name: pgoutput
+                    key.converter: org.apache.kafka.connect.json.JsonConverter
+                    value.converter: org.apache.kafka.connect.json.JsonConverter
+                    transforms: unwrap
+                    transforms.unwrap.type: io.debezium.transforms.ExtractNewRecordState
               mysql_example:
                 summary: MySQL Connector with Avro Converter
                 value:
-                  name: "mysql-connector"
-                  plugin_type: "io.debezium.connector.mysql.MySqlConnector"
+                  name: mysql-connector
+                  plugin_type: io.debezium.connector.mysql.MySqlConnector
                   config:
-                    "database.hostname": "mysql"
-                    "database.port": "3306"
-                    "database.user": "debezium"
-                    "database.password": "dbz"
-                    "database.server.id": "184054"
-                    "database.include.list": "inventory"
-                    "key.converter": "io.confluent.connect.avro.AvroConverter"
-                    "value.converter": "io.confluent.connect.avro.AvroConverter"
-                    "key.converter.schema.registry.url": "http://schema-registry:8081"
-                    "value.converter.schema.registry.url": "http://schema-registry:8081"
+                    database.hostname: mysql
+                    database.port: "3306"
+                    database.user: debezium
+                    database.password: dbz
+                    database.server.id: "184054"
+                    database.include.list: inventory
+                    key.converter: io.confluent.connect.avro.AvroConverter
+                    value.converter: io.confluent.connect.avro.AvroConverter
+                    key.converter.schema.registry.url: http://schema-registry:8081
+                    value.converter.schema.registry.url: http://schema-registry:8081
       responses:
         '201':
           description: Connector created successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  source_db:
-                    type: string
-                  status:
-                    type: string
-                  lag:
-                    type: integer
-                  tasks_count:
-                    type: integer
-                  created_at:
-                    type: string
+                $ref: '#/components/schemas/Connector'
         '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                bad_request:
-                  summary: Invalid request
-                  value:
-                    code: BAD_REQUEST
-                    message: "Invalid configuration provided"
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-  /api/v1/connectors/{id}:
-    get:
-      tags:
-        - connectors
-      summary: Get specific connector details
-      operationId: getConnectorById
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  plugin_type:
-                    type: string
-                  config:
-                    type: object
-                  status:
-                    type: string
-                  tasks_count:
-                    type: integer
-                  created_by:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      name:
-                        type: string
-                  updated_at:
-                    type: string
-                  created_at:
-                    type: string
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector not found"
-    patch:
-      tags:
-        - connectors
-      summary: Update a specific connector
-      operationId: updateConnector
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  description: Optional new name for the connector
-                config:
-                  type: object
-                  description: Optional new configuration for the connector
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  source_db:
-                    type: string
-                  status:
-                    type: string
-                  lag:
-                    type: integer
-                  tasks_count:
-                    type: integer
-                  created_at:
-                    type: string
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                bad_request:
-                  summary: Invalid request payload
-                  value:
-                    code: BAD_REQUEST
-                    message: "Invalid configuration provided"
-        '422':
-          description: Blocked due to modification of critical (immutable) fields.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                immutable_fields_violation:
-                  summary: Attempt to modify an immutable field (config.topic.prefix)
-                  value:
-                    code: IMMUTABLE_FIELD_VIOLATION
-                    message: "Modifying these fields will trigger offset reset. It is recommended to create a new connector."
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector not found"
-    delete:
-      tags:
-        - connectors
-      summary: Delete a connector
-      operationId: deleteConnector
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      responses:
-        '204':
-          description: Connector deleted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector not found"
-  /api/v1/connectors/{id}/actions:
-    post:
-      tags:
-        - connectors
-      summary: Perform action on a connector
-      operationId: connectorAction
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - action
-              properties:
-                action:
-                  type: string
-                  enum: [pause, resume, restart]
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  name:
-                    type: string
-                  source_db:
-                    type: string
-                  status:
-                    type: string
-                  lag:
-                    type: integer
-                  tasks_count:
-                    type: integer
-                  created_at:
-                    type: string
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                bad_request:
-                  summary: Invalid action
-                  value:
-                    code: BAD_REQUEST
-                    message: "Invalid action provided"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector not found"
-  /api/v1/connectors/{id}/metrics:
-    get:
-      tags:
-        - connectors
-      summary: Get connector metrics
-      operationId: getConnectorMetrics
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-        - in: query
-          name: from
-          schema:
-            type: string
-            format: date-time
-        - in: query
-          name: to
-          schema:
-            type: string
-            format: date-time
-        - in: query
-          name: interval
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  points:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        timestamp:
-                          type: string
-                          format: date-time
-                        avg_lag_ms:
-                          type: integer
-                        max_lag_ms:
-                          type: integer
-                        avg_rps:
-                          type: integer
-                        avg_commit_latency:
-                          type: integer
-                        max_commit_latency:
-                          type: integer
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector with provided ID not found"
-  /api/v1/connectors/{id}/summary:
-    get:
-      tags:
-        - connectors
-      summary: Get summary for a specific connector
-      operationId: getConnectorSummary
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  lag_ms:
-                    type: integer
-                  records_sec:
-                    type: integer
-                  uptime:
-                    type: integer
-                  errors:
-                    type: integer
-                  tasks:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        state:
-                          type: string
-                        worker_id:
-                          type: string
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector not found"
-  /api/v1/connectors/{id}/tasks:
-    get:
-      tags:
-        - connectors
-      summary: Get tasks for a specific connector
-      operationId: getConnectorTasks
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  tasks:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        state:
-                          type: string
-                        worker_id:
-                          type: string
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector not found"
-  /api/v1/connectors/{id}/tasks/{task_id}:
-    get:
-      tags:
-        - connectors
-      summary: Get details of a specific task for a connector
-      operationId: getConnectorTaskById
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-        - in: path
-          name: task_id
-          schema:
-            type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  state:
-                    type: string
-                  worker_id:
-                    type: string
-                  trace:
-                    type: string
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector or task not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector or task not found"
-  /api/v1/connectors/{id}/tasks/{task_id}/restart:
-    post:
-      tags:
-        - connectors
-      summary: Restart a specific task for a connector
-      operationId: restartConnectorTask
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-        - in: path
-          name: task_id
-          schema:
-            type: string
-          required: true
-      responses:
-        '204':
-          description: Task restarted successfully
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Connector or task not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector or task not found"
-  /api/v1/connectors/stats:
-    get:
-      tags:
-        - connectors
-      summary: Get connectors statistics
-      operationId: getConnectorsStats
-      x-required-roles: [user]
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  failed_connectors:
-                    type: integer
-                  running_connectors:
-                    type: integer
-                  paused_connectors:
-                    type: integer
-                  records_second:
-                    type: integer
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-  /api/v1/connector-plugins/{id}/schema:
-    get:
-      tags:
-        - connector-plugins
-      summary: Get configuration schema for a connector plugin
-      operationId: getConnectorPluginSchema
-      x-required-roles: [user]
-      parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  fields:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                        label:
-                          type: string
-                        description:
-                          type: string
-                        type:
-                          type: string
-                        required:
-                          type: boolean
-                        default:
-                          type: string
-              example:
-                fields:
-                  - name: "database.hostname"
-                    label: "Database Hostname"
-                    description: "IP address or hostname of the PostgreSQL database server."
-                    type: "STRING"
-                    required: true
-                    default: "localhost"
-                  - name: "database.port"
-                    label: "Database Port"
-                    description: "Port number of the PostgreSQL database server."
-                    type: "INT"
-                    required: true
-                    default: "5432"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Plugin not found
-                  value:
-                    code: NOT_FOUND
-                    message: "Connector plugin not found"
-  /api/v1/connector-plugins:
-    get:
-      tags:
-        - connector-plugins
-      summary: Get list of available connector plugins
-      operationId: getConnectorPlugins
-      x-required-roles: [user]
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    name:
-                      type: string
-              example:
-                - id: "io.debezium.connector.postgresql.PostgresConnector"
-                  name: "PostgresConnector"
-                - id: "io.debezium.connector.mysql.MySqlConnector"
-                  name: "MySqlConnector"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /api/v1/connectors/validate:
     post:
-      tags:
-        - connectors
+      tags: [connectors]
       summary: Validate connector configuration
       operationId: validateConnectorConfig
       x-required-roles: [user]
@@ -2316,42 +529,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required:
-                - plugin_id
-                - config
-              properties:
-                plugin_id:
-                  type: string
-                config:
-                  type: object
-                transforms:
-                  type: array
-                  items:
-                    type: string
+              $ref: '#/components/schemas/ValidateConnectorRequest'
       responses:
         '200':
           description: Validation result
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                        step:
-                          type: string
-                        status:
-                          type: string
-                        message:
-                          type: string
+                $ref: '#/components/schemas/ValidationResult'
               examples:
                 successful_validation:
                   summary: Validation passed
@@ -2363,53 +548,338 @@ paths:
                   value:
                     valid: false
                     results:
-                      - field: "database.hostname"
-                        step: "config_validation"
-                        status: "ERROR"
-                        message: "Unable to reach database host."
-                      - field: "tasks.max"
-                        step: "config_validation"
-                        status: "WARNING"
-                        message: "Value '10' is unusually high. Recommend 1-5."
+                      - field: database.hostname
+                        step: config_validation
+                        status: ERROR
+                        message: Unable to reach database host.
+                      - field: tasks.max
+                        step: config_validation
+                        status: WARNING
+                        message: Value '10' is unusually high. Recommend 1-5.
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/stats:
+    get:
+      tags: [connectors]
+      summary: Get connectors statistics
+      operationId: getConnectorsStats
+      x-required-roles: [user]
+      responses:
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+                $ref: '#/components/schemas/ClusterStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}:
+    get:
+      tags: [connectors]
+      summary: Get specific connector details
+      operationId: getConnectorById
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connector'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [connectors]
+      summary: Update a specific connector
+      operationId: updateConnector
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorUpdateRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connector'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '422':
+          $ref: '#/components/responses/ImmutableFieldsViolation'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [connectors]
+      summary: Delete a connector
+      operationId: deleteConnector
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      responses:
+        '204':
+          description: Connector deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/actions:
+    post:
+      tags: [connectors]
+      summary: Perform action on a connector
+      operationId: connectorAction
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorActionRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connector'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/metrics:
+    get:
+      tags: [connectors]
+      summary: Get connector metrics
+      operationId: getConnectorMetrics
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+        - $ref: '#/components/parameters/FromQueryParam'
+        - $ref: '#/components/parameters/ToQueryParam'
+        - $ref: '#/components/parameters/IntervalQueryParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/summary:
+    get:
+      tags: [connectors]
+      summary: Get summary for a specific connector
+      operationId: getConnectorSummary
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/tasks:
+    get:
+      tags: [connectors]
+      summary: Get tasks for a specific connector
+      operationId: getConnectorTasks
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorTasksResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/tasks/{task_id}:
+    get:
+      tags: [connectors]
+      summary: Get details of a specific task for a connector
+      operationId: getConnectorTaskById
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+        - $ref: '#/components/parameters/TaskIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorTaskNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/tasks/{task_id}/restart:
+    post:
+      tags: [connectors]
+      summary: Restart a specific task for a connector
+      operationId: restartConnectorTask
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+        - $ref: '#/components/parameters/TaskIdPathParam'
+      responses:
+        '204':
+          description: Task restarted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorTaskNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connector-plugins:
+    get:
+      tags: [connector-plugins]
+      summary: Get list of available connector plugins
+      operationId: getConnectorPlugins
+      x-required-roles: [user]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PluginListItem'
+              example:
+                - id: io.debezium.connector.postgresql.PostgresConnector
+                  name: PostgresConnector
+                - id: io.debezium.connector.mysql.MySqlConnector
+                  name: MySqlConnector
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connector-plugins/{id}/schema:
+    get:
+      tags: [connector-plugins]
+      summary: Get configuration schema for a connector plugin
+      operationId: getConnectorPluginSchema
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/PluginIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginSchema'
+              example:
+                fields:
+                  - name: database.hostname
+                    label: Database Hostname
+                    description: IP address or hostname of the PostgreSQL database server.
+                    type: STRING
+                    required: true
+                    default: localhost
+                  - name: database.port
+                    label: Database Port
+                    description: Port number of the PostgreSQL database server.
+                    type: INT
+                    required: true
+                    default: "5432"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/PluginNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /api/v1/smt-plugins:
     get:
-      tags:
-        - smt-plugins
+      tags: [smt-plugins]
       summary: Get list of available SMT (Single Message Transform) plugins
       operationId: getSmtPlugins
       x-required-roles: [user]
@@ -2421,152 +891,451 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    name:
-                      type: string
+                  $ref: '#/components/schemas/PluginListItem'
               example:
-                - id: "org.apache.kafka.connect.transforms.InsertField$Value"
-                  name: "InsertField"
-                - id: "org.apache.kafka.connect.transforms.ExtractField$Key"
-                  name: "ExtractField"
+                - id: org.apache.kafka.connect.transforms.InsertField$Value
+                  name: InsertField
+                - id: org.apache.kafka.connect.transforms.ExtractField$Key
+                  name: ExtractField
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /api/v1/smt-plugins/{id}/schema:
     get:
-      tags:
-        - smt-plugins
+      tags: [smt-plugins]
       summary: Get configuration schema for a specific SMT plugin
       operationId: getSmtPluginSchema
       x-required-roles: [user]
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-          required: true
+        - $ref: '#/components/parameters/PluginIdPathParam'
       responses:
         '200':
           description: Successful response
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  fields:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                        label:
-                          type: string
-                        description:
-                          type: string
-                        type:
-                          type: string
-                        required:
-                          type: boolean
-                        default:
-                          type: string
+                $ref: '#/components/schemas/PluginSchema'
               example:
                 fields:
-                  - name: "offset.field"
-                    label: "Offset Field"
-                    description: "Field name to insert offset."
-                    type: "STRING"
+                  - name: offset.field
+                    label: Offset Field
+                    description: Field name to insert offset.
+                    type: STRING
                     required: false
-                    default: "offset"
-                  - name: "partition.field"
-                    label: "Partition Field"
-                    description: "Field name to insert partition."
-                    type: "STRING"
+                    default: offset
+                  - name: partition.field
+                    label: Partition Field
+                    description: Field name to insert partition.
+                    type: STRING
                     required: false
-                    default: "partition"
+                    default: partition
         '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                access_token_missing:
-                  summary: Access token missing
-                  value:
-                    code: ACCESS_TOKEN_MISSING
-                    message: "Access token missing"
-                access_token_expired:
-                  summary: Access token expired
-                  value:
-                    code: ACCESS_TOKEN_EXPIRED
-                    message: "Access token expired"
-                access_token_invalid:
-                  summary: Invalid access token
-                  value:
-                    code: ACCESS_TOKEN_INVALID
-                    message: "Invalid access token"
+          $ref: '#/components/responses/Unauthorized'
         '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                forbidden:
-                  summary: Forbidden
-                  value:
-                    code: FORBIDDEN
-                    message: "Forbidden"
+          $ref: '#/components/responses/Forbidden'
         '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                not_found:
-                  summary: Plugin not found
-                  value:
-                    code: NOT_FOUND
-                    message: "SMT plugin not found"
+          $ref: '#/components/responses/SmtPluginNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
 components:
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-based).
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      description: Items per page.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    UserIdPathParam:
+      name: id
+      in: path
+      required: true
+      description: User UUID.
+      schema:
+        type: string
+        format: uuid
+    ConnectorIdPathParam:
+      name: id
+      in: path
+      required: true
+      description: Connector ID.
+      schema:
+        type: string
+    TaskIdPathParam:
+      name: task_id
+      in: path
+      required: true
+      description: Task ID.
+      schema:
+        type: string
+    AuditLogIdPathParam:
+      name: id
+      in: path
+      required: true
+      description: Audit log entry ID.
+      schema:
+        type: string
+    PluginIdPathParam:
+      name: id
+      in: path
+      required: true
+      description: Plugin ID (fully qualified class name).
+      schema:
+        type: string
+    UsernameQueryParam:
+      name: username
+      in: query
+      description: Filter by exact username.
+      schema:
+        type: string
+        minLength: 3
+        maxLength: 32
+        pattern: '^[a-zA-Z0-9_-]+$'
+    RoleQueryParam:
+      name: role
+      in: query
+      description: Filter by role.
+      schema:
+        type: string
+        enum: [admin, user]
+    ConnectorStatusQueryParam:
+      name: status
+      in: query
+      description: Filter by connector status.
+      schema:
+        type: string
+        enum: [running, paused, failed]
+    SearchQueryParam:
+      name: search
+      in: query
+      description: Free-text search over connector names.
+      schema:
+        type: string
+    SourceDbQueryParam:
+      name: source_db
+      in: query
+      description: Filter by source database name.
+      schema:
+        type: string
+    ActionQueryParam:
+      name: action
+      in: query
+      description: Filter audit log entries by action.
+      schema:
+        type: string
+    ConnectorQueryParam:
+      name: connector
+      in: query
+      description: Filter audit log entries by connector name.
+      schema:
+        type: string
+    ActorQueryParam:
+      name: actor
+      in: query
+      description: Filter audit log entries by acting user.
+      schema:
+        type: string
+    FromQueryParam:
+      name: from
+      in: query
+      description: Lower bound for the metrics window.
+      schema:
+        type: string
+        format: date-time
+    ToQueryParam:
+      name: to
+      in: query
+      description: Upper bound for the metrics window.
+      schema:
+        type: string
+        format: date-time
+    IntervalQueryParam:
+      name: interval
+      in: query
+      description: Aggregation bucket size, e.g. 1m, 5m, 1h, 1d.
+      schema:
+        type: string
+        pattern: '^[0-9]+(s|m|h|d)$'
+        example: 5m
+    StartAtQueryParam:
+      name: start_at
+      in: query
+      description: Lower bound on entry creation time (inclusive)
+      schema:
+        type: string
+        format: date-time
+    EndAtQueryParam:
+      name: end_at
+      in: query
+      description: Upper bound on entry creation time (inclusive)
+      schema:
+        type: string
+        format: date-time
+    RefreshTokenCookieParam:
+      name: refresh_token
+      in: cookie
+      required: true
+      description: The refresh token cookie.
+      schema:
+        type: string
+
+  responses:
+    ValidationFailed:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            validation_error:
+              summary: Validation error
+              value:
+                code: VALIDATION_FAILED
+                message: Validation failed
+    InvalidQueryParam:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_query_param:
+              summary: Invalid query parameter
+              value:
+                code: INVALID_QUERY_PARAM
+                message: Invalid query parameter
+    InvalidPathParam:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_path_param:
+              summary: Invalid path parameter
+              value:
+                code: INVALID_PATH_PARAM
+                message: Invalid path parameter
+    InvalidCredentials:
+      description: Unauthorized or incorrect credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_credentials:
+              summary: Invalid credentials
+              value:
+                code: INVALID_CREDENTIALS
+                message: Invalid credentials
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            bad_request:
+              summary: Invalid request payload
+              value:
+                code: BAD_REQUEST
+                message: Invalid request
+            invalid_config:
+              summary: Invalid connector configuration
+              value:
+                code: BAD_REQUEST
+                message: Invalid configuration provided
+            invalid_action:
+              summary: Invalid connector action
+              value:
+                code: BAD_REQUEST
+                message: Invalid action provided
+    Unauthorized:
+      description: Unauthorized
+      headers:
+        WWW-Authenticate:
+          description: Present on every 401 response; set to "Bearer".
+          schema:
+            type: string
+            example: Bearer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            access_token_missing:
+              summary: Access token missing
+              value:
+                code: ACCESS_TOKEN_MISSING
+                message: Access token missing
+            access_token_expired:
+              summary: Access token expired
+              value:
+                code: ACCESS_TOKEN_EXPIRED
+                message: Access token expired
+            access_token_invalid:
+              summary: Invalid access token
+              value:
+                code: ACCESS_TOKEN_INVALID
+                message: Invalid access token
+    RefreshUnauthorized:
+      description: Unauthorized or invalid refresh token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_token:
+              summary: Invalid refresh token
+              value:
+                code: INVALID_REFRESH_TOKEN
+                message: Invalid refresh token
+            expired_token:
+              summary: Expired refresh token
+              value:
+                code: INVALID_REFRESH_TOKEN
+                message: Session expired
+            missing_token:
+              summary: Missing refresh token
+              value:
+                code: INVALID_REFRESH_TOKEN
+                message: Refresh token is required
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            forbidden:
+              summary: Forbidden
+              value:
+                code: FORBIDDEN
+                message: Forbidden
+    UserNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: User not found
+              value:
+                code: USER_NOT_FOUND
+                message: User with provided ID not found
+    ConnectorNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: Connector not found
+              value:
+                code: NOT_FOUND
+                message: Connector not found
+    ConnectorTaskNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: Connector or task not found
+              value:
+                code: NOT_FOUND
+                message: Connector or task not found
+    AuditLogNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: Log not found
+              value:
+                code: NOT_FOUND
+                message: Audit log with provided ID not found
+    PluginNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: Plugin not found
+              value:
+                code: NOT_FOUND
+                message: Connector plugin not found
+    SmtPluginNotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            not_found:
+              summary: Plugin not found
+              value:
+                code: NOT_FOUND
+                message: SMT plugin not found
+    ImmutableFieldsViolation:
+      description: Blocked due to modification of critical (immutable) fields.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            immutable_fields_violation:
+              summary: Attempt to modify an immutable field (config.topic.prefix)
+              value:
+                code: IMMUTABLE_FIELD_VIOLATION
+                message: Modifying these fields will trigger offset reset. It is recommended to create a new connector.
+    UsernameConflict:
+      description: Username already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            conflict:
+              summary: Duplicate username
+              value:
+                code: USERNAME_CONFLICT
+                message: Username already taken
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internal_error:
+              summary: Unexpected error
+              value:
+                code: INTERNAL_ERROR
+                message: Internal server error
+
   schemas:
     ErrorResponse:
       type: object
@@ -2577,11 +1346,11 @@ components:
         code:
           type: string
           description: String error code for programmatic handling on the frontend.
-          example: "VALIDATION_FAILED"
+          example: VALIDATION_FAILED
         message:
           type: string
           description: Human-readable error description to display to the user.
-          example: "Provided configuration is invalid."
+          example: Provided configuration is invalid.
     User:
       type: object
       description: User record as stored in the users table.
@@ -2634,6 +1403,490 @@ components:
           type: string
           enum: [admin, user]
           example: admin
+    UserRef:
+      type: object
+      description: Short reference to a user. Replaces the former {id, name} shape.
+      required:
+        - id
+        - username
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - limit
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+    UserListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    UserLoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-zA-Z0-9_-]+$'
+          example: jdoe
+          description: Unique login identifier. ASCII letters, digits, underscore and hyphen only.
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^[^\x00-\x1F\x7F]+$'
+          example: secret123
+          description: Plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - username
+      properties:
+        access_token:
+          type: string
+          example: eyJhb...
+          description: |
+            JWT. Decoded payload example:
+            {
+              "sub": "1234567890",
+              "role": "admin",
+              "iat": 1516239022,
+              "exp": 1516242622
+            }
+        username:
+          type: string
+          example: jdoe
+          description: Login identifier of the authenticated user (not a display name).
+    RefreshResponse:
+      type: object
+      required:
+        - access_token
+      properties:
+        access_token:
+          type: string
+          example: eyJhb...
+    NewPasswordRequest:
+      type: object
+      required:
+        - new_password
+      properties:
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^[^\x00-\x1F\x7F]+$'
+          example: newSecret123
+          description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+    PasswordChangeRequest:
+      type: object
+      required:
+        - old_password
+        - new_password
+      properties:
+        old_password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^[^\x00-\x1F\x7F]+$'
+          example: oldSecret123
+          description: Current plaintext password.
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^[^\x00-\x1F\x7F]+$'
+          example: newSecret123
+          description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+    AccountDeletionRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          pattern: '^[^\x00-\x1F\x7F]+$'
+          example: mySecret123
+          description: Current password to confirm account deletion. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
+    UsernameUpdateRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 32
+          pattern: '^[a-zA-Z0-9_-]+$'
+          example: updateduser
+    ConnectorStatus:
+      type: string
+      enum: [running, paused, failed]
+      description: Connector lifecycle state reported by Kafka Connect.
+    Connector:
+      type: object
+      description: |
+        Unified connector model used by list, create, get-by-id, update and action responses.
+        Fields that are not available in a given context are null (plugin_type, config, etc.).
+      required:
+        - id
+        - name
+        - status
+        - tasks_count
+        - created_at
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        plugin_type:
+          type: string
+          nullable: true
+          description: Debezium/Kafka Connect connector class. Populated by GET /api/v1/connectors/{id}; null elsewhere.
+        source_db:
+          type: string
+          nullable: true
+          description: Source database name derived from the configuration (e.g. postgres, mysql).
+        config:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: Connector configuration. Populated by GET /api/v1/connectors/{id} only.
+        status:
+          $ref: '#/components/schemas/ConnectorStatus'
+        lag_ms:
+          type: integer
+          nullable: true
+          description: Replication lag in milliseconds; null when unknown.
+        tasks_count:
+          type: integer
+        created_by:
+          $ref: '#/components/schemas/UserRef'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    ConnectorCreateRequest:
+      type: object
+      required:
+        - name
+        - plugin_type
+        - config
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        plugin_type:
+          type: string
+          description: Fully qualified connector class, e.g. io.debezium.connector.postgresql.PostgresConnector.
+        config:
+          type: object
+          additionalProperties: true
+          description: Connector configuration including DB connection properties, converters, and optional SMTs.
+    ConnectorUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: Optional new name for the connector.
+        config:
+          type: object
+          additionalProperties: true
+          description: Optional new configuration for the connector.
+    ConnectorActionRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: [pause, resume, restart]
+    Task:
+      type: object
+      required:
+        - id
+        - state
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+          example: RUNNING
+        worker_id:
+          type: string
+          nullable: true
+    TaskDetail:
+      allOf:
+        - $ref: '#/components/schemas/Task'
+        - type: object
+          properties:
+            trace:
+              type: string
+              nullable: true
+              description: Last error stack trace, if any.
+    ConnectorSummary:
+      type: object
+      required:
+        - status
+        - tasks
+      properties:
+        status:
+          $ref: '#/components/schemas/ConnectorStatus'
+        lag_ms:
+          type: integer
+          nullable: true
+        records_per_sec:
+          type: integer
+          nullable: true
+        uptime_sec:
+          type: integer
+          nullable: true
+        errors_count:
+          type: integer
+          nullable: true
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    MetricsPoint:
+      type: object
+      required:
+        - timestamp
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        avg_lag_ms:
+          type: integer
+          nullable: true
+        max_lag_ms:
+          type: integer
+          nullable: true
+        avg_records_per_sec:
+          type: integer
+          nullable: true
+        avg_commit_latency_ms:
+          type: integer
+          nullable: true
+        max_commit_latency_ms:
+          type: integer
+          nullable: true
+    ClusterStats:
+      type: object
+      properties:
+        failed_connectors:
+          type: integer
+        running_connectors:
+          type: integer
+        paused_connectors:
+          type: integer
+        records_per_sec:
+          type: integer
+    ConnectorListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Connector'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+        cluster_stats:
+          $ref: '#/components/schemas/ClusterStats'
+          nullable: true
+          description: Cluster-wide statistics for the deployment.
+    ConnectorTasksResponse:
+      type: object
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    MetricsResponse:
+      type: object
+      required:
+        - points
+      properties:
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricsPoint'
+    AuditLogListItem:
+      type: object
+      required:
+        - id
+        - action
+        - created_at
+      properties:
+        id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        action:
+          type: string
+        user_name:
+          type: string
+          nullable: true
+        user_id:
+          type: string
+          nullable: true
+        connector_name:
+          type: string
+          nullable: true
+        connector_id:
+          type: string
+          nullable: true
+    AuditLog:
+      allOf:
+        - $ref: '#/components/schemas/AuditLogListItem'
+        - type: object
+          properties:
+            state_before:
+              type: object
+              additionalProperties: true
+              nullable: true
+            state_after:
+              type: object
+              additionalProperties: true
+              nullable: true
+    AuditLogListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogListItem'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    PluginListItem:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          description: Fully qualified plugin class name.
+        name:
+          type: string
+    PluginSchemaField:
+      type: object
+      required:
+        - name
+        - type
+        - required
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        type:
+          type: string
+          example: STRING
+        required:
+          type: boolean
+        default:
+          type: string
+          nullable: true
+    PluginSchema:
+      type: object
+      required:
+        - fields
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/PluginSchemaField'
+    ValidationIssue:
+      type: object
+      required:
+        - field
+        - step
+        - status
+        - message
+      properties:
+        field:
+          type: string
+        step:
+          type: string
+        status:
+          type: string
+          enum: [ERROR, WARNING]
+        message:
+          type: string
+    ValidationResult:
+      type: object
+      required:
+        - valid
+        - results
+      properties:
+        valid:
+          type: boolean
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationIssue'
+    ValidateConnectorRequest:
+      type: object
+      required:
+        - plugin_id
+        - config
+      properties:
+        plugin_id:
+          type: string
+        config:
+          type: object
+          additionalProperties: true
+        transforms:
+          type: array
+          items:
+            type: string
 
   securitySchemes:
     bearerAuth:

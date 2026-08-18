@@ -30,4 +30,9 @@ type UsersRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) (domain.User, error)
+
+	DeleteUser(
+		ctx context.Context,
+		id uuid.UUID,
+	) error
 }

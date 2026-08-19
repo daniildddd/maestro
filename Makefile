@@ -2,7 +2,7 @@
 export
 
 .DEFAULT_GOAL := help
-.PHONY: build run migrate-create docker-up docker-down lint lint-fix mocks test validate-swagger
+.PHONY: build run migrate-create docker-up docker-down lint lint-fix mocks test test-integration validate-swagger
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -38,7 +38,7 @@ mocks: ## Generate mocks with mockery
 test: ## Run unit tests with race detection and coverage
 	@go test -race -cover ./...
 
-test-integration:
+test-integration: ## Run integration tests against a live Postgres (docker compose up -d)
 	@go test -tags integration -race ./...
 
 validate-swagger: ## Validate OpenAPI spec

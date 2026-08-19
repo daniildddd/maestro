@@ -40,18 +40,16 @@ func (s *AuthService) Refresh(
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(
-				"%s: user not found for refresh token(user_id=%s): %w: %v",
+				"%s: user not found for refresh token: %w: %v",
 				op,
-				storedToken.UserID,
 				errs.ErrInvalidRefreshToken,
 				err,
 			)
 		}
 
 		return domain.TokenPair{}, fmt.Errorf(
-			"%s: get user by id(user_id=%s): %w",
+			"%s: get user by id: %w",
 			op,
-			storedToken.UserID,
 			err,
 		)
 	}

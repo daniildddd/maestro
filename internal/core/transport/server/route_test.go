@@ -5,9 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/stretchr/testify/require"
 
+	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 func makeTracingMiddleware(id string) middleware.Middleware {
@@ -17,6 +22,10 @@ func makeTracingMiddleware(id string) middleware.Middleware {
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func nopLogger() *core_logger.Logger {
+	return &core_logger.Logger{Logger: zap.NewNop()}
 }
 
 func TestRoute_WithMiddleware(t *testing.T) {
@@ -95,5 +104,56 @@ func TestRoute_WithMiddleware(t *testing.T) {
 		chained.ServeHTTP(rec, req)
 
 		must.Equal("MW1->MW2->MW3->done", rec.Body.String())
+	})
+
+	t.Run("applies RequireRole when Roles set", func(t *testing.T) {
+		t.Parallel()
+
+		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+
+		route := &Route{
+			Method:  http.MethodGet,
+			Path:    "/",
+			Handler: handler,
+			Roles:   []string{"admin"},
+		}
+
+		chained := route.WithMiddleware()
+
+		t.Run("allowed role passes through", func(t *testing.T) {
+			t.Parallel()
+			must := require.New(t)
+
+			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+			ctx := core_logger.ToContext(req.Context(), nopLogger())
+			ctx = reqctx.WithRole(ctx, "admin")
+			req = req.WithContext(ctx)
+
+			rec := httptest.NewRecorder()
+			rw := core_http_response.NewResponseWriter(rec)
+
+			chained.ServeHTTP(rw, req)
+
+			must.Equal(http.StatusOK, rec.Code)
+		})
+
+		t.Run("forbidden role rejected", func(t *testing.T) {
+			t.Parallel()
+			must := require.New(t)
+
+			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
+			ctx := core_logger.ToContext(req.Context(), nopLogger())
+			ctx = reqctx.WithRole(ctx, "user")
+			req = req.WithContext(ctx)
+
+			rec := httptest.NewRecorder()
+			rw := core_http_response.NewResponseWriter(rec)
+
+			chained.ServeHTTP(rw, req)
+
+			must.Equal(http.StatusForbidden, rec.Code)
+		})
 	})
 }

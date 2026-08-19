@@ -55,24 +55,34 @@ func NewUsersHTTPHandler(
 func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 	return []core_http_server.Route{
 		{
+			Method:  http.MethodPost,
+			Path:    "/users",
+			Handler: h.CreateUser,
+			Roles:   []string{domain.RoleAdmin},
+		},
+		{
 			Method:  http.MethodGet,
 			Path:    "/users",
 			Handler: h.GetUsers,
+			Roles:   []string{domain.RoleAdmin},
 		},
 		{
 			Method:  http.MethodGet,
 			Path:    "/users/{id}",
 			Handler: h.GetUserByID,
+			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
 		},
 		{
 			Method:  http.MethodDelete,
 			Path:    "/users/{id}",
 			Handler: h.DeleteUser,
+			Roles:   []string{domain.RoleAdmin},
 		},
 		{
 			Method:  http.MethodDelete,
 			Path:    "/users/me",
 			Handler: h.DeleteMe,
+			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
 		},
 	}
 }

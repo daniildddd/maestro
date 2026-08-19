@@ -7,7 +7,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 	"github.com/daniildddd/maestro/internal/core/transport/server"
 )
 
@@ -134,6 +137,39 @@ func TestAPIVersionRouter_Handlers(t *testing.T) {
 		handlers["GET /api/v1/"].ServeHTTP(rec, req)
 
 		must.Equal("ROUTER->ROUTE->done", rec.Body.String())
+	})
+
+	t.Run("applies RequireRole from route Roles", func(t *testing.T) {
+		t.Parallel()
+		must := require.New(t)
+
+		routes := []server.Route{
+			{
+				Method: http.MethodGet,
+				Path:   "/admin",
+				Handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusOK)
+				},
+				Roles: []string{"admin"},
+			},
+		}
+
+		router := server.NewAPIVersionRouter(routes, server.ApiVersion1)
+
+		handlers := router.Handlers()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/admin", http.NoBody)
+		ctx := core_logger.ToContext(req.Context(), nopLogger())
+		ctx = reqctx.WithRole(ctx, "user")
+		req = req.WithContext(ctx)
+
+		rec := httptest.NewRecorder()
+		rw := core_http_response.NewResponseWriter(rec)
+
+		must.Contains(handlers, "GET /api/v1/admin")
+		handlers["GET /api/v1/admin"].ServeHTTP(rw, req)
+
+		must.Equal(http.StatusForbidden, rec.Code)
 	})
 
 	t.Run("returns empty map for no routes", func(t *testing.T) {

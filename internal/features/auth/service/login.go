@@ -46,8 +46,9 @@ func (s *AuthService) Login(
 	err = s.passwordHasher.Verify(user.PasswordHash, password)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
-			"%s: verify password: %w: %v",
+			"%s: verify password (username=%s): %w: %v",
 			op,
+			username,
 			errs.ErrInvalidCredentials,
 			err,
 		)

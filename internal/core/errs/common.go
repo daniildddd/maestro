@@ -79,6 +79,13 @@ var ErrUserNotFound = &AppError{
 	LogLevel:   zapcore.InfoLevel,
 }
 
+var ErrUsernameConflict = &AppError{
+	HTTPStatus: http.StatusConflict,
+	Code:       "USERNAME_CONFLICT",
+	Message:    "Username already taken",
+	LogLevel:   zapcore.InfoLevel,
+}
+
 var ErrForbidden = &AppError{
 	HTTPStatus: http.StatusForbidden,
 	Code:       "FORBIDDEN",

@@ -51,7 +51,7 @@ func (h *AuthHTTPHandler) PublicRoutes() []core_http_server.Route {
 	return []core_http_server.Route{
 		{
 			Method:  http.MethodPost,
-			Path:    "/Login",
+			Path:    "/login",
 			Handler: h.Login,
 		},
 		{

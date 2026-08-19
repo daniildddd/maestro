@@ -19,6 +19,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
 	"github.com/daniildddd/maestro/internal/features/auth/transport"
+	usersrepository "github.com/daniildddd/maestro/internal/features/users/repository"
+	usersservice "github.com/daniildddd/maestro/internal/features/users/service"
+	userstransport "github.com/daniildddd/maestro/internal/features/users/transport"
 )
 
 func main() {
@@ -90,6 +93,15 @@ func run() int {
 		transport.NewConfigMust(),
 	)
 
+	usersRepository := usersrepository.NewUsersRepository(postgresPool)
+
+	usersService := usersservice.NewUsersService(
+		usersRepository,
+		bcryptHasher,
+	)
+
+	usersTransportHTTP := userstransport.NewUsersHTTPHandler(usersService)
+
 	cfgMiddleware := middleware.NewConfigMust()
 
 	baseMW := []middleware.Middleware{
@@ -111,8 +123,13 @@ func run() int {
 
 	privateMW = append(privateMW, middleware.Auth(accessManager))
 
-	privateV1 := server.NewAPIVersionRouter(
+	privateRoutes := append(
 		authTransportHTTP.PrivateRoutes(),
+		usersTransportHTTP.PrivateRoutes()...,
+	)
+
+	privateV1 := server.NewAPIVersionRouter(
+		privateRoutes,
 		server.ApiVersion1,
 		privateMW...,
 	)

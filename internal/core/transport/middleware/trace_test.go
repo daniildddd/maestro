@@ -240,4 +240,31 @@ func TestTrace(t *testing.T) {
 		must.Equal(userID.String(), ctxMap["user_id"])
 		must.Equal("admin", ctxMap["role"])
 	})
+
+	t.Run("warning when handler writes no response", func(t *testing.T) {
+		t.Parallel()
+		must := require.New(t)
+
+		log, recordedLogs := newObservableLogger(t, zapcore.WarnLevel)
+
+		nextHandler := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {})
+
+		req := newTestRequest(t, http.MethodGet, "/api/v1/health", nil)
+		req = req.WithContext(logger.ToContext(req.Context(), log))
+		rec := httptest.NewRecorder()
+
+		chained := middleware.Trace()(nextHandler)
+		chained.ServeHTTP(rec, req)
+
+		must.Equal(http.StatusOK, rec.Code)
+
+		logs := recordedLogs.All()
+		must.Len(logs, 1)
+		must.Equal(zapcore.WarnLevel, logs[0].Level)
+		must.Contains(logs[0].Message, "request completed without response")
+
+		ctxMap := logs[0].ContextMap()
+		_, hasStatus := ctxMap["status"]
+		must.False(hasStatus, "unwritten response must not log status")
+	})
 }

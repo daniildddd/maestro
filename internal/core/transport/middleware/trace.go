@@ -24,7 +24,6 @@ func Trace() Middleware {
 			fields := []zap.Field{
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),
-				zap.Int("status", rw.GetStatusCode()),
 				zap.Duration("latency", time.Since(before)),
 			}
 
@@ -34,6 +33,14 @@ func Trace() Middleware {
 					zap.String("role", rw.Role),
 				)
 			}
+
+			if !rw.Written() {
+				log.Warn("request completed without response", fields...)
+
+				return
+			}
+
+			fields = append(fields, zap.Int("status", rw.GetStatusCode()))
 
 			appErr := rw.AppErr
 			if appErr != nil {

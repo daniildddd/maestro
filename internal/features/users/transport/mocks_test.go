@@ -39,6 +39,110 @@ func (_m *MockUsersService) EXPECT() *MockUsersService_Expecter {
 	return &MockUsersService_Expecter{mock: &_m.Mock}
 }
 
+// CreateUser provides a mock function for the type MockUsersService
+func (_mock *MockUsersService) CreateUser(ctx context.Context, username string, password string, role string) (domain.User, error) {
+	ret := _mock.Called(ctx, username, password, role)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateUser")
+	}
+
+	var r0 domain.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string) (domain.User, error)); ok {
+		return returnFunc(ctx, username, password, role)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string) domain.User); ok {
+		r0 = returnFunc(ctx, username, password, role)
+	} else {
+		r0 = ret.Get(0).(domain.User)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = returnFunc(ctx, username, password, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockUsersService_CreateUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateUser'
+type MockUsersService_CreateUser_Call struct {
+	*mock.Call
+}
+
+// CreateUser is a helper method to define mock.On call
+//   - ctx
+//   - username
+//   - password
+//   - role
+func (_e *MockUsersService_Expecter) CreateUser(ctx interface{}, username interface{}, password interface{}, role interface{}) *MockUsersService_CreateUser_Call {
+	return &MockUsersService_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, username, password, role)}
+}
+
+func (_c *MockUsersService_CreateUser_Call) Run(run func(ctx context.Context, username string, password string, role string)) *MockUsersService_CreateUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *MockUsersService_CreateUser_Call) Return(user domain.User, err error) *MockUsersService_CreateUser_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *MockUsersService_CreateUser_Call) RunAndReturn(run func(ctx context.Context, username string, password string, role string) (domain.User, error)) *MockUsersService_CreateUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteMe provides a mock function for the type MockUsersService
+func (_mock *MockUsersService) DeleteMe(ctx context.Context, userID uuid.UUID, password string) error {
+	ret := _mock.Called(ctx, userID, password)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteMe")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) error); ok {
+		r0 = returnFunc(ctx, userID, password)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockUsersService_DeleteMe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteMe'
+type MockUsersService_DeleteMe_Call struct {
+	*mock.Call
+}
+
+// DeleteMe is a helper method to define mock.On call
+//   - ctx
+//   - userID
+//   - password
+func (_e *MockUsersService_Expecter) DeleteMe(ctx interface{}, userID interface{}, password interface{}) *MockUsersService_DeleteMe_Call {
+	return &MockUsersService_DeleteMe_Call{Call: _e.mock.On("DeleteMe", ctx, userID, password)}
+}
+
+func (_c *MockUsersService_DeleteMe_Call) Run(run func(ctx context.Context, userID uuid.UUID, password string)) *MockUsersService_DeleteMe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockUsersService_DeleteMe_Call) Return(err error) *MockUsersService_DeleteMe_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockUsersService_DeleteMe_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID, password string) error) *MockUsersService_DeleteMe_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteUser provides a mock function for the type MockUsersService
 func (_mock *MockUsersService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	ret := _mock.Called(ctx, id)
@@ -193,53 +297,6 @@ func (_c *MockUsersService_GetUsers_Call) Return(users []domain.User, err error)
 }
 
 func (_c *MockUsersService_GetUsers_Call) RunAndReturn(run func(ctx context.Context, filter domain.UserFilter) ([]domain.User, error)) *MockUsersService_GetUsers_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// DeleteMe provides a mock function for the type MockUsersService
-func (_mock *MockUsersService) DeleteMe(ctx context.Context, userID uuid.UUID, password string) error {
-	ret := _mock.Called(ctx, userID, password)
-
-	if len(ret) == 0 {
-		panic("no return value specified for DeleteMe")
-	}
-
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) error); ok {
-		r0 = returnFunc(ctx, userID, password)
-	} else {
-		r0 = ret.Error(0)
-	}
-	return r0
-}
-
-// MockUsersService_DeleteMe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteMe'
-type MockUsersService_DeleteMe_Call struct {
-	*mock.Call
-}
-
-// DeleteMe is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - password
-func (_e *MockUsersService_Expecter) DeleteMe(ctx interface{}, userID interface{}, password interface{}) *MockUsersService_DeleteMe_Call {
-	return &MockUsersService_DeleteMe_Call{Call: _e.mock.On("DeleteMe", ctx, userID, password)}
-}
-
-func (_c *MockUsersService_DeleteMe_Call) Run(run func(ctx context.Context, userID uuid.UUID, password string)) *MockUsersService_DeleteMe_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
-	})
-	return _c
-}
-
-func (_c *MockUsersService_DeleteMe_Call) Return(err error) *MockUsersService_DeleteMe_Call {
-	_c.Call.Return(err)
-	return _c
-}
-
-func (_c *MockUsersService_DeleteMe_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID, password string) error) *MockUsersService_DeleteMe_Call {
 	_c.Call.Return(run)
 	return _c
 }

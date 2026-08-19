@@ -50,7 +50,7 @@ func (u User) Validate() error {
 	}
 
 	if u.Role != RoleUser && u.Role != RoleAdmin {
-		return fmt.Errorf("%s: %w", op, ErrInvalidRole)
+		return fmt.Errorf("%s: (username=%s): %w", op, u.Username, ErrInvalidRole)
 	}
 
 	return nil

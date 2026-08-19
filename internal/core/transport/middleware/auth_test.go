@@ -18,15 +18,6 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-type fakeTokenVerifier struct {
-	user access.AuthUser
-	err  error
-}
-
-func (f *fakeTokenVerifier) Verify(_ string) (access.AuthUser, error) {
-	return f.user, f.err
-}
-
 func TestAuth(t *testing.T) {
 	t.Parallel()
 

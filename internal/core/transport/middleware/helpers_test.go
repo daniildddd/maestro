@@ -10,7 +10,17 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
+	"github.com/daniildddd/maestro/internal/core/security/access"
 )
+
+type fakeTokenVerifier struct {
+	user access.AuthUser
+	err  error
+}
+
+func (f *fakeTokenVerifier) Verify(_ string) (access.AuthUser, error) {
+	return f.user, f.err
+}
 
 func newTestRequest(t *testing.T, method, path string, headers http.Header) *http.Request {
 	t.Helper()

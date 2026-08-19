@@ -28,6 +28,10 @@ type PasswordHasher interface {
 		hash string,
 		plain string,
 	) error
+
+	Hash(
+		password string,
+	) (string, error)
 }
 
 type UsersRepository interface {
@@ -35,6 +39,11 @@ type UsersRepository interface {
 		ctx context.Context,
 		filter domain.UserFilter,
 	) ([]domain.User, error)
+
+	CreateUser(
+		ctx context.Context,
+		user domain.User,
+	) (domain.User, error)
 
 	GetUserByID(
 		ctx context.Context,

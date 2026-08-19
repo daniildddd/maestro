@@ -3,6 +3,8 @@ package response
 import (
 	"net/http"
 
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
@@ -14,6 +16,10 @@ type RWriter struct {
 	statusCode int
 	AppErr     *errs.AppError
 	RawErr     error
+
+	UserID   uuid.UUID
+	Role     string
+	AuthDone bool
 }
 
 func NewResponseWriter(w http.ResponseWriter) *RWriter {

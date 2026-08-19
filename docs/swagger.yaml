@@ -9,7 +9,7 @@ info:
     - POST /api/v1/login returns a short-lived JWT access_token (sent as "Authorization: Bearer ...")
       and sets a refresh_token in an HttpOnly cookie.
     - POST /api/v1/refresh exchanges the refresh-token cookie for a new token pair (rotation).
-    - POST /api/v1/logout invalidates the refresh token; requires a valid access token.
+    - POST /api/v1/logout invalidates the refresh token (public route; no access token required).
 
     ## Errors
     Every non-2xx JSON body follows the ErrorResponse shape: "code" (stable string for
@@ -47,6 +47,7 @@ paths:
       operationId: login
       security: []
       requestBody:
+        description: Login credentials.
         required: true
         content:
           application/json:
@@ -113,6 +114,8 @@ paths:
                 $ref: '#/components/schemas/RefreshResponse'
         '401':
           $ref: '#/components/responses/RefreshUnauthorized'
+        '404':
+          $ref: '#/components/responses/RefreshTokenNotFound'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -121,6 +124,7 @@ paths:
       tags: [auth]
       summary: User logout
       operationId: logout
+      security: []
       parameters:
         - $ref: '#/components/parameters/RefreshTokenCookieParam'
       responses:
@@ -132,8 +136,6 @@ paths:
               schema:
                 type: string
                 example: refresh_token=; Max-Age=0; HttpOnly; Path=/; Secure; SameSite=Lax
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -144,6 +146,7 @@ paths:
       operationId: deleteOwnAccount
       x-required-roles: [user, admin]
       requestBody:
+        description: Password confirmation required for account deletion.
         required: true
         content:
           application/json:
@@ -168,6 +171,7 @@ paths:
       operationId: changeOwnPassword
       x-required-roles: [user, admin]
       requestBody:
+        description: Current and new passwords.
         required: true
         content:
           application/json:
@@ -216,10 +220,35 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                data:
+                  - id: 550e8400-e29b-41d4-a716-446655440000
+                    username: jdoe
+                    role: admin
+                    created_at: '2026-08-18T00:00:00Z'
+                    updated_at: null
+                meta:
+                  page: 1
+                  limit: 20
               schema:
                 $ref: '#/components/schemas/UserListResponse'
         '400':
-          $ref: '#/components/responses/ValidationFailed'
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation error
+                  value:
+                    code: VALIDATION_FAILED
+                    message: Validation failed
+                invalid_query_param:
+                  summary: Invalid query parameter
+                  value:
+                    code: INVALID_QUERY_PARAM
+                    message: Invalid query parameter
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -232,6 +261,7 @@ paths:
       operationId: createUser
       x-required-roles: [admin]
       requestBody:
+        description: User details to create.
         required: true
         content:
           application/json:
@@ -242,6 +272,12 @@ paths:
           description: User created successfully
           content:
             application/json:
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                username: jdoe
+                role: user
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/User'
         '400':
@@ -268,6 +304,12 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                username: jdoe
+                role: user
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/User'
         '400':
@@ -293,6 +335,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserIdPathParam'
       requestBody:
+        description: Fields to update for the user.
         required: true
         content:
           application/json:
@@ -303,6 +346,12 @@ paths:
           description: Successful update
           content:
             application/json:
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                username: jdoe
+                role: user
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/User'
         '400':
@@ -358,6 +407,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/UserIdPathParam'
       requestBody:
+        description: New password for the user.
         required: true
         content:
           application/json:
@@ -396,6 +446,18 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                data:
+                  - id: log-1
+                    created_at: '2026-08-18T00:00:00Z'
+                    action: create_connector
+                    user_name: jdoe
+                    user_id: 550e8400-e29b-41d4-a716-446655440000
+                    connector_name: pg-connector
+                    connector_id: conn-1
+                meta:
+                  page: 1
+                  limit: 20
               schema:
                 $ref: '#/components/schemas/AuditLogListResponse'
         '400':
@@ -420,6 +482,17 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                id: log-1
+                created_at: '2026-08-18T00:00:00Z'
+                action: create_connector
+                user_name: jdoe
+                user_id: 550e8400-e29b-41d4-a716-446655440000
+                connector_name: pg-connector
+                connector_id: conn-1
+                state_before: null
+                state_after:
+                  name: pg-connector
               schema:
                 $ref: '#/components/schemas/AuditLog'
         '401':
@@ -448,6 +521,28 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                data:
+                  - id: conn-1
+                    name: pg-connector
+                    plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                    source_db: postgres
+                    status: running
+                    lag_ms: 120
+                    tasks_count: 1
+                    created_by:
+                      id: 550e8400-e29b-41d4-a716-446655440000
+                      username: jdoe
+                    created_at: '2026-08-18T00:00:00Z'
+                    updated_at: null
+                meta:
+                  page: 1
+                  limit: 20
+                cluster_stats:
+                  failed_connectors: 0
+                  running_connectors: 1
+                  paused_connectors: 0
+                  records_per_sec: 42
               schema:
                 $ref: '#/components/schemas/ConnectorListResponse'
         '400':
@@ -464,6 +559,7 @@ paths:
       operationId: createConnector
       x-required-roles: [user]
       requestBody:
+        description: Connector to create.
         required: true
         content:
           application/json:
@@ -507,6 +603,19 @@ paths:
           description: Connector created successfully
           content:
             application/json:
+              example:
+                id: conn-1
+                name: pg-connector
+                plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                source_db: postgres
+                status: running
+                lag_ms: 0
+                tasks_count: 1
+                created_by:
+                  id: 550e8400-e29b-41d4-a716-446655440000
+                  username: jdoe
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -525,9 +634,19 @@ paths:
       operationId: validateConnectorConfig
       x-required-roles: [user]
       requestBody:
+        description: Connector configuration to validate.
         required: true
         content:
           application/json:
+            example:
+              plugin_id: io.debezium.connector.postgresql.PostgresConnector
+              config:
+                database.hostname: localhost
+                database.port: '5432'
+                database.user: postgres
+                database.password: postgres
+                database.dbname: testdb
+                plugin.name: pgoutput
             schema:
               $ref: '#/components/schemas/ValidateConnectorRequest'
       responses:
@@ -576,6 +695,11 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                failed_connectors: 0
+                running_connectors: 1
+                paused_connectors: 0
+                records_per_sec: 42
               schema:
                 $ref: '#/components/schemas/ClusterStats'
         '401':
@@ -598,6 +722,25 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                id: conn-1
+                name: pg-connector
+                plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                source_db: postgres
+                config:
+                  database.hostname: localhost
+                  database.port: '5432'
+                  database.user: postgres
+                  database.dbname: testdb
+                  plugin.name: pgoutput
+                status: running
+                lag_ms: 120
+                tasks_count: 1
+                created_by:
+                  id: 550e8400-e29b-41d4-a716-446655440000
+                  username: jdoe
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/Connector'
         '401':
@@ -616,9 +759,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ConnectorIdPathParam'
       requestBody:
+        description: Fields to update for the connector.
         required: true
         content:
           application/json:
+            example:
+              name: pg-connector-renamed
             schema:
               $ref: '#/components/schemas/ConnectorUpdateRequest'
       responses:
@@ -626,6 +772,25 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                id: conn-1
+                name: pg-connector
+                plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                source_db: postgres
+                config:
+                  database.hostname: localhost
+                  database.port: '5432'
+                  database.user: postgres
+                  database.dbname: testdb
+                  plugin.name: pgoutput
+                status: running
+                lag_ms: 120
+                tasks_count: 1
+                created_by:
+                  id: 550e8400-e29b-41d4-a716-446655440000
+                  username: jdoe
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -668,9 +833,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ConnectorIdPathParam'
       requestBody:
+        description: Action to perform on the connector.
         required: true
         content:
           application/json:
+            example:
+              action: pause
             schema:
               $ref: '#/components/schemas/ConnectorActionRequest'
       responses:
@@ -678,6 +846,25 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                id: conn-1
+                name: pg-connector
+                plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                source_db: postgres
+                config:
+                  database.hostname: localhost
+                  database.port: '5432'
+                  database.user: postgres
+                  database.dbname: testdb
+                  plugin.name: pgoutput
+                status: running
+                lag_ms: 120
+                tasks_count: 1
+                created_by:
+                  id: 550e8400-e29b-41d4-a716-446655440000
+                  username: jdoe
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -707,6 +894,14 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                points:
+                  - timestamp: '2026-08-18T00:00:00Z'
+                    avg_lag_ms: 120
+                    max_lag_ms: 250
+                    avg_records_per_sec: 42
+                    avg_commit_latency_ms: 15
+                    max_commit_latency_ms: 30
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
         '401':
@@ -731,6 +926,16 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                status: running
+                lag_ms: 120
+                records_per_sec: 42
+                uptime_sec: 86400
+                errors_count: 0
+                tasks:
+                  - id: task-1
+                    state: RUNNING
+                    worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/ConnectorSummary'
         '401':
@@ -755,6 +960,11 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                tasks:
+                  - id: task-1
+                    state: RUNNING
+                    worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/ConnectorTasksResponse'
         '401':
@@ -780,6 +990,11 @@ paths:
           description: Successful response
           content:
             application/json:
+              example:
+                id: task-1
+                state: RUNNING
+                worker_id: worker-1
+                trace: null
               schema:
                 $ref: '#/components/schemas/TaskDetail'
         '401':
@@ -1195,6 +1410,12 @@ components:
                 message: Invalid access token
     RefreshUnauthorized:
       description: Unauthorized or invalid refresh token
+      headers:
+        WWW-Authenticate:
+          description: Present on every 401 response; set to "Bearer".
+          schema:
+            type: string
+            example: Bearer
       content:
         application/json:
           schema:
@@ -1215,6 +1436,18 @@ components:
               value:
                 code: INVALID_REFRESH_TOKEN
                 message: Refresh token is required
+    RefreshTokenNotFound:
+      description: Refresh token not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            token_not_found:
+              summary: Refresh token not found
+              value:
+                code: REFRESH_TOKEN_NOT_FOUND
+                message: Refresh token not found
     Forbidden:
       description: Forbidden
       content:
@@ -1338,6 +1571,7 @@ components:
 
   schemas:
     ErrorResponse:
+      description: Standard error body returned for every non-2xx response.
       type: object
       required:
         - code
@@ -1354,31 +1588,43 @@ components:
     User:
       type: object
       description: User record as stored in the users table.
+      required:
+        - id
+        - username
+        - role
+        - created_at
+        - updated_at
       properties:
         id:
           type: string
           format: uuid
           description: UUID primary key (users.id, DEFAULT gen_random_uuid()).
+          example: 550e8400-e29b-41d4-a716-446655440000
         username:
           type: string
           minLength: 3
           maxLength: 32
           pattern: '^[a-zA-Z0-9_-]+$'
           description: Unique username (users.username, TEXT NOT NULL UNIQUE). Stored as entered after sanitization; compared case-insensitively.
+          example: jdoe
         role:
           type: string
           enum: [admin, user]
           description: User role (users.role, TEXT NOT NULL, CHECK constraint).
+          example: admin
         created_at:
           type: string
           format: date-time
           description: Creation timestamp (users.created_at, TIMESTAMPTZ NOT NULL DEFAULT now()).
+          example: '2026-08-18T00:00:00Z'
         updated_at:
           type: string
           format: date-time
           nullable: true
           description: Last update timestamp (users.updated_at, TIMESTAMPTZ, nullable). null when the user was never updated.
+          example: null
     UserCreate:
+      description: Payload for creating a new user.
       type: object
       required:
         - username
@@ -1413,9 +1659,12 @@ components:
         id:
           type: string
           format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
         username:
           type: string
+          example: jdoe
     PaginationMeta:
+      description: Pagination metadata for list responses.
       type: object
       required:
         - page
@@ -1424,11 +1673,14 @@ components:
         page:
           type: integer
           minimum: 1
+          example: 1
         limit:
           type: integer
           minimum: 1
           maximum: 100
+          example: 20
     UserListResponse:
+      description: Paginated list of users.
       type: object
       required:
         - data
@@ -1438,9 +1690,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+          example:
+            - id: 550e8400-e29b-41d4-a716-446655440000
+              username: jdoe
+              role: admin
+              created_at: '2026-08-18T00:00:00Z'
+              updated_at: null
         meta:
           $ref: '#/components/schemas/PaginationMeta'
     UserLoginRequest:
+      description: Login credentials.
       type: object
       required:
         - username
@@ -1461,6 +1720,7 @@ components:
           example: secret123
           description: Plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
     LoginResponse:
+      description: Successful login response.
       type: object
       required:
         - access_token
@@ -1482,6 +1742,7 @@ components:
           example: jdoe
           description: Login identifier of the authenticated user (not a display name).
     RefreshResponse:
+      description: Successful token refresh response.
       type: object
       required:
         - access_token
@@ -1490,6 +1751,7 @@ components:
           type: string
           example: eyJhb...
     NewPasswordRequest:
+      description: Payload for setting a new password.
       type: object
       required:
         - new_password
@@ -1502,6 +1764,7 @@ components:
           example: newSecret123
           description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
     PasswordChangeRequest:
+      description: Old and new passwords for changing one's own password.
       type: object
       required:
         - old_password
@@ -1522,6 +1785,7 @@ components:
           example: newSecret123
           description: New plaintext password. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
     AccountDeletionRequest:
+      description: Password confirmation required for account deletion.
       type: object
       required:
         - password
@@ -1534,6 +1798,7 @@ components:
           example: mySecret123
           description: Current password to confirm account deletion. Control characters (0x00-0x1F, 0x7F) are forbidden; spaces are allowed.
     UsernameUpdateRequest:
+      description: Payload for renaming a user.
       type: object
       required:
         - username
@@ -1548,6 +1813,7 @@ components:
       type: string
       enum: [running, paused, failed]
       description: Connector lifecycle state reported by Kafka Connect.
+      example: running
     Connector:
       type: object
       description: |
@@ -1562,40 +1828,56 @@ components:
       properties:
         id:
           type: string
+          example: conn-1
         name:
           type: string
+          example: pg-connector
         plugin_type:
           type: string
           nullable: true
           description: Debezium/Kafka Connect connector class. Populated by GET /api/v1/connectors/{id}; null elsewhere.
+          example: io.debezium.connector.postgresql.PostgresConnector
         source_db:
           type: string
           nullable: true
           description: Source database name derived from the configuration (e.g. postgres, mysql).
+          example: postgres
         config:
           type: object
           additionalProperties: true
           nullable: true
           description: Connector configuration. Populated by GET /api/v1/connectors/{id} only.
+          example:
+            database.hostname: localhost
+            plugin.name: pgoutput
         status:
           $ref: '#/components/schemas/ConnectorStatus'
         lag_ms:
           type: integer
           nullable: true
           description: Replication lag in milliseconds; null when unknown.
+          example: 120
         tasks_count:
           type: integer
+          example: 1
         created_by:
-          $ref: '#/components/schemas/UserRef'
+          allOf:
+            - $ref: '#/components/schemas/UserRef'
           nullable: true
+          example:
+            id: 550e8400-e29b-41d4-a716-446655440000
+            username: jdoe
         created_at:
           type: string
           format: date-time
+          example: '2026-08-18T00:00:00Z'
         updated_at:
           type: string
           format: date-time
           nullable: true
+          example: null
     ConnectorCreateRequest:
+      description: Payload for creating a connector.
       type: object
       required:
         - name
@@ -1606,14 +1888,20 @@ components:
           type: string
           minLength: 1
           maxLength: 128
+          example: pg-connector
         plugin_type:
           type: string
           description: Fully qualified connector class, e.g. io.debezium.connector.postgresql.PostgresConnector.
+          example: io.debezium.connector.postgresql.PostgresConnector
         config:
           type: object
           additionalProperties: true
           description: Connector configuration including DB connection properties, converters, and optional SMTs.
+          example:
+            database.hostname: localhost
+            plugin.name: pgoutput
     ConnectorUpdateRequest:
+      description: Partial payload for updating a connector.
       type: object
       minProperties: 1
       properties:
@@ -1622,11 +1910,15 @@ components:
           minLength: 1
           maxLength: 128
           description: Optional new name for the connector.
+          example: pg-connector
         config:
           type: object
           additionalProperties: true
           description: Optional new configuration for the connector.
+          example:
+            database.hostname: localhost
     ConnectorActionRequest:
+      description: Action to perform on a connector.
       type: object
       required:
         - action
@@ -1634,7 +1926,9 @@ components:
         action:
           type: string
           enum: [pause, resume, restart]
+          example: pause
     Task:
+      description: Kafka Connect task summary.
       type: object
       required:
         - id
@@ -1642,13 +1936,16 @@ components:
       properties:
         id:
           type: string
+          example: task-1
         state:
           type: string
           example: RUNNING
         worker_id:
           type: string
           nullable: true
+          example: worker-1
     TaskDetail:
+      description: Detailed task information including the last error trace.
       allOf:
         - $ref: '#/components/schemas/Task'
         - type: object
@@ -1657,7 +1954,9 @@ components:
               type: string
               nullable: true
               description: Last error stack trace, if any.
+              example: null
     ConnectorSummary:
+      description: Aggregated summary for a single connector.
       type: object
       required:
         - status
@@ -1668,20 +1967,28 @@ components:
         lag_ms:
           type: integer
           nullable: true
+          example: 120
         records_per_sec:
           type: integer
           nullable: true
+          example: 42
         uptime_sec:
           type: integer
           nullable: true
+          example: 86400
         errors_count:
           type: integer
           nullable: true
+          example: 0
         tasks:
           type: array
           items:
             $ref: '#/components/schemas/Task'
+          example:
+            - id: task-1
+              state: RUNNING
     MetricsPoint:
+      description: One metrics sample at a point in time.
       type: object
       required:
         - timestamp
@@ -1689,33 +1996,45 @@ components:
         timestamp:
           type: string
           format: date-time
+          example: '2026-08-18T00:00:00Z'
         avg_lag_ms:
           type: integer
           nullable: true
+          example: 120
         max_lag_ms:
           type: integer
           nullable: true
+          example: 250
         avg_records_per_sec:
           type: integer
           nullable: true
+          example: 42
         avg_commit_latency_ms:
           type: integer
           nullable: true
+          example: 15
         max_commit_latency_ms:
           type: integer
           nullable: true
+          example: 30
     ClusterStats:
+      description: Cluster-wide connector statistics.
       type: object
       properties:
         failed_connectors:
           type: integer
+          example: 1
         running_connectors:
           type: integer
+          example: 1
         paused_connectors:
           type: integer
+          example: 0
         records_per_sec:
           type: integer
+          example: 42
     ConnectorListResponse:
+      description: Paginated list of connectors with optional cluster statistics.
       type: object
       required:
         - data
@@ -1725,13 +2044,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Connector'
+          example:
+            - id: conn-1
+              name: pg-connector
+              status: running
+              tasks_count: 1
+              created_at: '2026-08-18T00:00:00Z'
+              updated_at: null
         meta:
           $ref: '#/components/schemas/PaginationMeta'
         cluster_stats:
-          $ref: '#/components/schemas/ClusterStats'
+          allOf:
+            - $ref: '#/components/schemas/ClusterStats'
           nullable: true
           description: Cluster-wide statistics for the deployment.
+          example:
+            failed_connectors: 0
+            running_connectors: 1
+            paused_connectors: 0
+            records_per_sec: 42
     ConnectorTasksResponse:
+      description: List of tasks for a connector.
       type: object
       required:
         - tasks
@@ -1740,7 +2073,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Task'
+          example:
+            - id: task-1
+              state: RUNNING
     MetricsResponse:
+      description: Time series of connector metrics.
       type: object
       required:
         - points
@@ -1749,7 +2086,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MetricsPoint'
+          example:
+            - timestamp: '2026-08-18T00:00:00Z'
+              avg_lag_ms: 120
     AuditLogListItem:
+      description: Audit log entry summary.
       type: object
       required:
         - id
@@ -1758,24 +2099,32 @@ components:
       properties:
         id:
           type: string
+          example: log-1
         created_at:
           type: string
           format: date-time
+          example: '2026-08-18T00:00:00Z'
         action:
           type: string
+          example: create_connector
         user_name:
           type: string
           nullable: true
+          example: jdoe
         user_id:
           type: string
           nullable: true
+          example: 550e8400-e29b-41d4-a716-446655440000
         connector_name:
           type: string
           nullable: true
+          example: pg-connector
         connector_id:
           type: string
           nullable: true
+          example: conn-1
     AuditLog:
+      description: Full audit log entry with state snapshots.
       allOf:
         - $ref: '#/components/schemas/AuditLogListItem'
         - type: object
@@ -1784,11 +2133,19 @@ components:
               type: object
               additionalProperties: true
               nullable: true
+              example:
+                name: pg-connector
+                config: null
             state_after:
               type: object
               additionalProperties: true
               nullable: true
+              example:
+                name: pg-connector
+                config:
+                  database.hostname: localhost
     AuditLogListResponse:
+      description: Paginated list of audit log entries.
       type: object
       required:
         - data
@@ -1798,9 +2155,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AuditLogListItem'
+          example:
+            - id: log-1
+              created_at: '2026-08-18T00:00:00Z'
+              action: create_connector
         meta:
           $ref: '#/components/schemas/PaginationMeta'
     PluginListItem:
+      description: Available plugin summary.
       type: object
       required:
         - id
@@ -1809,9 +2171,12 @@ components:
         id:
           type: string
           description: Fully qualified plugin class name.
+          example: io.debezium.connector.postgresql.PostgresConnector
         name:
           type: string
+          example: PostgresConnector
     PluginSchemaField:
+      description: Configuration field description.
       type: object
       required:
         - name
@@ -1820,21 +2185,27 @@ components:
       properties:
         name:
           type: string
+          example: database.hostname
         label:
           type: string
           nullable: true
+          example: Database Hostname
         description:
           type: string
           nullable: true
+          example: IP address or hostname of the database server.
         type:
           type: string
           example: STRING
         required:
           type: boolean
+          example: true
         default:
           type: string
           nullable: true
+          example: localhost
     PluginSchema:
+      description: Configuration schema of a plugin.
       type: object
       required:
         - fields
@@ -1843,7 +2214,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PluginSchemaField'
+          example:
+            - name: database.hostname
+              label: Database Hostname
+              description: IP address or hostname of the database server.
+              type: STRING
+              required: true
+              default: localhost
     ValidationIssue:
+      description: Single validation finding.
       type: object
       required:
         - field
@@ -1853,14 +2232,19 @@ components:
       properties:
         field:
           type: string
+          example: database.hostname
         step:
           type: string
+          example: config_validation
         status:
           type: string
           enum: [ERROR, WARNING]
+          example: ERROR
         message:
           type: string
+          example: Unable to reach database host.
     ValidationResult:
+      description: Result of connector configuration validation.
       type: object
       required:
         - valid
@@ -1868,11 +2252,18 @@ components:
       properties:
         valid:
           type: boolean
+          example: true
         results:
           type: array
           items:
             $ref: '#/components/schemas/ValidationIssue'
+          example:
+            - field: database.hostname
+              step: config_validation
+              status: ERROR
+              message: Unable to reach database host.
     ValidateConnectorRequest:
+      description: Connector configuration to validate.
       type: object
       required:
         - plugin_id
@@ -1880,14 +2271,19 @@ components:
       properties:
         plugin_id:
           type: string
+          example: io.debezium.connector.postgresql.PostgresConnector
         config:
           type: object
           additionalProperties: true
+          example:
+            database.hostname: localhost
         transforms:
           type: array
           items:
             type: string
 
+          example:
+            - InsertField$Value
   securitySchemes:
     bearerAuth:
       type: http

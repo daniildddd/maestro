@@ -2,7 +2,7 @@
 export
 
 .DEFAULT_GOAL := help
-.PHONY: build run migrate-create docker-up docker-down lint lint-fix mocks test
+.PHONY: build run migrate-create docker-up docker-down lint lint-fix mocks test validate-swagger
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -40,6 +40,9 @@ test: ## Run unit tests with race detection and coverage
 
 test-integration:
 	@go test -tags integration -race ./...
+
+validate-swagger: ## Validate OpenAPI spec
+	@vacuum lint -r vacuum.yml docs/swagger.yaml
 
 help: ## Show available commands
 	@echo "Available commands:"

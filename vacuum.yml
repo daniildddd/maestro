@@ -1,0 +1,8 @@
+extends: [[vacuum:oas, recommended]]
+rules:
+  # snake_case is the deliberate API convention (Go JSON tags, DB columns).
+  camel-case-properties: off
+  # DELETE /users/me intentionally carries a confirmation body.
+  no-request-body: off
+  # Shared $ref response components legitimately repeat descriptions.
+  description-duplication: off

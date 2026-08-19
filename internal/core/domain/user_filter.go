@@ -1,16 +1,8 @@
 package domain
 
 import (
-	"errors"
 	"fmt"
 )
-
-const (
-	RoleUser  = "user"
-	RoleAdmin = "admin"
-)
-
-var ErrInvalidRole = errors.New("role must be one of: user, admin")
 
 type UserFilter struct {
 	Page     int

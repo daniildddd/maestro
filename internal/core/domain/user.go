@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,8 +23,10 @@ func NewUser(
 	role string,
 	createdAt time.Time,
 	updatedAt *time.Time,
-) User {
-	return User{
+) (User, error) {
+	const op = "core.domain.NewUser"
+
+	u := User{
 		ID:           id,
 		Username:     username,
 		PasswordHash: passwordHash,
@@ -31,4 +34,24 @@ func NewUser(
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
 	}
+
+	if err := u.Validate(); err != nil {
+		return User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return u, nil
+}
+
+func (u User) Validate() error {
+	const op = "domain.User.Validate"
+
+	if err := ValidateUsername(u.Username); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if u.Role != RoleUser && u.Role != RoleAdmin {
+		return fmt.Errorf("%s: %w", op, ErrInvalidRole)
+	}
+
+	return nil
 }

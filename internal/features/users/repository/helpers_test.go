@@ -1,30 +1,13 @@
-package transport_test
+package repository_test
 
 import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/google/uuid"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
-	"github.com/daniildddd/maestro/internal/core/logger"
-	"github.com/daniildddd/maestro/internal/features/users/transport"
 )
-
-func nopLogger() *logger.Logger {
-	return &logger.Logger{Logger: zap.NewNop()}
-}
-
-func newUsersTestHandler(usersService transport.UsersService) *transport.UsersHTTPHandler {
-	return transport.NewUsersHTTPHandler(usersService)
-}
-
-type errorResponseBody struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
 
 //nolint:unparam // test helper mirrors domain.NewUser; any argument may vary per test
 func mustNewUser(

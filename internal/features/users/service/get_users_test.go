@@ -39,7 +39,7 @@ func TestGetUsers(t *testing.T) {
 				repo.EXPECT().
 					GetUsers(mock.Anything, filter).
 					Return([]domain.User{
-						domain.NewUser(
+						mustNewUser(t,
 							userID,
 							"alice",
 							"hash",
@@ -51,7 +51,7 @@ func TestGetUsers(t *testing.T) {
 					Once()
 			},
 			wantUsers: []domain.User{
-				domain.NewUser(
+				mustNewUser(t,
 					userID,
 					"alice",
 					"hash",

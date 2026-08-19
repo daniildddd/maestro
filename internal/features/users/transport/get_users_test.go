@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
+	"github.com/daniildddd/maestro/internal/core/logger"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 	"github.com/daniildddd/maestro/internal/features/users/transport"
 )
@@ -54,7 +54,7 @@ func TestGetUsers(t *testing.T) {
 						}),
 					).
 					Return([]domain.User{
-						domain.NewUser(
+						mustNewUser(t,
 							userID,
 							"alice",
 							"hash",
@@ -89,7 +89,7 @@ func TestGetUsers(t *testing.T) {
 				m.EXPECT().
 					GetUsers(mock.Anything, mock.Anything).
 					Return([]domain.User{
-						domain.NewUser(
+						mustNewUser(t,
 							userID,
 							"bob",
 							"hash",
@@ -129,7 +129,7 @@ func TestGetUsers(t *testing.T) {
 						}),
 					).
 					Return([]domain.User{
-						domain.NewUser(
+						mustNewUser(t,
 							userID,
 							"carol",
 							"hash",

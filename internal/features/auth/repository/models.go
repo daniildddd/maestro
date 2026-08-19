@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,8 +38,10 @@ func (u *userModel) Scan(row core_postgres_pool.Row) error {
 	)
 }
 
-func (u *userModel) toDomain() domain.User {
-	return domain.NewUser(
+func (u *userModel) toDomain() (domain.User, error) {
+	const op = "auth.repository.toDomain"
+
+	user, err := domain.NewUser(
 		u.ID,
 		u.Username,
 		u.PasswordHash,
@@ -46,6 +49,11 @@ func (u *userModel) toDomain() domain.User {
 		u.CreatedAt,
 		u.UpdatedAt,
 	)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
 }
 
 func (r *refreshTokenModel) Scan(row core_postgres_pool.Row) error {

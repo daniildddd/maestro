@@ -47,5 +47,14 @@ func (r *UsersRepository) GetUserByID(
 		)
 	}
 
-	return dbUser.toDomain(), nil
+	user, err := dbUser.toDomain()
+	if err != nil {
+		return domain.User{}, fmt.Errorf(
+			"%s: map user: %w",
+			op,
+			err,
+		)
+	}
+
+	return user, nil
 }

@@ -107,7 +107,7 @@ func TestGetUserByID(t *testing.T) {
 					Return(nil).
 					Once()
 			},
-			wantUser: domain.NewUser(
+			wantUser: mustNewUser(t,
 				id,
 				"alice",
 				"hash",
@@ -172,7 +172,7 @@ func TestGetUserByID(t *testing.T) {
 					Return(nil).
 					Once()
 			},
-			wantUser: domain.NewUser(
+			wantUser: mustNewUser(t,
 				id,
 				"alice",
 				"hash",

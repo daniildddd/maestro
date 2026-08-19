@@ -125,7 +125,7 @@ func TestGetUsers(t *testing.T) {
 					Once()
 			},
 			wantUsers: []domain.User{
-				domain.NewUser(
+				mustNewUser(t,
 					userID,
 					"alice",
 					"hash",

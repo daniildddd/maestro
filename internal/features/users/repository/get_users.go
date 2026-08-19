@@ -43,7 +43,16 @@ func (r *UsersRepository) GetUsers(
 			)
 		}
 
-		users = append(users, dbUser.toDomain())
+		user, err := dbUser.toDomain()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"%s: map user: %w",
+				op,
+				err,
+			)
+		}
+
+		users = append(users, user)
 	}
 
 	if err := rows.Err(); err != nil {

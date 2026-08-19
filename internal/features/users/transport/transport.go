@@ -20,6 +20,13 @@ type UsersService interface {
 		filter domain.UserFilter,
 	) ([]domain.User, error)
 
+	CreateUser(
+		ctx context.Context,
+		username string,
+		password string,
+		role string,
+	) (domain.User, error)
+
 	GetUserByID(
 		ctx context.Context,
 		id uuid.UUID,

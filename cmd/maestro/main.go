@@ -106,13 +106,10 @@ func run() int {
 		baseMW...,
 	)
 
-	privateMW := make([]middleware.Middleware, len(baseMW), len(baseMW)+2)
+	privateMW := make([]middleware.Middleware, len(baseMW), len(baseMW)+1)
 	copy(privateMW, baseMW)
 
-	privateMW = append(
-		privateMW,
-		middleware.Auth(accessManager),
-		middleware.RequireRole(cfgMiddleware.Roles...))
+	privateMW = append(privateMW, middleware.Auth(accessManager))
 
 	privateV1 := server.NewAPIVersionRouter(
 		authTransportHTTP.PrivateRoutes(),

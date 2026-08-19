@@ -8,7 +8,6 @@ import (
 
 type Config struct {
 	AllowedOrigins []string `envconfig:"ALLOWED_ORIGINS" required:"true"`
-	Roles          []string `envconfig:"ROLES"           required:"true"`
 }
 
 func NewConfigMust() Config {

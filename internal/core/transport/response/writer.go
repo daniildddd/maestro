@@ -24,8 +24,24 @@ func NewResponseWriter(w http.ResponseWriter) *RWriter {
 }
 
 func (rw *RWriter) WriteHeader(statusCode int) {
-	rw.ResponseWriter.WriteHeader(statusCode)
+	if rw.statusCode != StatusCodeUninitialized {
+		return
+	}
+
 	rw.statusCode = statusCode
+	rw.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (rw *RWriter) Write(b []byte) (int, error) {
+	if rw.statusCode == StatusCodeUninitialized {
+		rw.statusCode = http.StatusOK
+	}
+
+	return rw.ResponseWriter.Write(b)
+}
+
+func (rw *RWriter) Written() bool {
+	return rw.statusCode != StatusCodeUninitialized
 }
 
 func (rw *RWriter) GetStatusCode() int {

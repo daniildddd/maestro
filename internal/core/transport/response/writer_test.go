@@ -25,6 +25,7 @@ func TestNewResponseWriter(t *testing.T) {
 		must.Same(rec, rw.ResponseWriter)
 		must.Nil(rw.AppErr)
 		must.NoError(rw.RawErr)
+		must.False(rw.Written())
 	})
 }
 
@@ -73,10 +74,11 @@ func TestRWriter_WriteHeader(t *testing.T) {
 
 			is.Equal(tt.statusCode, rec.Code)
 			is.Equal(tt.statusCode, rw.GetStatusCode())
+			is.True(rw.Written())
 		})
 	}
 
-	t.Run("last WriteHeader wins when called multiple times", func(t *testing.T) {
+	t.Run("first WriteHeader wins when called multiple times", func(t *testing.T) {
 		t.Parallel()
 		is := assert.New(t)
 
@@ -86,7 +88,61 @@ func TestRWriter_WriteHeader(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 		rw.WriteHeader(http.StatusNotFound)
 
-		is.Equal(http.StatusNotFound, rw.GetStatusCode())
+		is.Equal(http.StatusOK, rec.Code)
+		is.Equal(http.StatusOK, rw.GetStatusCode())
+		is.True(rw.Written())
+	})
+}
+
+func TestRWriter_Write(t *testing.T) {
+	t.Parallel()
+
+	t.Run("write without WriteHeader records implicit 200", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+		must := require.New(t)
+
+		rec := httptest.NewRecorder()
+		rw := response.NewResponseWriter(rec)
+
+		_, err := rw.Write([]byte("hello")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		must.NoError(err)
+		is.Equal(http.StatusOK, rec.Code)
+		is.Equal(http.StatusOK, rw.GetStatusCode())
+		is.True(rw.Written())
+	})
+
+	t.Run("write after WriteHeader does not change status", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+		must := require.New(t)
+
+		rec := httptest.NewRecorder()
+		rw := response.NewResponseWriter(rec)
+
+		rw.WriteHeader(http.StatusInternalServerError)
+
+		_, err := rw.Write([]byte("boom")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		must.NoError(err)
+		is.Equal(http.StatusInternalServerError, rec.Code)
+		is.Equal(http.StatusInternalServerError, rw.GetStatusCode())
+	})
+
+	t.Run("WriteHeader after write does not change status", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+		must := require.New(t)
+
+		rec := httptest.NewRecorder()
+		rw := response.NewResponseWriter(rec)
+
+		_, err := rw.Write([]byte("hello")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		must.NoError(err)
+
+		rw.WriteHeader(http.StatusInternalServerError)
+
+		is.Equal(http.StatusOK, rec.Code)
+		is.Equal(http.StatusOK, rw.GetStatusCode())
 	})
 }
 

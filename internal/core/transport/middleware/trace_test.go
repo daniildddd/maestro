@@ -9,10 +9,12 @@ import (
 
 	"go.uber.org/zap/zapcore"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/logger"
+	"github.com/daniildddd/maestro/internal/core/security/access"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
@@ -200,4 +202,42 @@ func TestTrace(t *testing.T) {
 			must.False(hasErr, "success path must not log error field")
 		})
 	}
+
+	t.Run("summary includes user_id and role when Auth runs inside", func(t *testing.T) {
+		t.Parallel()
+		must := require.New(t)
+
+		userID := uuid.New()
+
+		log, recordedLogs := newObservableLogger(t, zapcore.InfoLevel)
+
+		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+
+		verifier := &fakeTokenVerifier{
+			user: access.AuthUser{UserID: userID, Role: "admin"},
+		}
+
+		req := newTestRequest(
+			t,
+			http.MethodGet,
+			"/api/v1/users",
+			http.Header{"Authorization": []string{"Bearer valid"}},
+		)
+		req = req.WithContext(logger.ToContext(req.Context(), log))
+		rec := httptest.NewRecorder()
+
+		chained := middleware.Trace()(middleware.Auth(verifier)(nextHandler))
+		chained.ServeHTTP(rec, req)
+
+		must.Equal(http.StatusOK, rec.Code)
+
+		logs := recordedLogs.All()
+		must.Len(logs, 1)
+
+		ctxMap := logs[0].ContextMap()
+		must.Equal(userID.String(), ctxMap["user_id"])
+		must.Equal("admin", ctxMap["role"])
+	})
 }

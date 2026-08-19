@@ -28,6 +28,13 @@ func Trace() Middleware {
 				zap.Duration("latency", time.Since(before)),
 			}
 
+			if rw.AuthDone {
+				fields = append(fields,
+					zap.String("user_id", rw.UserID.String()),
+					zap.String("role", rw.Role),
+				)
+			}
+
 			appErr := rw.AppErr
 			if appErr != nil {
 				fields = append(fields,

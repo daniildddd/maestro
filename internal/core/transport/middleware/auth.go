@@ -51,6 +51,12 @@ func Auth(tv TokenVerifier) Middleware {
 			ctx = reqctx.WithUserID(ctx, claims.UserID)
 			ctx = reqctx.WithRole(ctx, claims.Role)
 
+			if rw, ok := w.(*core_http_response.RWriter); ok {
+				rw.UserID = claims.UserID
+				rw.Role = claims.Role
+				rw.AuthDone = true
+			}
+
 			ctx = core_logger.ToContext(ctx, l)
 
 			next.ServeHTTP(w, r.WithContext(ctx))

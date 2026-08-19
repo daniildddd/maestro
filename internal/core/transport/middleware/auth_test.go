@@ -110,11 +110,16 @@ func TestAuth(t *testing.T) {
 			}
 
 			if !tt.wantNext {
+				must.False(rw.AuthDone)
+
 				return
 			}
 
 			must.Equal(tt.wantUserID, capturedUserID)
 			must.Equal(tt.wantRole, capturedRole)
+			must.True(rw.AuthDone)
+			must.Equal(tt.wantUserID, rw.UserID)
+			must.Equal(tt.wantRole, rw.Role)
 
 			logs := recordedLogs.All()
 			must.Len(logs, 1)

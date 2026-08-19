@@ -3,7 +3,6 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"regexp"
 )
 
 const (
@@ -11,12 +10,7 @@ const (
 	RoleAdmin = "admin"
 )
 
-var (
-	ErrInvalidRole     = errors.New("role must be one of: user, admin")
-	ErrInvalidUsername = errors.New("username must contain only letters, digits, '_' and '-'")
-)
-
-var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+var ErrInvalidRole = errors.New("role must be one of: user, admin")
 
 type UserFilter struct {
 	Page     int
@@ -31,7 +25,7 @@ func NewUserFilter(
 	username string,
 	userRole string,
 ) (UserFilter, error) {
-	const op = "domain.NewUserFilter"
+	const op = "core.domain.NewUserFilter"
 
 	f := UserFilter{
 		Page:     page,
@@ -71,8 +65,10 @@ func (u *UserFilter) Validate() error {
 		return fmt.Errorf("%s: %w", op, ErrInvalidRole)
 	}
 
-	if u.Username != "" && !usernameRegex.MatchString(u.Username) {
-		return fmt.Errorf("%s: %w", op, ErrInvalidUsername)
+	if u.Username != "" {
+		if err := ValidateUsername(u.Username); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
 	}
 
 	return nil

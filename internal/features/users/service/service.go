@@ -10,14 +10,24 @@ import (
 
 type UsersService struct {
 	usersRepository UsersRepository
+	passwordHasher  PasswordHasher
 }
 
 func NewUsersService(
 	usersRepository UsersRepository,
+	passwordHasher PasswordHasher,
 ) *UsersService {
 	return &UsersService{
 		usersRepository: usersRepository,
+		passwordHasher:  passwordHasher,
 	}
+}
+
+type PasswordHasher interface {
+	Verify(
+		hash string,
+		plain string,
+	) error
 }
 
 type UsersRepository interface {

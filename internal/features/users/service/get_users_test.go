@@ -15,8 +15,16 @@ import (
 	"github.com/daniildddd/maestro/internal/features/users/service"
 )
 
-func newTestService(usersRepository service.UsersRepository) *service.UsersService {
-	return service.NewUsersService(usersRepository)
+func newTestService(
+	t *testing.T,
+	usersRepository service.UsersRepository,
+) *service.UsersService {
+	t.Helper()
+
+	return service.NewUsersService(
+		usersRepository,
+		NewMockPasswordHasher(t),
+	)
 }
 
 func TestGetUsers(t *testing.T) {
@@ -82,7 +90,7 @@ func TestGetUsers(t *testing.T) {
 			repo := NewMockUsersRepository(t)
 			tt.setupMock(repo)
 
-			svc := newTestService(repo)
+			svc := newTestService(t, repo)
 
 			users, err := svc.GetUsers(context.Background(), filter)
 

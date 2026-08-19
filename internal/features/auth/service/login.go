@@ -29,9 +29,8 @@ func (s *AuthService) Login(
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
 			return domain.TokenPair{}, fmt.Errorf(
-				"%s: user not found for username=%s: %w: %v",
+				"%s: user not found: %w: %v",
 				op,
-				username,
 				errs.ErrInvalidCredentials,
 				err,
 			)

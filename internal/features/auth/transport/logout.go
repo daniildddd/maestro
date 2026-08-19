@@ -9,7 +9,7 @@ import (
 )
 
 func (h *AuthHTTPHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	const op = "auth.transport.logout"
+	const op = "auth.transport.Logout"
 
 	ctx := r.Context()
 	log := logger.FromContext(ctx)

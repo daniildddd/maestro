@@ -14,7 +14,7 @@ type refreshResponse struct {
 }
 
 func (h *AuthHTTPHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	const op = "auth.transport.refresh"
+	const op = "auth.transport.Refresh"
 
 	ctx := r.Context()
 	log := logger.FromContext(ctx)

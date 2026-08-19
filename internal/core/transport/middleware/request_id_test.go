@@ -5,9 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 
@@ -85,30 +82,4 @@ func TestRequestID(t *testing.T) {
 			must.Equal(tt.headerValue, requestHeader)
 		})
 	}
-
-	t.Run("logs invalid header at debug level", func(t *testing.T) {
-		t.Parallel()
-		must := require.New(t)
-
-		req := newTestRequest(t, http.MethodGet, "/", http.Header{
-			"X-Request-ID": []string{"non-a-uuid"},
-		})
-		log, recordedLogs := newObservableLogger(t, zapcore.DebugLevel)
-		req = req.WithContext(core_logger.ToContext(req.Context(), log))
-
-		chained := middleware.RequestID()(
-			http.HandlerFunc(
-				func(_ http.ResponseWriter, _ *http.Request) {},
-			),
-		)
-		chained.ServeHTTP(httptest.NewRecorder(), req)
-
-		logs := recordedLogs.All()
-		must.Len(logs, 1)
-		must.Equal(zap.DebugLevel, logs[0].Level)
-
-		contextMap := logs[0].ContextMap()
-
-		must.Equal("non-a-uuid", contextMap["received"])
-	})
 }

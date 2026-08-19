@@ -29,6 +29,12 @@ type UsersService interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) error
+
+	DeleteMe(
+		ctx context.Context,
+		userID uuid.UUID,
+		password string,
+	) error
 }
 
 func NewUsersHTTPHandler(
@@ -55,6 +61,11 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodDelete,
 			Path:    "/users/{id}",
 			Handler: h.DeleteUser,
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/users/me",
+			Handler: h.DeleteMe,
 		},
 	}
 }

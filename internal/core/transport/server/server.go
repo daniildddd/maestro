@@ -9,14 +9,12 @@ import (
 	"go.uber.org/zap"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
-	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 )
 
 type HTTPServer struct {
-	mux         *http.ServeMux
-	config      Config
-	log         *core_logger.Logger
-	middlewares []middleware.Middleware
+	mux    *http.ServeMux
+	config Config
+	log    *core_logger.Logger
 }
 
 func NewHTTPServer(
@@ -50,7 +48,7 @@ func (s *HTTPServer) RegisterRoute(route ...Route) {
 func (s *HTTPServer) Run(ctx context.Context) error {
 	const op = "transport.server.Run"
 
-	mux := middleware.ChainMiddleware(s.mux, s.middlewares...)
+	mux := s.mux
 
 	server := http.Server{
 		Addr:                         s.config.Addr,

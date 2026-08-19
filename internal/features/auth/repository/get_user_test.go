@@ -59,53 +59,7 @@ func TestGetUserByName(t *testing.T) {
 					Return(row).
 					Once()
 
-				row.EXPECT().
-					Scan(mock.Anything).
-					Run(func(dest ...any) {
-						ptrs, ok := dest[0].([]any)
-						if !ok {
-							return
-						}
-
-						idPtr, ok := ptrs[0].(*uuid.UUID)
-						if !ok {
-							return
-						}
-
-						usernamePtr, ok := ptrs[1].(*string)
-						if !ok {
-							return
-						}
-
-						passwordHashPtr, ok := ptrs[2].(*string)
-						if !ok {
-							return
-						}
-
-						rolePtr, ok := ptrs[3].(*string)
-						if !ok {
-							return
-						}
-
-						createdAtPtr, ok := ptrs[4].(*time.Time)
-						if !ok {
-							return
-						}
-
-						updatedAtPtr, ok := ptrs[5].(**time.Time)
-						if !ok {
-							return
-						}
-
-						*idPtr = id
-						*usernamePtr = "alice"
-						*passwordHashPtr = "hash"
-						*rolePtr = "admin"
-						*createdAtPtr = createdAt
-						*updatedAtPtr = &updatedAt
-					}).
-					Return(nil).
-					Once()
+				scanUserIntoRow(row, mustNewUser(t, id, "alice", "hash", "admin", createdAt, &updatedAt))
 			},
 			wantUser: mustNewUser(t,
 				id,
@@ -130,47 +84,7 @@ func TestGetUserByName(t *testing.T) {
 					Return(row).
 					Once()
 
-				row.EXPECT().
-					Scan(mock.Anything).
-					Run(func(dest ...any) {
-						ptrs, ok := dest[0].([]any)
-						if !ok {
-							return
-						}
-
-						idPtr, ok := ptrs[0].(*uuid.UUID)
-						if !ok {
-							return
-						}
-
-						usernamePtr, ok := ptrs[1].(*string)
-						if !ok {
-							return
-						}
-
-						passwordHashPtr, ok := ptrs[2].(*string)
-						if !ok {
-							return
-						}
-
-						rolePtr, ok := ptrs[3].(*string)
-						if !ok {
-							return
-						}
-
-						createdAtPtr, ok := ptrs[4].(*time.Time)
-						if !ok {
-							return
-						}
-
-						*idPtr = id
-						*usernamePtr = "alice"
-						*passwordHashPtr = "hash"
-						*rolePtr = "admin"
-						*createdAtPtr = createdAt
-					}).
-					Return(nil).
-					Once()
+				scanUserIntoRow(row, mustNewUser(t, id, "alice", "hash", "admin", createdAt, nil))
 			},
 			wantUser: mustNewUser(t,
 				id,

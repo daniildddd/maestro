@@ -94,8 +94,8 @@ func run() int {
 
 	baseMW := []middleware.Middleware{
 		middleware.CORS(cfgMiddleware.AllowedOrigins),
-		middleware.Logger(logger),
 		middleware.RequestID(),
+		middleware.Logger(logger),
 		middleware.Trace(),
 		middleware.Recovery(),
 	}

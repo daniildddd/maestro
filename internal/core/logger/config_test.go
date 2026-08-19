@@ -81,8 +81,9 @@ func TestNewConfig(t *testing.T) {
 //nolint:paralleltest // t.Setenv is incompatible with t.Parallel (affects process-wide env)
 func TestNewConfigMust(t *testing.T) {
 	t.Run("valid env does not panic and returns config", func(t *testing.T) {
-		must := require.New(t)
 		is := assert.New(t)
+		must := require.New(t)
+
 		t.Setenv("LOGGER_LEVEL", "DEBUG")
 		t.Setenv("LOGGER_FOLDER", "/test")
 

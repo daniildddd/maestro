@@ -196,3 +196,50 @@ func (_c *MockUsersService_GetUsers_Call) RunAndReturn(run func(ctx context.Cont
 	_c.Call.Return(run)
 	return _c
 }
+
+// DeleteMe provides a mock function for the type MockUsersService
+func (_mock *MockUsersService) DeleteMe(ctx context.Context, userID uuid.UUID, password string) error {
+	ret := _mock.Called(ctx, userID, password)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteMe")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) error); ok {
+		r0 = returnFunc(ctx, userID, password)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockUsersService_DeleteMe_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteMe'
+type MockUsersService_DeleteMe_Call struct {
+	*mock.Call
+}
+
+// DeleteMe is a helper method to define mock.On call
+//   - ctx
+//   - userID
+//   - password
+func (_e *MockUsersService_Expecter) DeleteMe(ctx interface{}, userID interface{}, password interface{}) *MockUsersService_DeleteMe_Call {
+	return &MockUsersService_DeleteMe_Call{Call: _e.mock.On("DeleteMe", ctx, userID, password)}
+}
+
+func (_c *MockUsersService_DeleteMe_Call) Run(run func(ctx context.Context, userID uuid.UUID, password string)) *MockUsersService_DeleteMe_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockUsersService_DeleteMe_Call) Return(err error) *MockUsersService_DeleteMe_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockUsersService_DeleteMe_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID, password string) error) *MockUsersService_DeleteMe_Call {
+	_c.Call.Return(run)
+	return _c
+}

@@ -91,7 +91,7 @@ func buildGetUsersQuery(filter domain.UserFilter) (query string, args []any) {
 	}
 
 	args = append(args, filter.Limit, offset(filter.Page, filter.Limit))
-	fmt.Fprintf( //nolint:unhandled-error // writing to strings.Builder cannot fail
+	fmt.Fprintf( //nolint:revive // writing to strings.Builder cannot fail
 		&sb,
 		" ORDER BY created_at LIMIT $%d OFFSET $%d",
 		len(args)-1,

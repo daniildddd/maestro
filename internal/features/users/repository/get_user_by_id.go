@@ -33,16 +33,18 @@ func (r *UsersRepository) GetUserByID(
 	if err := dbUser.Scan(row); err != nil {
 		if errors.Is(err, postgres.ErrNoRows) {
 			return domain.User{}, fmt.Errorf(
-				"%s: scan user: %w: %v",
+				"%s: scan user (id=%s): %w: %v",
 				op,
+				id,
 				errs.ErrUserNotFound,
 				err,
 			)
 		}
 
 		return domain.User{}, fmt.Errorf(
-			"%s: scan user: %w",
+			"%s: scan user (id=%s): %w",
 			op,
+			id,
 			err,
 		)
 	}

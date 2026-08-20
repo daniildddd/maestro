@@ -10,6 +10,8 @@ import (
 	core_http_server "github.com/daniildddd/maestro/internal/core/transport/server"
 )
 
+const usersByIDPath = "/users/{id}"
+
 type UsersHTTPHandler struct {
 	usersService UsersService
 }
@@ -48,6 +50,14 @@ type UsersService interface {
 		id uuid.UUID,
 		newPassword string,
 	) error
+
+
+
+	UpdateUser(
+		ctx context.Context,
+		id uuid.UUID,
+		username string,
+	) (domain.User, error)
 }
 
 func NewUsersHTTPHandler(
@@ -79,14 +89,20 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Roles:   []string{domain.RoleAdmin},
 		},
 		{
+			Method:  http.MethodPatch,
+			Path:    usersByIDPath,
+			Handler: h.UpdateUser,
+			Roles:   []string{domain.RoleAdmin},
+		},
+		{
 			Method:  http.MethodGet,
-			Path:    "/users/{id}",
+			Path:    usersByIDPath,
 			Handler: h.GetUserByID,
 			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
 		},
 		{
 			Method:  http.MethodDelete,
-			Path:    "/users/{id}",
+			Path:    usersByIDPath,
 			Handler: h.DeleteUser,
 			Roles:   []string{domain.RoleAdmin},
 		},
@@ -96,5 +112,6 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Handler: h.DeleteMe,
 			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
 		},
+
 	}
 }

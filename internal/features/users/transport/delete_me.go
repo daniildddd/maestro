@@ -21,11 +21,13 @@ func (h *UsersHTTPHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 	log := logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
+	userID := reqctx.UserID(ctx)
+
 	var deleteMeRequest DeleteMeRequest
 
 	if err := request.DecodeAndValidate(w, r, &deleteMeRequest); err != nil {
 		responseHandler.ErrorResponse(
-			fmt.Errorf("%s: decode and validate: %w", op, err),
+			fmt.Errorf("%s: decode and validate (user_id=%s): %w", op, userID, err),
 		)
 
 		return
@@ -33,7 +35,7 @@ func (h *UsersHTTPHandler) DeleteMe(w http.ResponseWriter, r *http.Request) {
 
 	err := h.usersService.DeleteMe(
 		ctx,
-		reqctx.UserID(ctx),
+		userID,
 		deleteMeRequest.Password,
 	)
 	if err != nil {

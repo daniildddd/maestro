@@ -99,7 +99,15 @@ func TestChangePassword(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
+		{
+			name:        "unknown field returns INVALID_REQUEST_BODY",
+			pathID:      userID.String(),
+			contentType: "application/json",
+			body:        `{"new_password":"newSecret123","extra":1}`,
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
 
 
 

@@ -91,7 +91,14 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
+		{
+			name:        "unknown field returns INVALID_REQUEST_BODY",
+			body:        `{"password":"secret123","extra":1}`,
+			contentType: "application/json",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
 
 
 

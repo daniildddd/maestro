@@ -79,6 +79,15 @@ func TestLogin(t *testing.T) {
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
+			name:        "unknown field returns INVALID_REQUEST_BODY",
+			contentType: "application/json",
+			body:        `{"username":"alice","password":"secret123","extra":1}`,
+			setupMock:   func(_ *MockAuthService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
+
+		{
 			name:        "validation failure returns VALIDATION_FAILED",
 			contentType: "application/json",
 			body:        `{"username":"ab","password":"short"}`,

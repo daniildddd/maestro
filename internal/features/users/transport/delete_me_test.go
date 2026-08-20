@@ -83,7 +83,14 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "VALIDATION_FAILED",
 		},
-
+		{
+			name:        "malformed json returns INVALID_REQUEST_BODY",
+			body:        `{"password":`,
+			contentType: "application/json",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
 
 
 

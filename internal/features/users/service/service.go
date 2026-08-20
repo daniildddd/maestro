@@ -54,4 +54,10 @@ type UsersRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) error
+
+	ChangePassword(
+		ctx context.Context,
+		id uuid.UUID,
+		passwordHash string,
+	) error
 }

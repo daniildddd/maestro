@@ -60,4 +60,10 @@ type UsersRepository interface {
 		id uuid.UUID,
 		passwordHash string,
 	) error
+
+	UpdateUser(
+		ctx context.Context,
+		id uuid.UUID,
+		username string,
+	) (domain.User, error)
 }

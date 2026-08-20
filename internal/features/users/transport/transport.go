@@ -51,7 +51,12 @@ type UsersService interface {
 		newPassword string,
 	) error
 
-
+	ChangeOwnPassword(
+		ctx context.Context,
+		userID uuid.UUID,
+		oldPassword string,
+		newPassword string,
+	) error
 
 	UpdateUser(
 		ctx context.Context,
@@ -112,6 +117,11 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Handler: h.DeleteMe,
 			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
 		},
-
+		{
+			Method:  http.MethodPatch,
+			Path:    "/users/me/password",
+			Handler: h.ChangeOwnPassword,
+			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
+		},
 	}
 }

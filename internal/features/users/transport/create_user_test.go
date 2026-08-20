@@ -102,6 +102,22 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
+			name:        "password too long rejected",
+			body:        `{"username":"alice","password":"` + strings.Repeat("a", 129) + `","role":"admin"}`,
+			contentType: "application/json",
+			setupMock:   func(_ *MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
+		},
+		{
+			name:        "username too long rejected",
+			body:        `{"username":"` + strings.Repeat("a", 33) + `","password":"secret123","role":"admin"}`,
+			contentType: "application/json",
+			setupMock:   func(_ *MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
+		},
+		{
 			name:        "missing role rejected",
 			body:        `{"username":"alice","password":"secret123"}`,
 			contentType: "application/json",

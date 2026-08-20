@@ -103,6 +103,22 @@ func TestLogin(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
+			name:        "username too long returns VALIDATION_FAILED",
+			contentType: "application/json",
+			body:        `{"username":"` + strings.Repeat("a", 33) + `","password":"secret123"}`,
+			setupMock:   func(_ *MockAuthService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
+		},
+		{
+			name:        "password too long returns VALIDATION_FAILED",
+			contentType: "application/json",
+			body:        `{"username":"alice","password":"` + strings.Repeat("a", 129) + `"}`,
+			setupMock:   func(_ *MockAuthService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
+		},
+		{
 			name:        "invalid content type returns INVALID_CONTENT_TYPE",
 			contentType: "text/plain",
 			body:        `{"username":"alice","password":"secret123"}`,

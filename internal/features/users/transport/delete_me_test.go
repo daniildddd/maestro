@@ -71,8 +71,22 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "VALIDATION_FAILED",
 		},
-
-
+		{
+			name:        "password too short returns VALIDATION_FAILED",
+			body:        `{"password":"short"}`,
+			contentType: "application/json",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
+		},
+		{
+			name:        "password too long returns VALIDATION_FAILED",
+			body:        `{"password":"` + strings.Repeat("a", 129) + `"}`,
+			contentType: "application/json",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
+		},
 		{
 			name:        "malformed json returns INVALID_REQUEST_BODY",
 			body:        `{"password":`,

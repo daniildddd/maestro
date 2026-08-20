@@ -13,6 +13,8 @@ type UpdateUserRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=32"`
 }
 
+type UpdateUserResponse UserDTOResponse
+
 func (h *UsersHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	const op = "users.transport.UpdateUser"
 
@@ -49,7 +51,7 @@ func (h *UsersHTTPHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseHandler.JSONResponse(
-		userResponseFromDomain(user),
+		UpdateUserResponse(userDTOFromDomain(user)),
 		http.StatusOK,
 	)
 }

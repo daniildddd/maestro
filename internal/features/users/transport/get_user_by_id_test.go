@@ -40,7 +40,7 @@ func TestGetUserByID(t *testing.T) {
 		setupMock  func(m *MockUsersService)
 		wantStatus int
 		wantCode   string
-		wantBody   transport.UserResponse
+		wantBody   transport.GetUserByIDResponse
 	}{
 		{
 			name:   "success returns user",
@@ -59,7 +59,7 @@ func TestGetUserByID(t *testing.T) {
 					Once()
 			},
 			wantStatus: http.StatusOK,
-			wantBody: transport.UserResponse{
+			wantBody: transport.GetUserByIDResponse{
 				ID:        userID.String(),
 				Username:  "alice",
 				Role:      "admin",
@@ -84,7 +84,7 @@ func TestGetUserByID(t *testing.T) {
 					Once()
 			},
 			wantStatus: http.StatusOK,
-			wantBody: transport.UserResponse{
+			wantBody: transport.GetUserByIDResponse{
 				ID:        userID.String(),
 				Username:  "bob",
 				Role:      "user",
@@ -156,7 +156,7 @@ func TestGetUserByID(t *testing.T) {
 				return
 			}
 
-			var body transport.UserResponse
+			var body transport.GetUserByIDResponse
 
 			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
 			is.Equal(tt.wantBody, body)

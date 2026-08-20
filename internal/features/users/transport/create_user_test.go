@@ -49,7 +49,7 @@ func TestCreateUser(t *testing.T) {
 		setupMock   func(m *MockUsersService)
 		wantStatus  int
 		wantCode    string
-		wantBody    transport.UserResponse
+		wantBody    transport.CreateUserResponse
 	}{
 		{
 			name:        "success creates user",
@@ -77,7 +77,7 @@ func TestCreateUser(t *testing.T) {
 					Once()
 			},
 			wantStatus: http.StatusCreated,
-			wantBody: transport.UserResponse{
+			wantBody: transport.CreateUserResponse{
 				ID:        userID.String(),
 				Username:  "alice",
 				Role:      "admin",
@@ -241,7 +241,7 @@ func TestCreateUser(t *testing.T) {
 				return
 			}
 
-			var body transport.UserResponse
+			var body transport.CreateUserResponse
 
 			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
 			is.Equal(tt.wantBody, body)

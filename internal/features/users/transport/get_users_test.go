@@ -67,7 +67,7 @@ func TestGetUsers(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 			wantBody: transport.GetUsersResponse{
-				Data: []transport.UserResponse{
+				Data: []transport.UserDTOResponse{
 					{
 						ID:        userID.String(),
 						Username:  "alice",
@@ -76,7 +76,7 @@ func TestGetUsers(t *testing.T) {
 						UpdatedAt: &updatedAt,
 					},
 				},
-				Meta: transport.Meta{
+				Meta: transport.PaginationMeta{
 					Page:  2,
 					Limit: 10,
 				},
@@ -102,7 +102,7 @@ func TestGetUsers(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 			wantBody: transport.GetUsersResponse{
-				Data: []transport.UserResponse{
+				Data: []transport.UserDTOResponse{
 					{
 						ID:        userID.String(),
 						Username:  "bob",
@@ -111,7 +111,7 @@ func TestGetUsers(t *testing.T) {
 						UpdatedAt: nil,
 					},
 				},
-				Meta: transport.Meta{
+				Meta: transport.PaginationMeta{
 					Page:  2,
 					Limit: 10,
 				},
@@ -142,7 +142,7 @@ func TestGetUsers(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 			wantBody: transport.GetUsersResponse{
-				Data: []transport.UserResponse{
+				Data: []transport.UserDTOResponse{
 					{
 						ID:        userID.String(),
 						Username:  "carol",
@@ -151,7 +151,7 @@ func TestGetUsers(t *testing.T) {
 						UpdatedAt: nil,
 					},
 				},
-				Meta: transport.Meta{
+				Meta: transport.PaginationMeta{
 					Page:  1,
 					Limit: 20,
 				},
@@ -168,8 +168,8 @@ func TestGetUsers(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 			wantBody: transport.GetUsersResponse{
-				Data: []transport.UserResponse{},
-				Meta: transport.Meta{
+				Data: []transport.UserDTOResponse{},
+				Meta: transport.PaginationMeta{
 					Page:  2,
 					Limit: 10,
 				},

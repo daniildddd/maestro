@@ -9,6 +9,8 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
+type GetUserByIDResponse UserDTOResponse
+
 func (h *UsersHTTPHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	const op = "users.transport.GetUserByID"
 
@@ -35,7 +37,7 @@ func (h *UsersHTTPHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseHandler.JSONResponse(
-		userResponseFromDomain(user),
+		GetUserByIDResponse(userDTOFromDomain(user)),
 		http.StatusOK,
 	)
 }

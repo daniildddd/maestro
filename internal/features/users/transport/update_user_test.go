@@ -43,7 +43,7 @@ func TestUpdateUser(t *testing.T) {
 		setupMock   func(m *MockUsersService)
 		wantStatus  int
 		wantCode    string
-		wantBody    transport.UserResponse
+		wantBody    transport.UpdateUserResponse
 	}{
 		{
 			name:        "success updates username",
@@ -64,7 +64,7 @@ func TestUpdateUser(t *testing.T) {
 					Once()
 			},
 			wantStatus: http.StatusOK,
-			wantBody: transport.UserResponse{
+			wantBody: transport.UpdateUserResponse{
 				ID:        userID.String(),
 				Username:  "updateduser",
 				Role:      "user",
@@ -219,7 +219,7 @@ func TestUpdateUser(t *testing.T) {
 				return
 			}
 
-			var body transport.UserResponse
+			var body transport.UpdateUserResponse
 
 			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
 			is.Equal(tt.wantBody, body)

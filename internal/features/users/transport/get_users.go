@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -14,19 +13,11 @@ import (
 )
 
 type GetUsersResponse struct {
-	Data []UserResponse `json:"data"`
-	Meta Meta           `json:"meta"`
+	Data []UserDTOResponse `json:"data"`
+	Meta PaginationMeta    `json:"meta"`
 }
 
-type UserResponse struct {
-	ID        string     `json:"id"`
-	Username  string     `json:"username"`
-	Role      string     `json:"role"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt *time.Time `json:"updated_at"`
-}
-
-type Meta struct {
+type PaginationMeta struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`
 }
@@ -93,8 +84,8 @@ func (h *UsersHTTPHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	responseHandler.JSONResponse(
 		GetUsersResponse{
-			Data: usersResponseFromDomain(users),
-			Meta: Meta{
+			Data: usersDTOFromDomains(users),
+			Meta: PaginationMeta{
 				Page:  filter.Page,
 				Limit: filter.Limit,
 			},

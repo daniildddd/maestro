@@ -15,6 +15,8 @@ type CreateUserRequest struct {
 	Role     string `json:"role"     validate:"required"`
 }
 
+type CreateUserResponse UserDTOResponse
+
 func (h *UsersHTTPHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	const op = "users.transport.CreateUser"
 
@@ -47,7 +49,7 @@ func (h *UsersHTTPHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseHandler.JSONResponse(
-		userResponseFromDomain(user),
+		CreateUserResponse(userDTOFromDomain(user)),
 		http.StatusCreated,
 	)
 }

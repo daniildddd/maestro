@@ -42,6 +42,12 @@ type UsersService interface {
 		userID uuid.UUID,
 		password string,
 	) error
+
+	ChangePassword(
+		ctx context.Context,
+		id uuid.UUID,
+		newPassword string,
+	) error
 }
 
 func NewUsersHTTPHandler(
@@ -64,6 +70,12 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/users",
 			Handler: h.GetUsers,
+			Roles:   []string{domain.RoleAdmin},
+		},
+		{
+			Method:  http.MethodPatch,
+			Path:    "/users/{id}/password",
+			Handler: h.ChangePassword,
 			Roles:   []string{domain.RoleAdmin},
 		},
 		{

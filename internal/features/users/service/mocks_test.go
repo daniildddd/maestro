@@ -166,6 +166,53 @@ func (_m *MockUsersRepository) EXPECT() *MockUsersRepository_Expecter {
 	return &MockUsersRepository_Expecter{mock: &_m.Mock}
 }
 
+// ChangePassword provides a mock function for the type MockUsersRepository
+func (_mock *MockUsersRepository) ChangePassword(ctx context.Context, id uuid.UUID, passwordHash string) error {
+	ret := _mock.Called(ctx, id, passwordHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ChangePassword")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) error); ok {
+		r0 = returnFunc(ctx, id, passwordHash)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockUsersRepository_ChangePassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ChangePassword'
+type MockUsersRepository_ChangePassword_Call struct {
+	*mock.Call
+}
+
+// ChangePassword is a helper method to define mock.On call
+//   - ctx
+//   - id
+//   - passwordHash
+func (_e *MockUsersRepository_Expecter) ChangePassword(ctx interface{}, id interface{}, passwordHash interface{}) *MockUsersRepository_ChangePassword_Call {
+	return &MockUsersRepository_ChangePassword_Call{Call: _e.mock.On("ChangePassword", ctx, id, passwordHash)}
+}
+
+func (_c *MockUsersRepository_ChangePassword_Call) Run(run func(ctx context.Context, id uuid.UUID, passwordHash string)) *MockUsersRepository_ChangePassword_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockUsersRepository_ChangePassword_Call) Return(err error) *MockUsersRepository_ChangePassword_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockUsersRepository_ChangePassword_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, passwordHash string) error) *MockUsersRepository_ChangePassword_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateUser provides a mock function for the type MockUsersRepository
 func (_mock *MockUsersRepository) CreateUser(ctx context.Context, user domain.User) (domain.User, error) {
 	ret := _mock.Called(ctx, user)

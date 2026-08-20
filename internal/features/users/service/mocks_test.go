@@ -425,3 +425,59 @@ func (_c *MockUsersRepository_GetUsers_Call) RunAndReturn(run func(ctx context.C
 	_c.Call.Return(run)
 	return _c
 }
+
+// UpdateUser provides a mock function for the type MockUsersRepository
+func (_mock *MockUsersRepository) UpdateUser(ctx context.Context, id uuid.UUID, username string) (domain.User, error) {
+	ret := _mock.Called(ctx, id, username)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUser")
+	}
+
+	var r0 domain.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (domain.User, error)); ok {
+		return returnFunc(ctx, id, username)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) domain.User); ok {
+		r0 = returnFunc(ctx, id, username)
+	} else {
+		r0 = ret.Get(0).(domain.User)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = returnFunc(ctx, id, username)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockUsersRepository_UpdateUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUser'
+type MockUsersRepository_UpdateUser_Call struct {
+	*mock.Call
+}
+
+// UpdateUser is a helper method to define mock.On call
+//   - ctx
+//   - id
+//   - username
+func (_e *MockUsersRepository_Expecter) UpdateUser(ctx interface{}, id interface{}, username interface{}) *MockUsersRepository_UpdateUser_Call {
+	return &MockUsersRepository_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, id, username)}
+}
+
+func (_c *MockUsersRepository_UpdateUser_Call) Run(run func(ctx context.Context, id uuid.UUID, username string)) *MockUsersRepository_UpdateUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockUsersRepository_UpdateUser_Call) Return(user domain.User, err error) *MockUsersRepository_UpdateUser_Call {
+	_c.Call.Return(user, err)
+	return _c
+}
+
+func (_c *MockUsersRepository_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, username string) (domain.User, error)) *MockUsersRepository_UpdateUser_Call {
+	_c.Call.Return(run)
+	return _c
+}

@@ -108,7 +108,15 @@ func TestChangePassword(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
+		{
+			name:        "body too large returns INVALID_REQUEST_BODY",
+			pathID:      userID.String(),
+			contentType: "application/json",
+			body:        `{"new_password":"` + strings.Repeat("a", 1<<20) + `"}`,
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
 
 
 		{

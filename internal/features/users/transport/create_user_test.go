@@ -109,9 +109,19 @@ func TestCreateUser(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "VALIDATION_FAILED",
 		},
+
+
 		{
 			name:        "malformed json rejected",
 			body:        `{"username":`,
+			contentType: "application/json",
+			setupMock:   func(_ *MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
+		{
+			name:        "body too large rejected",
+			body:        `{"username":"alice","password":"` + strings.Repeat("a", 1<<20) + `","role":"admin"}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,

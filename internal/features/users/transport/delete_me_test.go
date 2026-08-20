@@ -99,7 +99,14 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
+		{
+			name:        "body too large returns INVALID_REQUEST_BODY",
+			body:        `{"password":"` + strings.Repeat("a", 1<<20) + `"}`,
+			contentType: "application/json",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
 
 
 	}

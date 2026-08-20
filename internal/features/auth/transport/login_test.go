@@ -86,7 +86,14 @@ func TestLogin(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
+		{
+			name:        "body too large returns INVALID_REQUEST_BODY",
+			contentType: "application/json",
+			body:        `{"username":"alice","password":"` + strings.Repeat("a", 1<<20) + `"}`,
+			setupMock:   func(_ *MockAuthService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_REQUEST_BODY",
+		},
 		{
 			name:        "validation failure returns VALIDATION_FAILED",
 			contentType: "application/json",

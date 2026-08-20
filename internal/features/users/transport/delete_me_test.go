@@ -18,7 +18,7 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func newDeleteMeRequest(t *testing.T, userID uuid.UUID, body string) *http.Request {
+func newDeleteMeRequest(t *testing.T, userID uuid.UUID, body, contentType string) *http.Request {
 	t.Helper()
 
 	req := httptest.NewRequest(
@@ -26,7 +26,10 @@ func newDeleteMeRequest(t *testing.T, userID uuid.UUID, body string) *http.Reque
 		"/users/me",
 		strings.NewReader(body),
 	)
-	req.Header.Set("Content-Type", "application/json")
+
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
 
 	ctx := logger.ToContext(req.Context(), nopLogger())
 	ctx = reqctx.WithUserID(ctx, userID)
@@ -40,15 +43,17 @@ func TestDeleteMe(t *testing.T) {
 	userID := uuid.New()
 
 	tests := []struct {
-		name       string
-		body       string
-		setupMock  func(m *MockUsersService)
-		wantStatus int
-		wantCode   string
+		name        string
+		body        string
+		contentType string
+		setupMock   func(m *MockUsersService)
+		wantStatus  int
+		wantCode    string
 	}{
 		{
-			name: "success deletes own account",
-			body: `{"password":"secret123"}`,
+			name:        "success deletes own account",
+			body:        `{"password":"secret123"}`,
+			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
 					DeleteMe(mock.Anything, userID, "secret123").
@@ -58,8 +63,9 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus: http.StatusNoContent,
 		},
 		{
-			name: "wrong password returns INVALID_CREDENTIALS",
-			body: `{"password":"wrong-pass"}`,
+			name:        "wrong password returns INVALID_CREDENTIALS",
+			body:        `{"password":"wrong-pass"}`,
+			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
 					DeleteMe(mock.Anything, userID, "wrong-pass").
@@ -70,13 +76,18 @@ func TestDeleteMe(t *testing.T) {
 			wantCode:   "INVALID_CREDENTIALS",
 		},
 		{
-			name: "missing password returns VALIDATION_FAILED",
-			body: `{}`,
-			setupMock: func(_ *MockUsersService) {
-			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "VALIDATION_FAILED",
+			name:        "missing password returns VALIDATION_FAILED",
+			body:        `{}`,
+			contentType: "application/json",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "VALIDATION_FAILED",
 		},
+
+
+
+
+
 	}
 
 	for _, tt := range tests {
@@ -93,7 +104,7 @@ func TestDeleteMe(t *testing.T) {
 			rec := httptest.NewRecorder()
 			rw := core_http_response.NewResponseWriter(rec)
 
-			handler.DeleteMe(rw, newDeleteMeRequest(t, userID, tt.body))
+			handler.DeleteMe(rw, newDeleteMeRequest(t, userID, tt.body, tt.contentType))
 
 			must.Equal(tt.wantStatus, rec.Code)
 

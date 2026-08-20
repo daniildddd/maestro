@@ -27,7 +27,7 @@ func (r *UsersRepository) ChangePassword(
 	tag, err := r.pool.Exec(ctx, query, passwordHash, id)
 	if err != nil {
 		return fmt.Errorf(
-			"%s: exec query (id=%s): %w",
+			"%s: exec query (user_id=%s): %w",
 			op,
 			id,
 			err,
@@ -36,7 +36,7 @@ func (r *UsersRepository) ChangePassword(
 
 	if tag.RowsAffected() == 0 {
 		return fmt.Errorf(
-			"%s: user (id=%s): %w",
+			"%s: user (user_id=%s): %w",
 			op,
 			id,
 			errs.ErrUserNotFound,

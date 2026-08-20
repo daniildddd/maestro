@@ -38,6 +38,12 @@ func TestGetUUIDPathParam(t *testing.T) {
 			wantIs: errs.ErrInvalidPathParam,
 		},
 		{
+			name:   "nil uuid returns ErrInvalidPathParam",
+			key:    "id",
+			value:  "00000000-0000-0000-0000-000000000000",
+			wantIs: errs.ErrInvalidPathParam,
+		},
+		{
 			name:   "empty param value returns ErrInvalidPathParam",
 			key:    "id",
 			value:  "",

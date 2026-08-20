@@ -107,8 +107,22 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
-
+		{
+			name:        "invalid content type returns INVALID_CONTENT_TYPE",
+			body:        `{"password":"secret123"}`,
+			contentType: "text/plain",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name:        "missing content type returns INVALID_CONTENT_TYPE",
+			body:        `{"password":"secret123"}`,
+			contentType: "",
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
 	}
 
 	for _, tt := range tests {

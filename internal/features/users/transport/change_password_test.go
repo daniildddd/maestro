@@ -117,8 +117,24 @@ func TestChangePassword(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
-
-
+		{
+			name:        "invalid content type returns INVALID_CONTENT_TYPE",
+			pathID:      userID.String(),
+			contentType: "text/plain",
+			body:        `{"new_password":"newSecret123"}`,
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name:        "missing content type returns INVALID_CONTENT_TYPE",
+			pathID:      userID.String(),
+			contentType: "",
+			body:        `{"new_password":"newSecret123"}`,
+			setupMock:   func(*MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
 		{
 			name:        "invalid path id returns INVALID_PATH_PARAM",
 			pathID:      "not-a-uuid",

@@ -1,6 +1,9 @@
 package transport_test
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -15,6 +18,18 @@ import (
 
 func nopLogger() *logger.Logger {
 	return &logger.Logger{Logger: zap.NewNop()}
+}
+
+func newTestJSONRequest(t *testing.T, method, path, body, contentType string) *http.Request {
+	t.Helper()
+
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+
+	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
 func newUsersTestHandler(usersService transport.UsersService) *transport.UsersHTTPHandler {

@@ -13,26 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/errs"
-	"github.com/daniildddd/maestro/internal/core/logger"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 func newChangePasswordRequest(t *testing.T, pathID, body, contentType string) *http.Request {
 	t.Helper()
 
-	req := httptest.NewRequest(
-		http.MethodPatch,
-		"/users/{id}/password",
-		strings.NewReader(body),
-	)
-
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-
+	req := newTestJSONRequest(t, http.MethodPatch, "/users/{id}/password", body, contentType)
 	req.SetPathValue("id", pathID)
 
-	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
+	return req
 }
 
 func TestChangePassword(t *testing.T) {
@@ -144,6 +134,7 @@ func TestChangePassword(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_PATH_PARAM",
 		},
+
 		{
 			name:        "user not found returns USER_NOT_FOUND",
 			pathID:      userID.String(),

@@ -14,7 +14,6 @@ import (
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
-	"github.com/daniildddd/maestro/internal/core/logger"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 	"github.com/daniildddd/maestro/internal/features/users/transport"
 )
@@ -22,10 +21,10 @@ import (
 func newGetUserByIDRequest(t *testing.T, pathID string) *http.Request {
 	t.Helper()
 
-	req := httptest.NewRequest(http.MethodGet, "/users/{id}", http.NoBody)
+	req := newTestJSONRequest(t, http.MethodGet, "/users/{id}", "", "")
 	req.SetPathValue("id", pathID)
 
-	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
+	return req
 }
 
 func TestGetUserByID(t *testing.T) {
@@ -109,6 +108,7 @@ func TestGetUserByID(t *testing.T) {
 			wantStatus: http.StatusBadRequest,
 			wantCode:   "INVALID_PATH_PARAM",
 		},
+
 		{
 			name:   "user not found returns USER_NOT_FOUND",
 			pathID: userID.String(),

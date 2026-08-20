@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/errs"
-	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
@@ -21,20 +20,9 @@ import (
 func newDeleteMeRequest(t *testing.T, userID uuid.UUID, body, contentType string) *http.Request {
 	t.Helper()
 
-	req := httptest.NewRequest(
-		http.MethodDelete,
-		"/users/me",
-		strings.NewReader(body),
-	)
+	req := newTestJSONRequest(t, http.MethodDelete, "/users/me", body, contentType)
 
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-
-	ctx := logger.ToContext(req.Context(), nopLogger())
-	ctx = reqctx.WithUserID(ctx, userID)
-
-	return req.WithContext(ctx)
+	return req.WithContext(reqctx.WithUserID(req.Context(), userID))
 }
 
 func TestDeleteMe(t *testing.T) {
@@ -83,6 +71,8 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "VALIDATION_FAILED",
 		},
+
+
 		{
 			name:        "malformed json returns INVALID_REQUEST_BODY",
 			body:        `{"password":`,

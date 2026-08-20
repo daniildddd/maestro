@@ -65,6 +65,13 @@ func TestDeleteUser(t *testing.T) {
 			wantCode:   "INVALID_PATH_PARAM",
 		},
 		{
+			name:       "nil uuid path id returns INVALID_PATH_PARAM",
+			pathID:     "00000000-0000-0000-0000-000000000000",
+			setupMock:  func(*MockUsersService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_PATH_PARAM",
+		},
+		{
 			name:   "user not found returns USER_NOT_FOUND",
 			pathID: userID.String(),
 			setupMock: func(m *MockUsersService) {

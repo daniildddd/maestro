@@ -2,7 +2,7 @@
 export
 
 .DEFAULT_GOAL := help
-.PHONY: build run migrate-create docker-up docker-down lint lint-fix mocks test test-integration validate-swagger
+.PHONY: build run migrate-action migrate-create docker-up docker-down ps lint lint-fix mocks test test-integration validate-swagger
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -10,21 +10,41 @@ build:
 run: build
 	@./bin/maestro
 
-migrate-create: ## Create a migration (make migrate-create seq=init)
+migrate-create: ## PostgreSQL: Create a new schema version
 	@if [ -z "$(seq)" ]; then \
 		echo "Missing required parameter seq. Example: make migrate-create seq=init"; \
 		exit 1; \
 	fi; \
-	migrate create \
-	-ext sql \
-	-dir migrations \
-	-seq "$(seq)"
+	docker compose run --rm maestro-migrate \
+		create \
+		-ext sql \
+		-dir /migrations \
+		-seq "$(seq)"
+
+migrate-up: ## PostgreSQL: Apply migrations
+	@make migrate-action action=up
+
+migrate-down: ## PostgreSQL: Roll back migrations
+	@make migrate-action action=down
+
+migrate-action:
+	@if [ -z "$(action)" ]; then \
+		echo "Missing required parameter action. Example: make migrate-action action=up"; \
+		exit 1; \
+	fi; \
+	docker compose run --rm maestro-migrate \
+		-path /migrations \
+		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@maestro-postgres:5432/${POSTGRES_DB}?sslmode=disable \
+		"$(action)"
 
 docker-up: ## Start containers
 	@docker compose up -d --build
 
 docker-down: ## Stop containers
 	@docker compose down
+
+ps: ## Show running Docker Compose services
+	@docker compose ps
 
 lint: ## Run the linter
 	@golangci-lint run ./...

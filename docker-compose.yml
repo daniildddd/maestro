@@ -17,6 +17,17 @@ services:
       retries: 3
 
     restart: unless-stopped
+
+  maestro-migrate:
+    image: migrate/migrate:v4.19.1
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      maestro-postgres:
+        condition: service_healthy
+
+    restart: "no"
+
 volumes:
   postgres_data:
     name: maestro_postgres_data

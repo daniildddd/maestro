@@ -28,6 +28,34 @@ services:
 
     restart: "no"
 
+  maestro-actionlint:
+    image: rhysd/actionlint:1.7.12
+    volumes:
+      - .:/code:ro
+    working_dir: /code
+
+    restart: "no"
+
+  maestro-hadolint:
+    image: hadolint/hadolint:v2.12.0
+    volumes:
+      - .:/code:ro
+    working_dir: /code
+    entrypoint: ["hadolint"]
+
+    restart: "no"
+
+  maestro-trivy:
+    image: aquasec/trivy:0.74.0
+    volumes:
+      - .:/code:ro
+      - trivy_cache:/root/.cache
+    working_dir: /code
+    entrypoint: ["trivy"]
+
+    restart: "no"
+
 volumes:
   postgres_data:
     name: maestro_postgres_data
+  trivy_cache:

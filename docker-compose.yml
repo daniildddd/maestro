@@ -37,7 +37,7 @@ services:
     restart: "no"
 
   maestro-hadolint:
-    image: hadolint/hadolint:v2.12.0
+    image: hadolint/hadolint:v2.15.1
     volumes:
       - .:/code:ro
     working_dir: /code

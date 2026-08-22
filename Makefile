@@ -2,7 +2,8 @@
 export
 
 .DEFAULT_GOAL := help
-.PHONY: build run migrate-action migrate-create docker-up docker-down ps lint lint-fix mocks test test-integration validate-swagger
+
+.PHONY: build run migrate-action migrate-create docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration validate-swagger
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -51,6 +52,15 @@ lint: ## Run the linter
 
 lint-fix: ## Auto-fix linter issues
 	@golangci-lint run --fix ./...
+
+lint-actions: ## Lint GitHub Actions workflows with actionlint
+	@docker compose run --rm maestro-actionlint -color
+
+lint-dockerfile: ## Lint Dockerfile with hadolint
+	@docker compose run --rm maestro-hadolint cmd/maestro/Dockerfile
+
+lint-trivy: ## Scan filesystem for vulnerabilities with Trivy
+	@docker compose run --rm maestro-trivy fs --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
 
 mocks: ## Generate mocks with mockery
 	@mockery

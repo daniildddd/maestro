@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+.vscode
+bin/
+logs/
+docs/
+*.md
+.env
+.env.*
+cmd/maestro/Dockerfile
+docker-compose.yml
+Makefile
+.golangci.yml
+.mockery.yml
+vacuum.yml

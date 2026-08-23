@@ -1,0 +1,47 @@
+startDelaySeconds: 0
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+rules:
+  - pattern: 'kafka.connect<type=connect-worker-metrics><>([a-z-]+)'
+    name: kafka_connect_worker_$1
+  - pattern: 'kafka.connect<type=connect-worker-rebalance-metrics><>([a-z-]+)'
+    name: kafka_connect_worker_rebalance_$1
+  - pattern: 'kafka.connect<type=connector-metrics, connector=(.+)><>([a-z-]+)'
+    name: kafka_connect_connector_$2
+    labels:
+      connector: "$1"
+  - pattern: 'kafka.connect<type=connector-task-metrics, connector=(.+), task=(.+)><>([a-z-]+)'
+    name: kafka_connect_task_$3
+    labels:
+      connector: "$1"
+      task: "$2"
+  - pattern: 'kafka.connect<type=task-error-metrics, connector=(.+), task=(.+)><>([a-z-]+)'
+    name: kafka_connect_task_error_$3
+    labels:
+      connector: "$1"
+      task: "$2"
+  - pattern: 'debezium.postgres<type=connector-metrics, context=streaming, server=(.+)><>MilliSecondsBehindSource'
+    name: debezium_milliseconds_behind_source
+    labels:
+      server: "$1"
+  - pattern: 'debezium.postgres<type=connector-metrics, context=streaming, server=(.+)><>MilliSecondsSinceLastEvent'
+    name: debezium_milliseconds_since_last_event
+    labels:
+      server: "$1"
+  - pattern: 'debezium.postgres<type=connector-metrics, context=streaming, server=(.+)><>TotalNumberOfEventsSeen'
+    name: debezium_total_events_seen
+    labels:
+      server: "$1"
+  - pattern: 'debezium.postgres<type=connector-metrics, context=streaming, server=(.+)><>Connected'
+    name: debezium_connected
+    labels:
+      server: "$1"
+  - pattern: 'debezium.postgres<type=connector-metrics, context=snapshot, server=(.+)><>SnapshotRunning'
+    name: debezium_snapshot_running
+    labels:
+      server: "$1"
+  - pattern: 'debezium.postgres<type=connector-metrics, context=snapshot, server=(.+)><>SnapshotCompleted'
+    name: debezium_snapshot_completed
+    labels:
+      server: "$1"

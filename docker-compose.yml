@@ -1,5 +1,5 @@
 services:
-  maestro-postgres:
+  postgres:
     image: postgres:17-alpine
     container_name: maestro-postgres
     command: ["postgres", "-c", "wal_level=logical"]
@@ -75,7 +75,7 @@ services:
     ports:
       - "127.0.0.1:9090:9090"
 
-  maestro-migrate:
+  migrate:
     image: migrate/migrate:v4.19.1
     volumes:
       - ./migrations:/migrations
@@ -85,7 +85,7 @@ services:
 
     restart: "no"
 
-  maestro-actionlint:
+  actionlint:
     image: rhysd/actionlint:1.7.12
     volumes:
       - .:/code:ro
@@ -93,7 +93,7 @@ services:
 
     restart: "no"
 
-  maestro-hadolint:
+  hadolint:
     image: hadolint/hadolint:v2.15.1
     volumes:
       - .:/code:ro
@@ -102,7 +102,7 @@ services:
 
     restart: "no"
 
-  maestro-trivy:
+  trivy:
     image: aquasec/trivy:0.74.0
     volumes:
       - .:/code:ro
@@ -118,3 +118,4 @@ volumes:
   prometheus_data:
     name: maestro_prometheus_data
   trivy_cache:
+    name: maestro_trivy_cache

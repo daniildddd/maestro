@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: kafka-connect
+    static_configs:
+      - targets: ['connect:8084']

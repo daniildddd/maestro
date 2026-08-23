@@ -39,7 +39,7 @@ func newCreateUserRequest(
 func TestCreateUser(t *testing.T) {
 	t.Parallel()
 
-	createdAt := time.Now().Add(-time.Hour).Truncate(time.Second)
+	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)
 	userID := uuid.New()
 
 	tests := []struct {

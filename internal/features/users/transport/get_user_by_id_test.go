@@ -30,8 +30,8 @@ func newGetUserByIDRequest(t *testing.T, pathID string) *http.Request {
 func TestGetUserByID(t *testing.T) {
 	t.Parallel()
 
-	createdAt := time.Now().Add(-time.Hour).Truncate(time.Second)
-	updatedAt := time.Now().Add(-time.Minute).Truncate(time.Second)
+	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)
+	updatedAt := time.Now().UTC().Add(-time.Minute).Truncate(time.Second)
 	userID := uuid.New()
 
 	tests := []struct {

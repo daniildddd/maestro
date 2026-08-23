@@ -32,8 +32,8 @@ func TestUpdateUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()
-	createdAt := time.Now().Add(-time.Hour).Truncate(time.Second)
-	updatedAt := time.Now().Add(-time.Minute).Truncate(time.Second)
+	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)
+	updatedAt := time.Now().UTC().Add(-time.Minute).Truncate(time.Second)
 
 	tests := []struct {
 		name        string

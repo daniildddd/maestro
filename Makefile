@@ -3,7 +3,7 @@ export
 
 .DEFAULT_GOAL := help
 
-.PHONY: build run migrate-action migrate-create docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration validate-swagger
+.PHONY: build run migrate-action migrate-create jmx-exporter docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration validate-swagger
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -11,12 +11,21 @@ build:
 run: build
 	@./bin/maestro
 
+JMX_EXPORTER_VERSION := 1.6.0
+JMX_EXPORTER_SHA256 := a95983fd96e865d2bcdf911cc500e7c82808c27ab9fd226bf96732b6c3d8c46e
+
+jmx-exporter: ## Download jmx_exporter agent jar
+	@mkdir -p deploy/jmx-exporter
+	@curl -fL --retry 3 --retry-delay 2 -o deploy/jmx-exporter/jmx_prometheus_javaagent.jar \
+		https://github.com/prometheus/jmx_exporter/releases/download/$(JMX_EXPORTER_VERSION)/jmx_prometheus_javaagent-$(JMX_EXPORTER_VERSION).jar
+	@echo "$(JMX_EXPORTER_SHA256)  deploy/jmx-exporter/jmx_prometheus_javaagent.jar" | shasum -a 256 -c -
+
 migrate-create: ## PostgreSQL: Create a new schema version
 	@if [ -z "$(seq)" ]; then \
 		echo "Missing required parameter seq. Example: make migrate-create seq=init"; \
 		exit 1; \
 	fi; \
-	docker compose run --rm maestro-migrate \
+	docker compose run --rm migrate \
 		create \
 		-ext sql \
 		-dir /migrations \
@@ -33,9 +42,9 @@ migrate-action:
 		echo "Missing required parameter action. Example: make migrate-action action=up"; \
 		exit 1; \
 	fi; \
-	docker compose run --rm maestro-migrate \
+	docker compose run --rm migrate \
 		-path /migrations \
-		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@maestro-postgres:5432/${POSTGRES_DB}?sslmode=disable \
+		-database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable \
 		"$(action)"
 
 docker-up: ## Start containers
@@ -54,13 +63,13 @@ lint-fix: ## Auto-fix linter issues
 	@golangci-lint run --fix ./...
 
 lint-actions: ## Lint GitHub Actions workflows with actionlint
-	@docker compose run --rm maestro-actionlint -color
+	@docker compose run --rm actionlint -color
 
 lint-dockerfile: ## Lint Dockerfile with hadolint
-	@docker compose run --rm maestro-hadolint cmd/maestro/Dockerfile
+	@docker compose run --rm hadolint cmd/maestro/Dockerfile
 
 lint-trivy: ## Scan filesystem for vulnerabilities with Trivy
-	@docker compose run --rm maestro-trivy fs --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
+	@docker compose run --rm trivy fs --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
 
 mocks: ## Generate mocks with mockery
 	@mockery

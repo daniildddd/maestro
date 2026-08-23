@@ -2,6 +2,7 @@ services:
   maestro-postgres:
     image: postgres:17-alpine
     container_name: maestro-postgres
+    command: ["postgres", "-c", "wal_level=logical"]
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -18,12 +19,68 @@ services:
 
     restart: unless-stopped
 
+  kafka:
+    image: apache/kafka:4.3.1
+    container_name: maestro-kafka
+    environment:
+      - KAFKA_NODE_ID=0
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=false
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+    ports:
+      - "127.0.0.1:9092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  connect:
+    image: quay.io/debezium/connect:3.5.2
+    container_name: maestro-connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - GROUP_ID=maestro-connect
+      - CONFIG_STORAGE_TOPIC=maestro_connect_configs
+      - OFFSET_STORAGE_TOPIC=maestro_connect_offsets
+      - STATUS_STORAGE_TOPIC=maestro_connect_status
+      - CONFIG_STORAGE_REPLICATION_FACTOR=1
+      - OFFSET_STORAGE_REPLICATION_FACTOR=1
+      - STATUS_STORAGE_REPLICATION_FACTOR=1
+      - CONNECT_REST_ADVERTISED_HOST_NAME=connect
+      - KAFKA_OPTS=-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=8084:/opt/jmx-exporter/config.yml
+    volumes:
+      - ./deploy/jmx-exporter/jmx_prometheus_javaagent.jar:/opt/jmx-exporter/jmx_prometheus_javaagent.jar
+      - ./deploy/jmx-exporter/config.yml:/opt/jmx-exporter/config.yml
+    ports:
+      - "127.0.0.1:8083:8083"
+      - "127.0.0.1:8084:8084"
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    container_name: maestro-prometheus
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+
   maestro-migrate:
     image: migrate/migrate:v4.19.1
     volumes:
       - ./migrations:/migrations
     depends_on:
-      maestro-postgres:
+      postgres:
         condition: service_healthy
 
     restart: "no"
@@ -58,4 +115,6 @@ services:
 volumes:
   postgres_data:
     name: maestro_postgres_data
+  prometheus_data:
+    name: maestro_prometheus_data
   trivy_cache:

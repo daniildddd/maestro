@@ -723,12 +723,22 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ConnectorIdPathParam'
       requestBody:
-        description: Fields to update for the connector.
+        description: New connector configuration (full replacement). The connector name is immutable.
         required: true
         content:
           application/json:
             example:
-              name: pg-connector-renamed
+              config:
+                connector.class: io.debezium.connector.postgresql.PostgresConnector
+                database.hostname: new-host
+                database.port: '5432'
+                database.user: postgres
+                database.password: '********'
+                database.dbname: postgres
+                plugin.name: pgoutput
+                table.include.list: public.users
+                transforms: unwrap
+                transforms.unwrap.type: io.debezium.transforms.ExtractNewRecordState
             schema:
               $ref: '#/components/schemas/ConnectorUpdateRequest'
       responses:
@@ -1853,22 +1863,19 @@ components:
             database.hostname: localhost
             plugin.name: pgoutput
     ConnectorUpdateRequest:
-      description: Partial payload for updating a connector.
+      description: New connector configuration. Replaces the entire connector configuration; the connector name is immutable.
       type: object
-      minProperties: 1
+      required:
+        - config
       properties:
-        name:
-          type: string
-          minLength: 1
-          maxLength: 128
-          description: Optional new name for the connector.
-          example: pg-connector
         config:
           type: object
           additionalProperties: true
-          description: Optional new configuration for the connector.
+          description: Complete replacement for the connector configuration (PUT semantics, not a merge).
           example:
-            database.hostname: localhost
+            database.hostname: maestro-postgres
+            database.password: '********'
+            plugin.name: pgoutput
     ConnectorActionRequest:
       description: Action to perform on a connector.
       type: object

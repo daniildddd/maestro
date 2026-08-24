@@ -592,12 +592,10 @@ paths:
           content:
             application/json:
               example:
-                id: conn-1
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 source_db: postgres
                 status: running
-                lag_ms: 0
                 tasks_count: 1
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
@@ -711,18 +709,16 @@ paths:
           content:
             application/json:
               example:
-                id: conn-1
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 source_db: postgres
                 config:
-                  database.hostname: localhost
+                  database.hostname: maestro-postgres
                   database.port: '5432'
                   database.user: postgres
                   database.dbname: testdb
                   plugin.name: pgoutput
                 status: running
-                lag_ms: 120
                 tasks_count: 1
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
@@ -761,7 +757,6 @@ paths:
           content:
             application/json:
               example:
-                id: conn-1
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 source_db: postgres
@@ -772,7 +767,6 @@ paths:
                   database.dbname: testdb
                   plugin.name: pgoutput
                 status: running
-                lag_ms: 120
                 tasks_count: 1
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
@@ -835,7 +829,6 @@ paths:
           content:
             application/json:
               example:
-                id: conn-1
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 source_db: postgres
@@ -846,7 +839,6 @@ paths:
                   database.dbname: testdb
                   plugin.name: pgoutput
                 status: running
-                lag_ms: 120
                 tasks_count: 1
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
@@ -916,7 +908,6 @@ paths:
             application/json:
               example:
                 status: running
-                lag_ms: 120
                 records_per_sec: 42
                 uptime_sec: 86400
                 errors_count: 0
@@ -1176,7 +1167,7 @@ components:
       name: id
       in: path
       required: true
-      description: Connector ID.
+      description: Connector name (unique identifier).
       schema:
         type: string
     TaskIdPathParam:
@@ -1222,7 +1213,7 @@ components:
       description: Filter by connector status.
       schema:
         type: string
-        enum: [running, paused, failed]
+        enum: [running, paused, failed, starting]
     SearchQueryParam:
       name: search
       in: query
@@ -1799,7 +1790,7 @@ components:
           example: updateduser
     ConnectorStatus:
       type: string
-      enum: [running, paused, failed]
+      enum: [running, paused, failed, starting]
       description: Connector lifecycle state reported by Kafka Connect.
       example: running
     Connector:
@@ -1808,15 +1799,11 @@ components:
         Unified connector model used by create, get-by-id, update and action responses.
         Fields that are not available in a given context are null (config, created_by, etc.).
       required:
-        - id
         - name
         - status
         - tasks_count
         - created_at
       properties:
-        id:
-          type: string
-          example: conn-1
         name:
           type: string
           example: pg-connector
@@ -1834,17 +1821,14 @@ components:
           type: object
           additionalProperties: true
           nullable: true
-          description: Connector configuration. Populated by GET /api/v1/connectors/{id} only.
+          description: |
+            Connector configuration. Populated by GET /api/v1/connectors/{id} only.
+            Secret values (password, token, secret) are masked in responses.
           example:
-            database.hostname: localhost
+            database.hostname: maestro-postgres
             plugin.name: pgoutput
         status:
           $ref: '#/components/schemas/ConnectorStatus'
-        lag_ms:
-          type: integer
-          nullable: true
-          description: Replication lag in milliseconds; null when unknown.
-          example: 120
         tasks_count:
           type: integer
           example: 1

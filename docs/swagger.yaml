@@ -528,6 +528,11 @@ paths:
                     source_db: postgres
                     status: running
                     tasks_count: 1
+                    created_by:
+                      id: 550e8400-e29b-41d4-a716-446655440000
+                      username: jdoe
+                    created_at: '2026-08-18T00:00:00Z'
+                    updated_at: null
                 meta:
                   page: 1
                   limit: 20
@@ -893,6 +898,35 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/connectors/{id}/tasks:
+    get:
+      tags: [connectors]
+      summary: Get tasks for a specific connector
+      operationId: getConnectorTasks
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                tasks:
+                  - id: task-1
+                    state: RUNNING
+                    worker_id: worker-1
+              schema:
+                $ref: '#/components/schemas/ConnectorTasksResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/connectors/{id}/summary:
     get:
       tags: [connectors]
@@ -917,35 +951,6 @@ paths:
                     worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/ConnectorSummary'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/ConnectorNotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
-  /api/v1/connectors/{id}/tasks:
-    get:
-      tags: [connectors]
-      summary: Get tasks for a specific connector
-      operationId: getConnectorTasks
-      x-required-roles: [user]
-      parameters:
-        - $ref: '#/components/parameters/ConnectorIdPathParam'
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              example:
-                tasks:
-                  - id: task-1
-                    state: RUNNING
-                    worker_id: worker-1
-              schema:
-                $ref: '#/components/schemas/ConnectorTasksResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1916,49 +1921,6 @@ components:
           type: string
           nullable: true
           example: worker-1
-    TaskDetail:
-      description: Detailed task information including the last error trace.
-      allOf:
-        - $ref: '#/components/schemas/Task'
-        - type: object
-          properties:
-            trace:
-              type: string
-              nullable: true
-              description: Last error stack trace, if any.
-              example: null
-    ConnectorSummary:
-      description: Aggregated summary for a single connector.
-      type: object
-      required:
-        - status
-        - tasks
-      properties:
-        status:
-          $ref: '#/components/schemas/ConnectorStatus'
-        lag_ms:
-          type: integer
-          nullable: true
-          example: 120
-        records_per_sec:
-          type: integer
-          nullable: true
-          example: 42
-        uptime_sec:
-          type: integer
-          nullable: true
-          example: 86400
-        errors_count:
-          type: integer
-          nullable: true
-          example: 0
-        tasks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Task'
-          example:
-            - id: task-1
-              state: RUNNING
     MetricsPoint:
       description: One metrics sample at a point in time.
       type: object
@@ -2031,6 +1993,23 @@ components:
         tasks_count:
           type: integer
           example: 1
+        created_by:
+          allOf:
+            - $ref: '#/components/schemas/UserRef'
+          nullable: true
+          description: Connector creator; null when created outside Maestro.
+          example:
+            id: 550e8400-e29b-41d4-a716-446655440000
+            username: jdoe
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-08-18T00:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
     ConnectorListResponse:
       description: Paginated list of connectors.
       type: object
@@ -2056,6 +2035,38 @@ components:
       required:
         - tasks
       properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+          example:
+            - id: task-1
+              state: RUNNING
+    ConnectorSummary:
+      description: Aggregated summary for a single connector.
+      type: object
+      required:
+        - status
+        - tasks
+      properties:
+        status:
+          $ref: '#/components/schemas/ConnectorStatus'
+        lag_ms:
+          type: integer
+          nullable: true
+          example: 120
+        records_per_sec:
+          type: integer
+          nullable: true
+          example: 42
+        uptime_sec:
+          type: integer
+          nullable: true
+          example: 86400
+        errors_count:
+          type: integer
+          nullable: true
+          example: 0
         tasks:
           type: array
           items:

@@ -912,39 +912,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/v1/connectors/{id}/summary:
-    get:
-      tags: [connectors]
-      summary: Get summary for a specific connector
-      operationId: getConnectorSummary
-      x-required-roles: [user]
-      parameters:
-        - $ref: '#/components/parameters/ConnectorIdPathParam'
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              example:
-                status: running
-                records_per_sec: 42
-                uptime_sec: 86400
-                errors_count: 0
-                tasks:
-                  - id: task-1
-                    state: RUNNING
-                    worker_id: worker-1
-              schema:
-                $ref: '#/components/schemas/ConnectorSummary'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/ConnectorNotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
   /api/v1/connectors/{id}/tasks/{task_id}:
     get:
       tags: [connectors]
@@ -2001,38 +1968,6 @@ components:
       required:
         - tasks
       properties:
-        tasks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Task'
-          example:
-            - id: task-1
-              state: RUNNING
-    ConnectorSummary:
-      description: Aggregated summary for a single connector.
-      type: object
-      required:
-        - status
-        - tasks
-      properties:
-        status:
-          $ref: '#/components/schemas/ConnectorStatus'
-        lag_ms:
-          type: integer
-          nullable: true
-          example: 120
-        records_per_sec:
-          type: integer
-          nullable: true
-          example: 42
-        uptime_sec:
-          type: integer
-          nullable: true
-          example: 86400
-        errors_count:
-          type: integer
-          nullable: true
-          example: 0
         tasks:
           type: array
           items:

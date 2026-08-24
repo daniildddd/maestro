@@ -675,31 +675,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/v1/connectors/stats:
-    get:
-      tags: [connectors]
-      summary: Get connectors statistics
-      operationId: getConnectorsStats
-      x-required-roles: [user]
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              example:
-                failed_connectors: 0
-                running_connectors: 1
-                paused_connectors: 0
-                records_per_sec: 42
-              schema:
-                $ref: '#/components/schemas/ClusterStats'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
   /api/v1/connectors/{id}:
     get:
       tags: [connectors]
@@ -1951,22 +1926,6 @@ components:
           type: integer
           nullable: true
           example: 30
-    ClusterStats:
-      description: Cluster-wide connector statistics.
-      type: object
-      properties:
-        failed_connectors:
-          type: integer
-          example: 1
-        running_connectors:
-          type: integer
-          example: 1
-        paused_connectors:
-          type: integer
-          example: 0
-        records_per_sec:
-          type: integer
-          example: 42
     ConnectorListItem:
       description: Connector summary shown in the list response (main screen).
       type: object

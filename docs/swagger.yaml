@@ -602,6 +602,9 @@ paths:
                 source_db: postgres
                 status: running
                 tasks_count: 1
+                tasks:
+                  - id: 0
+                    state: running
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
                   username: jdoe
@@ -700,6 +703,9 @@ paths:
                   plugin.name: pgoutput
                 status: running
                 tasks_count: 1
+                tasks:
+                  - id: 0
+                    state: running
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
                   username: jdoe
@@ -758,6 +764,9 @@ paths:
                   plugin.name: pgoutput
                 status: running
                 tasks_count: 1
+                tasks:
+                  - id: 0
+                    state: running
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
                   username: jdoe
@@ -830,6 +839,9 @@ paths:
                   plugin.name: pgoutput
                 status: running
                 tasks_count: 1
+                tasks:
+                  - id: 0
+                    state: running
                 created_by:
                   id: 550e8400-e29b-41d4-a716-446655440000
                   username: jdoe
@@ -874,35 +886,6 @@ paths:
                     max_commit_latency_ms: 30
               schema:
                 $ref: '#/components/schemas/MetricsResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/ConnectorNotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
-  /api/v1/connectors/{id}/tasks:
-    get:
-      tags: [connectors]
-      summary: Get tasks for a specific connector
-      operationId: getConnectorTasks
-      x-required-roles: [user]
-      parameters:
-        - $ref: '#/components/parameters/ConnectorIdPathParam'
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              example:
-                tasks:
-                  - id: task-1
-                    state: RUNNING
-                    worker_id: worker-1
-              schema:
-                $ref: '#/components/schemas/ConnectorTasksResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1789,6 +1772,24 @@ components:
         tasks_count:
           type: integer
           example: 1
+        tasks:
+          type: array
+          description: Task ids and current states. Populated by GET /api/v1/connectors/{id}.
+          items:
+            type: object
+            required:
+              - id
+              - state
+            properties:
+              id:
+                type: integer
+                example: 0
+              state:
+                type: string
+                example: RUNNING
+          example:
+            - id: 0
+              state: RUNNING
         created_by:
           allOf:
             - $ref: '#/components/schemas/UserRef'
@@ -1853,8 +1854,8 @@ components:
           type: string
           enum: [pause, resume, restart]
           example: pause
-    Task:
-      description: Kafka Connect task summary.
+    TaskDetail:
+      description: Detailed task information including the last error trace.
       type: object
       required:
         - id
@@ -1870,6 +1871,11 @@ components:
           type: string
           nullable: true
           example: worker-1
+        trace:
+          type: string
+          nullable: true
+          description: Last error stack trace, if any. Absent when the task has no errors.
+          example: null
     MetricsPoint:
       description: One metrics sample at a point in time.
       type: object
@@ -1962,19 +1968,6 @@ components:
               tasks_count: 1
         meta:
           $ref: '#/components/schemas/PaginationMeta'
-    ConnectorTasksResponse:
-      description: List of tasks for a connector.
-      type: object
-      required:
-        - tasks
-      properties:
-        tasks:
-          type: array
-          items:
-            $ref: '#/components/schemas/Task'
-          example:
-            - id: task-1
-              state: RUNNING
     MetricsResponse:
       description: Time series of connector metrics.
       type: object

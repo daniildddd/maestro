@@ -515,7 +515,6 @@ paths:
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/ConnectorStatusQueryParam'
         - $ref: '#/components/parameters/SearchQueryParam'
-        - $ref: '#/components/parameters/SourceDbQueryParam'
       responses:
         '200':
           description: Successful response
@@ -525,14 +524,8 @@ paths:
                 data:
                   - name: pg-connector
                     plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                    source_db: postgres
                     status: running
                     tasks_count: 1
-                    created_by:
-                      id: 550e8400-e29b-41d4-a716-446655440000
-                      username: jdoe
-                    created_at: '2026-08-18T00:00:00Z'
-                    updated_at: null
                 meta:
                   page: 1
                   limit: 20
@@ -599,17 +592,12 @@ paths:
               example:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                source_db: postgres
                 status: running
                 tasks_count: 1
                 tasks:
                   - id: 0
                     state: running
-                created_by:
-                  id: 550e8400-e29b-41d4-a716-446655440000
-                  username: jdoe
-                created_at: '2026-08-18T00:00:00Z'
-                updated_at: null
+                    worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -694,7 +682,6 @@ paths:
               example:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                source_db: postgres
                 config:
                   database.hostname: maestro-postgres
                   database.port: '5432'
@@ -706,11 +693,7 @@ paths:
                 tasks:
                   - id: 0
                     state: running
-                created_by:
-                  id: 550e8400-e29b-41d4-a716-446655440000
-                  username: jdoe
-                created_at: '2026-08-18T00:00:00Z'
-                updated_at: null
+                    worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/Connector'
         '401':
@@ -755,7 +738,6 @@ paths:
               example:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                source_db: postgres
                 config:
                   database.hostname: localhost
                   database.port: '5432'
@@ -767,11 +749,7 @@ paths:
                 tasks:
                   - id: 0
                     state: running
-                created_by:
-                  id: 550e8400-e29b-41d4-a716-446655440000
-                  username: jdoe
-                created_at: '2026-08-18T00:00:00Z'
-                updated_at: null
+                    worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -830,7 +808,6 @@ paths:
               example:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                source_db: postgres
                 config:
                   database.hostname: localhost
                   database.port: '5432'
@@ -842,11 +819,7 @@ paths:
                 tasks:
                   - id: 0
                     state: running
-                created_by:
-                  id: 550e8400-e29b-41d4-a716-446655440000
-                  username: jdoe
-                created_at: '2026-08-18T00:00:00Z'
-                updated_at: null
+                    worker_id: worker-1
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -1158,12 +1131,6 @@ components:
       name: search
       in: query
       description: Free-text search over connector names.
-      schema:
-        type: string
-    SourceDbQueryParam:
-      name: source_db
-      in: query
-      description: Filter by source database name.
       schema:
         type: string
     ActionQueryParam:
@@ -1568,20 +1535,6 @@ components:
           type: string
           enum: [admin, user]
           example: admin
-    UserRef:
-      type: object
-      description: Short reference to a user. Replaces the former {id, name} shape.
-      required:
-        - id
-        - username
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: 550e8400-e29b-41d4-a716-446655440000
-        username:
-          type: string
-          example: jdoe
     PaginationMeta:
       description: Pagination metadata for list responses.
       type: object
@@ -1737,12 +1690,11 @@ components:
       type: object
       description: |
         Unified connector model used by create, get-by-id, update and action responses.
-        Fields that are not available in a given context are null (config, created_by, etc.).
+        Fields that are not available in a given context are null (config, tasks, etc.).
       required:
         - name
         - status
         - tasks_count
-        - created_at
       properties:
         name:
           type: string
@@ -1752,11 +1704,6 @@ components:
           nullable: true
           description: Debezium/Kafka Connect connector class. Populated in list items and detail responses; null when unknown.
           example: io.debezium.connector.postgresql.PostgresConnector
-        source_db:
-          type: string
-          nullable: true
-          description: Source database name derived from the configuration (e.g. postgres, mysql).
-          example: postgres
         config:
           type: object
           additionalProperties: true
@@ -1787,25 +1734,14 @@ components:
               state:
                 type: string
                 example: RUNNING
+              worker_id:
+                type: string
+                nullable: true
+                example: worker-1
           example:
             - id: 0
               state: RUNNING
-        created_by:
-          allOf:
-            - $ref: '#/components/schemas/UserRef'
-          nullable: true
-          example:
-            id: 550e8400-e29b-41d4-a716-446655440000
-            username: jdoe
-        created_at:
-          type: string
-          format: date-time
-          example: '2026-08-18T00:00:00Z'
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
-          example: null
+              worker_id: worker-1
     ConnectorCreateRequest:
       description: Payload for creating a connector.
       type: object
@@ -1922,33 +1858,11 @@ components:
           nullable: true
           description: Debezium/Kafka Connect connector class, from the connector config.
           example: io.debezium.connector.postgresql.PostgresConnector
-        source_db:
-          type: string
-          nullable: true
-          description: Source database name derived from the configuration (e.g. postgres, mysql).
-          example: postgres
         status:
           $ref: '#/components/schemas/ConnectorStatus'
         tasks_count:
           type: integer
           example: 1
-        created_by:
-          allOf:
-            - $ref: '#/components/schemas/UserRef'
-          nullable: true
-          description: Connector creator; null when created outside Maestro.
-          example:
-            id: 550e8400-e29b-41d4-a716-446655440000
-            username: jdoe
-        created_at:
-          type: string
-          format: date-time
-          example: '2026-08-18T00:00:00Z'
-        updated_at:
-          type: string
-          format: date-time
-          nullable: true
-          example: null
     ConnectorListResponse:
       description: Paginated list of connectors.
       type: object
@@ -1963,7 +1877,6 @@ components:
           example:
             - name: pg-connector
               plugin_type: io.debezium.connector.postgresql.PostgresConnector
-              source_db: postgres
               status: running
               tasks_count: 1
         meta:

@@ -503,6 +503,24 @@ paths:
           $ref: '#/components/responses/AuditLogNotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [audit]
+      summary: Delete an audit log entry
+      operationId: deleteAuditLog
+      x-required-roles: [admin]
+      parameters:
+        - $ref: '#/components/parameters/AuditLogIdPathParam'
+      responses:
+        '204':
+          description: Audit log entry deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/AuditLogNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /api/v1/connectors:
     get:

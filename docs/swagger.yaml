@@ -523,26 +523,14 @@ paths:
             application/json:
               example:
                 data:
-                  - id: conn-1
-                    name: pg-connector
+                  - name: pg-connector
                     plugin_type: io.debezium.connector.postgresql.PostgresConnector
                     source_db: postgres
                     status: running
-                    lag_ms: 120
                     tasks_count: 1
-                    created_by:
-                      id: 550e8400-e29b-41d4-a716-446655440000
-                      username: jdoe
-                    created_at: '2026-08-18T00:00:00Z'
-                    updated_at: null
                 meta:
                   page: 1
                   limit: 20
-                cluster_stats:
-                  failed_connectors: 0
-                  running_connectors: 1
-                  paused_connectors: 0
-                  records_per_sec: 42
               schema:
                 $ref: '#/components/schemas/ConnectorListResponse'
         '400':
@@ -1817,8 +1805,8 @@ components:
     Connector:
       type: object
       description: |
-        Unified connector model used by list, create, get-by-id, update and action responses.
-        Fields that are not available in a given context are null (plugin_type, config, etc.).
+        Unified connector model used by create, get-by-id, update and action responses.
+        Fields that are not available in a given context are null (config, created_by, etc.).
       required:
         - id
         - name
@@ -1835,7 +1823,7 @@ components:
         plugin_type:
           type: string
           nullable: true
-          description: Debezium/Kafka Connect connector class. Populated by GET /api/v1/connectors/{id}; null elsewhere.
+          description: Debezium/Kafka Connect connector class. Populated in list items and detail responses; null when unknown.
           example: io.debezium.connector.postgresql.PostgresConnector
         source_db:
           type: string
@@ -2033,8 +2021,34 @@ components:
         records_per_sec:
           type: integer
           example: 42
+    ConnectorListItem:
+      description: Connector summary shown in the list response (main screen).
+      type: object
+      required:
+        - name
+        - status
+        - tasks_count
+      properties:
+        name:
+          type: string
+          example: pg-connector
+        plugin_type:
+          type: string
+          nullable: true
+          description: Debezium/Kafka Connect connector class, from the connector config.
+          example: io.debezium.connector.postgresql.PostgresConnector
+        source_db:
+          type: string
+          nullable: true
+          description: Source database name derived from the configuration (e.g. postgres, mysql).
+          example: postgres
+        status:
+          $ref: '#/components/schemas/ConnectorStatus'
+        tasks_count:
+          type: integer
+          example: 1
     ConnectorListResponse:
-      description: Paginated list of connectors with optional cluster statistics.
+      description: Paginated list of connectors.
       type: object
       required:
         - data
@@ -2043,26 +2057,15 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Connector'
+            $ref: '#/components/schemas/ConnectorListItem'
           example:
-            - id: conn-1
-              name: pg-connector
+            - name: pg-connector
+              plugin_type: io.debezium.connector.postgresql.PostgresConnector
+              source_db: postgres
               status: running
               tasks_count: 1
-              created_at: '2026-08-18T00:00:00Z'
-              updated_at: null
         meta:
           $ref: '#/components/schemas/PaginationMeta'
-        cluster_stats:
-          allOf:
-            - $ref: '#/components/schemas/ClusterStats'
-          nullable: true
-          description: Cluster-wide statistics for the deployment.
-          example:
-            failed_connectors: 0
-            running_connectors: 1
-            paused_connectors: 0
-            records_per_sec: 42
     ConnectorTasksResponse:
       description: List of tasks for a connector.
       type: object

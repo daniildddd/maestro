@@ -148,3 +148,10 @@ var ErrInternal = &AppError{
 	Message:    "Internal server error",
 	LogLevel:   zapcore.ErrorLevel,
 }
+
+var ErrKafkaConnectUnavailable = &AppError{
+	HTTPStatus: http.StatusServiceUnavailable,
+	Code:       "KAFKA_CONNECT_UNAVAILABLE",
+	Message:    "Kafka Connect is unavailable",
+	LogLevel:   zapcore.ErrorLevel,
+}

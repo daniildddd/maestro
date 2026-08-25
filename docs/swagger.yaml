@@ -1388,7 +1388,7 @@ components:
             not_found:
               summary: Connector not found
               value:
-                code: NOT_FOUND
+                code: CONNECTOR_NOT_FOUND
                 message: Connector not found
     ConnectorTaskNotFound:
       description: Not found

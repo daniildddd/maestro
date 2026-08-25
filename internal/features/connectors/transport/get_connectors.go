@@ -48,7 +48,7 @@ func (h *ConnectorsHTTPHandler) GetConnectors(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	connectors, err := h.connectorsService.List(ctx, filter)
+	connectors, err := h.connectorsService.GetConnectors(ctx, filter)
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: list connectors: %w", op, err))
 

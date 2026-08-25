@@ -13,7 +13,7 @@ type ConnectorsHTTPHandler struct {
 }
 
 type ConnectorsService interface {
-	List(
+	GetConnectors(
 		ctx context.Context,
 		filter *domain.ConnectorFilter,
 	) ([]domain.Connector, error)

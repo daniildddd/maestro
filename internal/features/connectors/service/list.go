@@ -7,13 +7,13 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func (s *ConnectorsService) List(
+func (s *ConnectorsService) GetConnectors(
 	ctx context.Context,
 	filter *domain.ConnectorFilter,
 ) ([]domain.Connector, error) {
-	const op = "connectors.service.List"
+	const op = "connectors.service.GetConnectors"
 
-	connectors, err := s.connectors.List(ctx)
+	connectors, err := s.connectors.GetConnectors(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

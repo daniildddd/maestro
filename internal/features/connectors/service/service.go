@@ -19,7 +19,7 @@ func NewConnectorsService(
 }
 
 type KafkaConnect interface {
-	List(
+	GetConnectors(
 		ctx context.Context,
 	) ([]domain.Connector, error)
 }

@@ -47,8 +47,8 @@ type connectorExpansion struct {
 	} `json:"info"`
 }
 
-func (c *HTTPClient) List(ctx context.Context) ([]domain.Connector, error) {
-	const op = "connectors.kafkaconnect.List"
+func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, error) {
+	const op = "connectors.kafkaconnect.GetConnectors"
 
 	var resp listResponse
 

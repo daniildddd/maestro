@@ -10,9 +10,15 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
+)
+
+const (
+	deleteMaxAttempts = 3
+	deleteRetryDelay  = 300 * time.Millisecond
 )
 
 type HTTPClient struct {
@@ -87,23 +93,40 @@ func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, err
 	return connectors, nil
 }
 
-
 func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	const op = "connectors.kafkaconnect.Delete"
 
-	if err := c.do(ctx, http.MethodDelete, "/connectors/"+url.PathEscape(name), nil, nil); err != nil {
-		if isNotFound(err) {
-			return fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
+	path := "/connectors/" + url.PathEscape(name)
+
+	var err error
+
+	for attempt := 1; attempt <= deleteMaxAttempts; attempt++ {
+		err = c.do(ctx, http.MethodDelete, path, nil, nil)
+		if err == nil {
+			return nil
 		}
 
-		if isRebalance(err) {
-			return fmt.Errorf("%s: %w", op, domain.ErrRebalanceInProgress)
+		if !isRebalance(err) || attempt == deleteMaxAttempts {
+			break
 		}
 
-		return fmt.Errorf("%s: %w", op, err)
+		delay := deleteRetryDelay * time.Duration(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return fmt.Errorf("%s: %w", op, ctx.Err())
+		}
 	}
 
-	return nil
+	switch {
+	case isNotFound(err):
+		return fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
+	case isRebalance(err):
+		return fmt.Errorf("%s: %w", op, domain.ErrRebalanceInProgress)
+	default:
+		return fmt.Errorf("%s: %w", op, err)
+	}
 }
 
 func isNotFound(err error) bool {

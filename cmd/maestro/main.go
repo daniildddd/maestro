@@ -19,6 +19,10 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
 	"github.com/daniildddd/maestro/internal/features/auth/transport"
+	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
+	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
+	connectorsservice "github.com/daniildddd/maestro/internal/features/connectors/service"
+	connectorstransport "github.com/daniildddd/maestro/internal/features/connectors/transport"
 	usersrepository "github.com/daniildddd/maestro/internal/features/users/repository"
 	usersservice "github.com/daniildddd/maestro/internal/features/users/service"
 	userstransport "github.com/daniildddd/maestro/internal/features/users/transport"
@@ -102,6 +106,28 @@ func run() int {
 
 	usersTransportHTTP := userstransport.NewUsersHTTPHandler(usersService)
 
+	pluginRegistry := plugins.NewRegistry(
+		plugins.PostgresAdapter{},
+		plugins.MySQLAdapter{},
+		plugins.MongoDBAdapter{},
+		plugins.SQLServerAdapter{},
+		plugins.OracleAdapter{},
+		plugins.Db2Adapter{},
+		plugins.InformixAdapter{},
+		plugins.VitessAdapter{},
+	)
+
+	kafkaConnectClient := kafkaconnect.NewHTTPClient(
+		kafkaconnect.NewConfigMust(),
+		pluginRegistry,
+	)
+
+	connectorsService := connectorsservice.NewConnectorsService(
+		kafkaConnectClient,
+	)
+
+	connectorsTransportHTTP := connectorstransport.NewConnectorsHTTPHandler(connectorsService)
+
 	cfgMiddleware := middleware.NewConfigMust()
 
 	baseMW := []middleware.Middleware{
@@ -126,6 +152,10 @@ func run() int {
 	privateRoutes := append(
 		authTransportHTTP.PrivateRoutes(),
 		usersTransportHTTP.PrivateRoutes()...,
+	)
+	privateRoutes = append(
+		privateRoutes,
+		connectorsTransportHTTP.PrivateRoutes()...,
 	)
 
 	privateV1 := server.NewAPIVersionRouter(

@@ -30,7 +30,7 @@ func newTestService(
 func TestGetUsers(t *testing.T) {
 	t.Parallel()
 
-	filter := domain.UserFilter{Page: 1, Limit: 20}
+	filter := &domain.UserFilter{Page: 1, Limit: 20}
 
 	userID := uuid.New()
 	createdAt := time.Now().Add(-time.Hour)

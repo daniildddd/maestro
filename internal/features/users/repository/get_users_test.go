@@ -27,14 +27,14 @@ func TestGetUsers(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		filter    domain.UserFilter
+		filter    *domain.UserFilter
 		setup     func(pool *MockPool, rows *MockRows)
 		wantIs    error
 		wantUsers []domain.User
 	}{
 		{
 			name:   "success returns users",
-			filter: domain.UserFilter{Page: 1, Limit: 20},
+			filter: &domain.UserFilter{Page: 1, Limit: 20},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -91,7 +91,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:   "success with username and role filters",
-			filter: domain.UserFilter{Page: 2, Limit: 10, Username: "alice", UserRole: "admin"},
+			filter: &domain.UserFilter{Page: 2, Limit: 10, Username: "alice", UserRole: "admin"},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -125,7 +125,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:   "success with username filter only",
-			filter: domain.UserFilter{Page: 1, Limit: 20, Username: "alice"},
+			filter: &domain.UserFilter{Page: 1, Limit: 20, Username: "alice"},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -159,7 +159,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:   "success with role filter only",
-			filter: domain.UserFilter{Page: 1, Limit: 20, UserRole: "admin"},
+			filter: &domain.UserFilter{Page: 1, Limit: 20, UserRole: "admin"},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -193,7 +193,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:   "query error is wrapped",
-			filter: domain.UserFilter{Page: 1, Limit: 20},
+			filter: &domain.UserFilter{Page: 1, Limit: 20},
 			setup: func(pool *MockPool, _ *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -209,7 +209,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:   "scan error is wrapped",
-			filter: domain.UserFilter{Page: 1, Limit: 20},
+			filter: &domain.UserFilter{Page: 1, Limit: 20},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -239,7 +239,7 @@ func TestGetUsers(t *testing.T) {
 		},
 		{
 			name:   "rows error is wrapped",
-			filter: domain.UserFilter{Page: 1, Limit: 20},
+			filter: &domain.UserFilter{Page: 1, Limit: 20},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().

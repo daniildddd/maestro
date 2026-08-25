@@ -340,7 +340,7 @@ func (_c *MockUsersService_GetUserByID_Call) RunAndReturn(run func(ctx context.C
 }
 
 // GetUsers provides a mock function for the type MockUsersService
-func (_mock *MockUsersService) GetUsers(ctx context.Context, filter domain.UserFilter) ([]domain.User, error) {
+func (_mock *MockUsersService) GetUsers(ctx context.Context, filter *domain.UserFilter) ([]domain.User, error) {
 	ret := _mock.Called(ctx, filter)
 
 	if len(ret) == 0 {
@@ -349,17 +349,17 @@ func (_mock *MockUsersService) GetUsers(ctx context.Context, filter domain.UserF
 
 	var r0 []domain.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.UserFilter) ([]domain.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.UserFilter) ([]domain.User, error)); ok {
 		return returnFunc(ctx, filter)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.UserFilter) []domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.UserFilter) []domain.User); ok {
 		r0 = returnFunc(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]domain.User)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, domain.UserFilter) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *domain.UserFilter) error); ok {
 		r1 = returnFunc(ctx, filter)
 	} else {
 		r1 = ret.Error(1)
@@ -379,9 +379,9 @@ func (_e *MockUsersService_Expecter) GetUsers(ctx interface{}, filter interface{
 	return &MockUsersService_GetUsers_Call{Call: _e.mock.On("GetUsers", ctx, filter)}
 }
 
-func (_c *MockUsersService_GetUsers_Call) Run(run func(ctx context.Context, filter domain.UserFilter)) *MockUsersService_GetUsers_Call {
+func (_c *MockUsersService_GetUsers_Call) Run(run func(ctx context.Context, filter *domain.UserFilter)) *MockUsersService_GetUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(domain.UserFilter))
+		run(args[0].(context.Context), args[1].(*domain.UserFilter))
 	})
 	return _c
 }
@@ -391,7 +391,7 @@ func (_c *MockUsersService_GetUsers_Call) Return(users []domain.User, err error)
 	return _c
 }
 
-func (_c *MockUsersService_GetUsers_Call) RunAndReturn(run func(ctx context.Context, filter domain.UserFilter) ([]domain.User, error)) *MockUsersService_GetUsers_Call {
+func (_c *MockUsersService_GetUsers_Call) RunAndReturn(run func(ctx context.Context, filter *domain.UserFilter) ([]domain.User, error)) *MockUsersService_GetUsers_Call {
 	_c.Call.Return(run)
 	return _c
 }

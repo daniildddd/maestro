@@ -49,7 +49,7 @@ func TestGetUsers(t *testing.T) {
 				m.EXPECT().
 					GetUsers(
 						mock.Anything,
-						mock.MatchedBy(func(f domain.UserFilter) bool {
+						mock.MatchedBy(func(f *domain.UserFilter) bool {
 							return f.Page == 2 && f.Limit == 10
 						}),
 					).
@@ -124,7 +124,7 @@ func TestGetUsers(t *testing.T) {
 				m.EXPECT().
 					GetUsers(
 						mock.Anything,
-						mock.MatchedBy(func(f domain.UserFilter) bool {
+						mock.MatchedBy(func(f *domain.UserFilter) bool {
 							return f.Page == 1 && f.Limit == 20
 						}),
 					).

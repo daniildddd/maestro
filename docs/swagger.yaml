@@ -557,6 +557,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/KafkaConnectUnavailable'
     post:
       tags: [connectors]
       summary: Create a new connector
@@ -1472,6 +1474,18 @@ components:
               value:
                 code: INTERNAL_ERROR
                 message: Internal server error
+    KafkaConnectUnavailable:
+      description: Kafka Connect is unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            kafka_connect_unavailable:
+              summary: Kafka Connect is unavailable
+              value:
+                code: KAFKA_CONNECT_UNAVAILABLE
+                message: Kafka Connect is unavailable
 
   schemas:
     ErrorResponse:

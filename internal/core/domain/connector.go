@@ -16,6 +16,9 @@ const (
 var (
 	ErrInvalidConnector       = errors.New("invalid connector")
 	ErrInvalidConnectorStatus = errors.New("status must be one of: running, paused, failed, starting")
+	ErrConnectorNotFound       = errors.New("connector not found")
+	ErrKafkaConnectUnavailable = errors.New("kafka connect unavailable")
+	ErrRebalanceInProgress     = errors.New("kafka connect rebalance in progress")
 )
 
 type Task struct {

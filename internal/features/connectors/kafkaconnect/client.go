@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
-	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
 
@@ -122,7 +121,7 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 			return fmt.Errorf("%s: %w", op, err)
 		}
 
-		return fmt.Errorf("%s: %w: %v", op, errs.ErrKafkaConnectUnavailable, err)
+		return fmt.Errorf("%s: %w: %v", op, domain.ErrKafkaConnectUnavailable, err)
 	}
 
 	defer func() { _ = resp.Body.Close() }() //nolint:errcheck // body fully read below; close error not actionable
@@ -142,7 +141,7 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 
 		return nil
 	case resp.StatusCode >= 500:
-		return fmt.Errorf("%s: %w: unexpected status %d: %s", op, errs.ErrKafkaConnectUnavailable, resp.StatusCode, string(data))
+		return fmt.Errorf("%s: %w: unexpected status %d: %s", op, domain.ErrKafkaConnectUnavailable, resp.StatusCode, string(data))
 	default:
 		return fmt.Errorf("%s: unexpected status %d: %s", op, resp.StatusCode, string(data))
 	}

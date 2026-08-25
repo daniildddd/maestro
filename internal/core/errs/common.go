@@ -155,3 +155,17 @@ var ErrKafkaConnectUnavailable = &AppError{
 	Message:    "Kafka Connect is unavailable",
 	LogLevel:   zapcore.ErrorLevel,
 }
+
+var ErrConnectorNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       "CONNECTOR_NOT_FOUND",
+	Message:    "Connector not found",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrRebalanceInProgress = &AppError{
+	HTTPStatus: http.StatusServiceUnavailable,
+	Code:       "REBALANCE_IN_PROGRESS",
+	Message:    "Kafka Connect is rebalancing, retry the request later",
+	LogLevel:   zapcore.WarnLevel,
+}

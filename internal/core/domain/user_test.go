@@ -159,3 +159,172 @@ func TestUser_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateUsername(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		username string
+		wantErr  error
+	}{
+		{
+			name:     "valid username",
+			username: "alice",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid username with digits and separators",
+			username: "user_name-1",
+			wantErr:  nil,
+		},
+		{
+			name:     "minimum length accepted",
+			username: "abc",
+			wantErr:  nil,
+		},
+		{
+			name:     "maximum length accepted",
+			username: strings.Repeat("a", 32),
+			wantErr:  nil,
+		},
+		{
+			name:     "empty username rejected",
+			username: "",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "username too short rejected",
+			username: "ab",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "username too long rejected",
+			username: strings.Repeat("a", 33),
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "username with space rejected",
+			username: "bad name",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "username with dot rejected",
+			username: "user.name",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "username with non-ascii rejected",
+			username: "пользователь",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "username with at sign rejected",
+			username: "user@mail",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			err := domain.ValidateUsername(tt.username)
+
+			if tt.wantErr != nil {
+				must.ErrorIs(err, tt.wantErr)
+
+				return
+			}
+
+			must.NoError(err)
+		})
+	}
+}
+
+func TestValidatePassword(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		password string
+		wantErr  error
+	}{
+		{
+			name:     "valid password",
+			password: "secret123",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password with spaces",
+			password: "my pass phrase",
+			wantErr:  nil,
+		},
+		//nolint:gosec // test fixture: unicode password string, not a real credential
+		{
+			name:     "valid password with unicode",
+			password: "секретный пароль",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password exactly 8 chars",
+			password: "12345678",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password exactly 128 chars",
+			password: strings.Repeat("a", 128),
+			wantErr:  nil,
+		},
+		{
+			name:     "password too short rejected",
+			password: "1234567",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password too long rejected",
+			password: strings.Repeat("a", 129),
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "empty password rejected",
+			password: "",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password with newline rejected",
+			password: "secret\n123",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password with tab rejected",
+			password: "secret\t123",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password with del char rejected",
+			password: "secret\x7F123",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			err := domain.ValidatePassword(tt.password)
+
+			if tt.wantErr != nil {
+				must.ErrorIs(err, tt.wantErr)
+
+				return
+			}
+
+			must.NoError(err)
+		})
+	}
+}

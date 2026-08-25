@@ -10,7 +10,7 @@ import (
 
 func (r *UsersRepository) GetUsers(
 	ctx context.Context,
-	filter domain.UserFilter,
+	filter *domain.UserFilter,
 ) ([]domain.User, error) {
 	const op = "users.repository.GetUsers"
 
@@ -66,7 +66,7 @@ func (r *UsersRepository) GetUsers(
 	return users, nil
 }
 
-func buildGetUsersQuery(filter domain.UserFilter) (query string, args []any) {
+func buildGetUsersQuery(filter *domain.UserFilter) (query string, args []any) {
 	var sb strings.Builder
 
 	sb.WriteString(`

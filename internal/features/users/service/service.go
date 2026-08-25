@@ -37,7 +37,7 @@ type PasswordHasher interface {
 type UsersRepository interface {
 	GetUsers(
 		ctx context.Context,
-		filter domain.UserFilter,
+		filter *domain.UserFilter,
 	) ([]domain.User, error)
 
 	CreateUser(

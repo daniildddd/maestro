@@ -59,6 +59,6 @@ func NewRefreshToken(
 	}
 }
 
-func (t *RefreshToken) IsExpired(now time.Time) bool {
+func (t RefreshToken) IsExpired(now time.Time) bool {
 	return t.ExpiresAt.Before(now)
 }

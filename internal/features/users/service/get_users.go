@@ -9,7 +9,7 @@ import (
 
 func (s *UsersService) GetUsers(
 	ctx context.Context,
-	filter domain.UserFilter,
+	filter *domain.UserFilter,
 ) ([]domain.User, error) {
 	const op = "users.service.GetUsers"
 

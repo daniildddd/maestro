@@ -17,6 +17,10 @@ type ConnectorsService interface {
 		ctx context.Context,
 		filter *domain.ConnectorFilter,
 	) ([]domain.Connector, error)
+	Delete(
+		ctx context.Context,
+		name string,
+	) error
 }
 
 func NewConnectorsHTTPHandler(connectorsService ConnectorsService) *ConnectorsHTTPHandler {
@@ -31,6 +35,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/connectors",
 			Handler: h.GetConnectors,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/connectors/{id}",
+			Handler: h.DeleteConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 	}

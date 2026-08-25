@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
@@ -84,6 +85,33 @@ func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, err
 	}
 
 	return connectors, nil
+}
+
+
+func (c *HTTPClient) Delete(ctx context.Context, name string) error {
+	const op = "connectors.kafkaconnect.Delete"
+
+	if err := c.do(ctx, http.MethodDelete, "/connectors/"+url.PathEscape(name), nil, nil); err != nil {
+		if isNotFound(err) {
+			return fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
+		}
+
+		if isRebalance(err) {
+			return fmt.Errorf("%s: %w", op, domain.ErrRebalanceInProgress)
+		}
+
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func isNotFound(err error) bool {
+	return strings.Contains(err.Error(), "unexpected status 404")
+}
+
+func isRebalance(err error) bool {
+	return strings.Contains(err.Error(), "rebalance")
 }
 
 func (c *HTTPClient) sourceConfig(pluginType string, config map[string]string) domain.SourceConfig {

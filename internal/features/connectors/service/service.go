@@ -22,4 +22,8 @@ type KafkaConnect interface {
 	GetConnectors(
 		ctx context.Context,
 	) ([]domain.Connector, error)
+	Delete(
+		ctx context.Context,
+		name string,
+	) error
 }

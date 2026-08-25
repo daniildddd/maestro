@@ -9,6 +9,17 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
+func GetStringPathParam(r *http.Request, key string) (string, error) {
+	const op = "transport.request.GetStringPathParam"
+
+	param := r.PathValue(key)
+	if param == "" {
+		return "", fmt.Errorf("%s: param by key=%s is empty: %w", op, key, errs.ErrInvalidPathParam)
+	}
+
+	return param, nil
+}
+
 func GetUUIDPathParam(r *http.Request, key string) (uuid.UUID, error) {
 	const op = "transport.request.GetUUIDPathParam"
 

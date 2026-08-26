@@ -39,6 +39,11 @@ type KafkaConnect interface {
 		name string,
 	) (domain.Connector, error)
 
+	ResumeConnector(
+		ctx context.Context,
+		name string,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,

@@ -221,6 +221,11 @@ func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Co
 	return c.putConnectorAction(ctx, name, "pause")
 }
 
+func (c *HTTPClient) ResumeConnector(ctx context.Context, name string) (domain.Connector, error) {
+	return c.putConnectorAction(ctx, name, "resume")
+}
+
+//nolint:revive // includeTasks/onlyFailed are restart options from the API contract
 func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	const op = "connectors.kafkaconnect.Delete"
 

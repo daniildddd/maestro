@@ -331,15 +331,14 @@ type pluginInfo struct {
 func (c *HTTPClient) GetConnectorPlugins(ctx context.Context) ([]domain.ConnectorPlugin, error) {
 	const op = "connectors.kafkaconnect.GetConnectorPlugins"
 
-	var resp []pluginInfo
-
-	if err := c.do(ctx, http.MethodGet, "/connector-plugins", nil, &resp); err != nil {
+	infos, err := c.getPlugins(ctx, true)
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	conPlugins := make([]domain.ConnectorPlugin, 0, len(resp))
+	conPlugins := make([]domain.ConnectorPlugin, 0, len(infos))
 
-	for _, p := range resp {
+	for _, p := range infos {
 		conPlugins = append(conPlugins, domain.ConnectorPlugin{
 			ID:   p.Class,
 			Name: pluginDisplayName(p.Class),
@@ -347,6 +346,30 @@ func (c *HTTPClient) GetConnectorPlugins(ctx context.Context) ([]domain.Connecto
 	}
 
 	return conPlugins, nil
+}
+
+func (c *HTTPClient) GetSMTPlugins(ctx context.Context) ([]domain.ConnectorPlugin, error) {
+	const op = "connectors.kafkaconnect.GetSMTPlugins"
+
+	infos, err := c.getPlugins(ctx, false)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	plugins := make([]domain.ConnectorPlugin, 0, len(infos))
+
+	for _, p := range infos {
+		if p.Type != "transformation" {
+			continue
+		}
+
+		plugins = append(plugins, domain.ConnectorPlugin{
+			ID:   p.Class,
+			Name: pluginDisplayName(p.Class),
+		})
+	}
+
+	return plugins, nil
 }
 
 func pluginDisplayName(class string) string {
@@ -492,6 +515,25 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	}
 
 	return fmt.Errorf("%s: %w", op, connectorError(err))
+}
+
+//nolint:revive // connectorsOnly mirrors the kafka connect query parameter of the same name
+func (c *HTTPClient) getPlugins(ctx context.Context, connectorsOnly bool) ([]pluginInfo, error) {
+	const op = "connectors.kafkaconnect.getPlugins"
+
+	path := "/connector-plugins"
+
+	if !connectorsOnly {
+		path += "?connectorsOnly=false"
+	}
+
+	var resp []pluginInfo
+
+	if err := c.do(ctx, http.MethodGet, path, nil, &resp); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
 }
 
 func (c *HTTPClient) putConnectorAction(ctx context.Context, name, action string) (domain.Connector, error) {

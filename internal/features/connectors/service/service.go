@@ -28,6 +28,12 @@ type KafkaConnect interface {
 		name string,
 	) (domain.Connector, error)
 
+	CreateConnector(
+		ctx context.Context,
+		name string,
+		config map[string]string,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,

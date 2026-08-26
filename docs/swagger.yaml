@@ -999,6 +999,7 @@ paths:
       x-required-roles: [user]
       parameters:
         - $ref: '#/components/parameters/PluginIdPathParam'
+        - $ref: '#/components/parameters/ImportanceQueryParam'
       responses:
         '200':
           description: Successful response
@@ -1012,14 +1013,18 @@ paths:
                     label: Database Hostname
                     description: IP address or hostname of the PostgreSQL database server.
                     type: STRING
+                    importance: HIGH
                     required: true
                     default: localhost
                   - name: database.port
                     label: Database Port
                     description: Port number of the PostgreSQL database server.
                     type: INT
+                    importance: HIGH
                     required: true
                     default: "5432"
+        '400':
+          $ref: '#/components/responses/InvalidQueryParam'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1218,6 +1223,17 @@ components:
       description: The refresh token cookie.
       schema:
         type: string
+    ImportanceQueryParam:
+      name: importance
+      in: query
+      description: >-
+        Minimum field importance to include. Fields with required=true are
+        always included. high - HIGH importance and required fields; medium -
+        HIGH, MEDIUM and required; all - all fields.
+      schema:
+        type: string
+        enum: [high, medium, all]
+        default: high
 
   responses:
     ValidationFailed:
@@ -2038,11 +2054,16 @@ components:
       required:
         - name
         - type
+        - importance
         - required
       properties:
         name:
           type: string
           example: database.hostname
+        importance:
+          type: string
+          description: Field importance from Kafka Connect ConfigDef.
+          example: HIGH
         label:
           type: string
           nullable: true
@@ -2076,6 +2097,7 @@ components:
               label: Database Hostname
               description: IP address or hostname of the database server.
               type: STRING
+              importance: HIGH
               required: true
               default: localhost
     ValidationIssue:

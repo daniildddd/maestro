@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	BaseURL string        `envconfig:"BASE_URL" required:"true"`
-	Timeout time.Duration `default:"5s"         envconfig:"TIMEOUT"`
+	Timeout time.Duration `default:"30s"        envconfig:"TIMEOUT"`
 }
 
 func NewConfigMust() Config {

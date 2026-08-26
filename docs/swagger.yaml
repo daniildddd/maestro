@@ -1748,6 +1748,11 @@ components:
             plugin.name: pgoutput
         status:
           $ref: '#/components/schemas/ConnectorStatus'
+        worker_id:
+          type: string
+          nullable: true
+          description: Worker that runs the connector. Populated by GET /api/v1/connectors/{id}.
+          example: 172.23.0.2:8083
         tasks_count:
           type: integer
           example: 1

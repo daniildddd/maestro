@@ -703,11 +703,11 @@ paths:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 config:
-                  database.hostname: maestro-postgres
-                  database.port: '5432'
-                  database.user: postgres
-                  database.dbname: testdb
-                  plugin.name: pgoutput
+                  database_hostname: maestro-postgres
+                  database_port: '5432'
+                  database_user: postgres
+                  database_dbname: testdb
+                  plugin_name: pgoutput
                 status: running
                 tasks_count: 1
                 tasks:
@@ -759,11 +759,11 @@ paths:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 config:
-                  database.hostname: localhost
-                  database.port: '5432'
-                  database.user: postgres
-                  database.dbname: testdb
-                  plugin.name: pgoutput
+                  database_hostname: localhost
+                  database_port: '5432'
+                  database_user: postgres
+                  database_dbname: testdb
+                  plugin_name: pgoutput
                 status: running
                 tasks_count: 1
                 tasks:
@@ -829,11 +829,11 @@ paths:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
                 config:
-                  database.hostname: localhost
-                  database.port: '5432'
-                  database.user: postgres
-                  database.dbname: testdb
-                  plugin.name: pgoutput
+                  database_hostname: localhost
+                  database_port: '5432'
+                  database_user: postgres
+                  database_dbname: testdb
+                  plugin_name: pgoutput
                 status: running
                 tasks_count: 1
                 tasks:
@@ -1744,8 +1744,8 @@ components:
             Connector configuration. Populated by GET /api/v1/connectors/{id} only.
             Secret values (password, token, secret) are masked in responses.
           example:
-            database.hostname: maestro-postgres
-            plugin.name: pgoutput
+            database_hostname: maestro-postgres
+            plugin_name: pgoutput
         status:
           $ref: '#/components/schemas/ConnectorStatus'
         worker_id:
@@ -1985,7 +1985,7 @@ components:
               example:
                 name: pg-connector
                 config:
-                  database.hostname: localhost
+                  database_hostname: localhost
     AuditLogListResponse:
       description: Paginated list of audit log entries.
       type: object

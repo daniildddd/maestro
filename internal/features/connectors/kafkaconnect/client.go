@@ -226,6 +226,55 @@ func (c *HTTPClient) ResumeConnector(ctx context.Context, name string) (domain.C
 }
 
 //nolint:revive // includeTasks/onlyFailed are restart options from the API contract
+func (c *HTTPClient) RestartConnector(
+	ctx context.Context,
+	name string,
+	includeTasks bool,
+	onlyFailed bool,
+) (domain.Connector, error) {
+	const op = "connectors.kafkaconnect.RestartConnector"
+
+	path := "/connectors/" + url.PathEscape(name) + "/restart"
+
+	if includeTasks {
+		path += "?includeTasks=true"
+	} else if onlyFailed {
+		path += "?onlyFailed=true"
+	}
+
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = c.do(ctx, http.MethodPost, path, nil, nil)
+		if err == nil {
+			break
+		}
+
+		if !isRebalance(err) || attempt == maxAttempts {
+			break
+		}
+
+		delay := retryDelay * time.Duration(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
+		}
+	}
+
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
+	}
+
+	connector, err := c.GetConnectorByID(ctx, name)
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return connector, nil
+}
+
 func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	const op = "connectors.kafkaconnect.Delete"
 

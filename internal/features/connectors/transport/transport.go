@@ -39,6 +39,13 @@ type ConnectorsService interface {
 		name string,
 	) (domain.Connector, error)
 
+	RestartConnector(
+		ctx context.Context,
+		name string,
+		includeTasks bool,
+		onlyFailed bool,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,
@@ -87,6 +94,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodPost,
 			Path:    "/connectors/{id}/resume",
 			Handler: h.ResumeConnector,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/connectors/{id}/restart",
+			Handler: h.RestartConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 	}

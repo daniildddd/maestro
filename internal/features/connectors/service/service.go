@@ -44,6 +44,13 @@ type KafkaConnect interface {
 		name string,
 	) (domain.Connector, error)
 
+	RestartConnector(
+		ctx context.Context,
+		name string,
+		includeTasks bool,
+		onlyFailed bool,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,

@@ -7,7 +7,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const codeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+const (
+	codeInvalidRefreshToken = "INVALID_REFRESH_TOKEN"
+	codeNotFound            = "NOT_FOUND"
+)
 
 type AppError struct {
 	HTTPStatus int
@@ -179,14 +182,21 @@ var ErrConnectorAlreadyExists = &AppError{
 
 var ErrConnectorTaskNotFound = &AppError{
 	HTTPStatus: http.StatusNotFound,
-	Code:       "NOT_FOUND",
+	Code:       codeNotFound,
 	Message:    "Connector or task not found",
 	LogLevel:   zapcore.InfoLevel,
 }
 
 var ErrConnectorPluginNotFound = &AppError{
 	HTTPStatus: http.StatusNotFound,
-	Code:       "NOT_FOUND",
+	Code:       codeNotFound,
 	Message:    "Connector plugin not found",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrSmtPluginNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       codeNotFound,
+	Message:    "SMT plugin not found",
 	LogLevel:   zapcore.InfoLevel,
 }

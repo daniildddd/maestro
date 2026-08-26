@@ -322,6 +322,41 @@ func (c *HTTPClient) UpdateConnector(ctx context.Context, name string, config ma
 	return connector, nil
 }
 
+type pluginInfo struct {
+	Class   string `json:"class"`
+	Type    string `json:"type"`
+	Version string `json:"version"`
+}
+
+func (c *HTTPClient) GetConnectorPlugins(ctx context.Context) ([]domain.ConnectorPlugin, error) {
+	const op = "connectors.kafkaconnect.GetConnectorPlugins"
+
+	var resp []pluginInfo
+
+	if err := c.do(ctx, http.MethodGet, "/connector-plugins", nil, &resp); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	conPlugins := make([]domain.ConnectorPlugin, 0, len(resp))
+
+	for _, p := range resp {
+		conPlugins = append(conPlugins, domain.ConnectorPlugin{
+			ID:   p.Class,
+			Name: pluginDisplayName(p.Class),
+		})
+	}
+
+	return conPlugins, nil
+}
+
+func pluginDisplayName(class string) string {
+	if idx := strings.LastIndexByte(class, '.'); idx >= 0 {
+		return strings.Clone(class[idx+1:])
+	}
+
+	return class
+}
+
 func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
 	return c.putConnectorAction(ctx, name, "pause")
 }

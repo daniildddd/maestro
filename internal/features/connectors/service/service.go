@@ -18,6 +18,7 @@ func NewConnectorsService(
 	}
 }
 
+//nolint:interfacebloat // the kafka connect client contract grows with connector features
 type KafkaConnect interface {
 	GetConnectors(
 		ctx context.Context,
@@ -27,6 +28,10 @@ type KafkaConnect interface {
 		ctx context.Context,
 		name string,
 	) (domain.Connector, error)
+
+	GetConnectorPlugins(
+		ctx context.Context,
+	) ([]domain.ConnectorPlugin, error)
 
 	CreateConnector(
 		ctx context.Context,

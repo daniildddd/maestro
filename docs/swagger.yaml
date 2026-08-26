@@ -612,20 +612,25 @@ paths:
               example:
                 name: pg-connector
                 plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                status: running
-                tasks_count: 1
-                tasks:
-                  - id: 0
-                    state: running
-                    worker_id: worker-1
+                status: starting
+                config:
+                  database_hostname: maestro-postgres
+                  database_port: '5432'
+                  database_user: postgres
+                  database_dbname: testdb
+                  plugin_name: pgoutput
+                tasks_count: 0
+                tasks: []
               schema:
-                $ref: '#/components/schemas/Connector'
+                $ref: '#/components/schemas/ConnectorCreateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/ConnectorConflict'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -1274,8 +1279,8 @@ components:
             bad_request:
               summary: Invalid request payload
               value:
-                code: BAD_REQUEST
-                message: Invalid request
+                code: VALIDATION_FAILED
+                message: Validation failed
             invalid_config:
               summary: Invalid connector configuration
               value:
@@ -1390,6 +1395,18 @@ components:
               value:
                 code: CONNECTOR_NOT_FOUND
                 message: Connector not found
+    ConnectorConflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            already_exists:
+              summary: Connector already exists
+              value:
+                code: CONNECTOR_ALREADY_EXISTS
+                message: Connector already exists
     ConnectorTaskNotFound:
       description: Not found
       content:
@@ -1779,6 +1796,45 @@ components:
             - id: 0
               state: RUNNING
               worker_id: worker-1
+    ConnectorCreateResponse:
+      description: Response returned by connector creation.
+      type: object
+      required:
+        - name
+        - plugin_type
+        - config
+      properties:
+        name:
+          type: string
+          example: pg-connector
+        plugin_type:
+          type: string
+          example: io.debezium.connector.postgresql.PostgresConnector
+        status:
+          $ref: '#/components/schemas/ConnectorStatus'
+        config:
+          type: object
+          additionalProperties: true
+          description: Connector configuration without secret values.
+          example:
+            database_hostname: maestro-postgres
+            plugin_name: pgoutput
+        tasks_count:
+          type: integer
+          example: 0
+        tasks:
+          type: array
+          description: Task layout. Always empty right after creation.
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              state:
+                type: string
+              worker_id:
+                type: string
+          example: []
     ConnectorCreateRequest:
       description: Payload for creating a connector.
       type: object

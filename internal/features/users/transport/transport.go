@@ -112,6 +112,12 @@ func (h *UsersHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Roles:   []string{domain.RoleAdmin},
 		},
 		{
+			Method:  http.MethodGet,
+			Path:    "/users/me",
+			Handler: h.GetMe,
+			Roles:   []string{domain.RoleUser, domain.RoleAdmin},
+		},
+		{
 			Method:  http.MethodDelete,
 			Path:    "/users/me",
 			Handler: h.DeleteMe,

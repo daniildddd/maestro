@@ -1051,9 +1051,9 @@ paths:
                   $ref: '#/components/schemas/PluginListItem'
               example:
                 - id: org.apache.kafka.connect.transforms.InsertField$Value
-                  name: InsertField
+                  name: InsertField$Value
                 - id: org.apache.kafka.connect.transforms.ExtractField$Key
-                  name: ExtractField
+                  name: ExtractField$Key
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1069,6 +1069,7 @@ paths:
       x-required-roles: [user]
       parameters:
         - $ref: '#/components/parameters/PluginIdPathParam'
+        - $ref: '#/components/parameters/ImportanceQueryParam'
       responses:
         '200':
           description: Successful response
@@ -1082,14 +1083,18 @@ paths:
                     label: Offset Field
                     description: Field name to insert offset.
                     type: STRING
+                    importance: HIGH
                     required: false
                     default: offset
                   - name: partition.field
                     label: Partition Field
                     description: Field name to insert partition.
                     type: STRING
+                    importance: HIGH
                     required: false
                     default: partition
+        '400':
+          $ref: '#/components/responses/InvalidQueryParam'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':

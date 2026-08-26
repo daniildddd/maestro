@@ -8,6 +8,8 @@ import (
 	core_http_server "github.com/daniildddd/maestro/internal/core/transport/server"
 )
 
+const connectorsByIDPath = "/connectors/{id}"
+
 type ConnectorsHTTPHandler struct {
 	connectorsService ConnectorsService
 }
@@ -40,6 +42,12 @@ type ConnectorsService interface {
 		name string,
 		taskID int,
 	) error
+
+	UpdateConnector(
+		ctx context.Context,
+		name string,
+		config map[string]string,
+	) (domain.Connector, error)
 
 	PauseConnector(
 		ctx context.Context,
@@ -86,14 +94,20 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 		},
 		{
 			Method:  http.MethodGet,
-			Path:    "/connectors/{id}",
+			Path:    connectorsByIDPath,
 			Handler: h.GetConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 		{
 			Method:  http.MethodDelete,
-			Path:    "/connectors/{id}",
+			Path:    connectorsByIDPath,
 			Handler: h.DeleteConnector,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodPatch,
+			Path:    connectorsByIDPath,
+			Handler: h.UpdateConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 		{

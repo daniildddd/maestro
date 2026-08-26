@@ -297,10 +297,18 @@ func (c *HTTPClient) RestartConnector(
 
 	path := "/connectors/" + url.PathEscape(name) + "/restart"
 
+	query := url.Values{}
+
 	if includeTasks {
-		path += "?includeTasks=true"
-	} else if onlyFailed {
-		path += "?onlyFailed=true"
+		query.Set("includeTasks", "true")
+	}
+
+	if onlyFailed {
+		query.Set("onlyFailed", "true")
+	}
+
+	if len(query) > 0 {
+		path += "?" + query.Encode()
 	}
 
 	var err error

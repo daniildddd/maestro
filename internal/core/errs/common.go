@@ -183,3 +183,10 @@ var ErrConnectorTaskNotFound = &AppError{
 	Message:    "Connector or task not found",
 	LogLevel:   zapcore.InfoLevel,
 }
+
+var ErrConnectorPluginNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       "NOT_FOUND",
+	Message:    "Connector plugin not found",
+	LogLevel:   zapcore.InfoLevel,
+}

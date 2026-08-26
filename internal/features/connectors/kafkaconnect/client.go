@@ -278,6 +278,50 @@ func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config ma
 	return connector, nil
 }
 
+func (c *HTTPClient) UpdateConnector(ctx context.Context, name string, config map[string]string) (domain.Connector, error) {
+	const op = "connectors.kafkaconnect.UpdateConnector"
+
+	var probe connectorInfo
+
+	if err := c.do(ctx, http.MethodGet, "/connectors/"+url.PathEscape(name), nil, &probe); err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
+	}
+
+	var updated connectorInfo
+
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = c.do(ctx, http.MethodPut, "/connectors/"+url.PathEscape(name)+"/config", config, &updated)
+		if err == nil {
+			break
+		}
+
+		if !isRebalance(err) || attempt == maxAttempts {
+			break
+		}
+
+		delay := retryDelay * time.Duration(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
+		}
+	}
+
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
+	}
+
+	connector, err := c.GetConnectorByID(ctx, name)
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return connector, nil
+}
+
 func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
 	return c.putConnectorAction(ctx, name, "pause")
 }

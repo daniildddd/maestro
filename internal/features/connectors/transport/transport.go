@@ -29,6 +29,11 @@ type ConnectorsService interface {
 		config map[string]string,
 	) (domain.Connector, error)
 
+	PauseConnector(
+		ctx context.Context,
+		name string,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,
@@ -65,6 +70,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodDelete,
 			Path:    "/connectors/{id}",
 			Handler: h.DeleteConnector,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/connectors/{id}/pause",
+			Handler: h.PauseConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 	}

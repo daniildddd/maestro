@@ -34,6 +34,11 @@ type KafkaConnect interface {
 		config map[string]string,
 	) (domain.Connector, error)
 
+	PauseConnector(
+		ctx context.Context,
+		name string,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,

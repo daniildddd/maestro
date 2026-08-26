@@ -217,6 +217,10 @@ func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config ma
 	return connector, nil
 }
 
+func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
+	return c.putConnectorAction(ctx, name, "pause")
+}
+
 func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	const op = "connectors.kafkaconnect.Delete"
 
@@ -244,6 +248,44 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	}
 
 	return fmt.Errorf("%s: %w", op, connectorError(err))
+}
+
+func (c *HTTPClient) putConnectorAction(ctx context.Context, name, action string) (domain.Connector, error) {
+	const op = "connectors.kafkaconnect.putConnectorAction"
+
+	path := "/connectors/" + url.PathEscape(name) + "/" + action
+
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = c.do(ctx, http.MethodPut, path, nil, nil)
+		if err == nil {
+			break
+		}
+
+		if !isRebalance(err) || attempt == maxAttempts {
+			break
+		}
+
+		delay := retryDelay * time.Duration(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
+		}
+	}
+
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
+	}
+
+	connector, err := c.GetConnectorByID(ctx, name)
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return connector, nil
 }
 
 func isNotFound(err error) bool {

@@ -19,6 +19,8 @@ var (
 	ErrConnectorNotFound       = errors.New("connector not found")
 	ErrKafkaConnectUnavailable = errors.New("kafka connect unavailable")
 	ErrRebalanceInProgress     = errors.New("kafka connect rebalance in progress")
+	ErrConnectorAlreadyExists  = errors.New("connector already exists")
+	ErrInvalidConnectorConfig  = errors.New("connector config is invalid")
 )
 
 type Task struct {

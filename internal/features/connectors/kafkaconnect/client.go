@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	deleteMaxAttempts = 3
-	deleteRetryDelay  = 300 * time.Millisecond
+	maxAttempts = 3
+	retryDelay  = 300 * time.Millisecond
 )
 
 type HTTPClient struct {
@@ -108,6 +108,21 @@ func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, err
 	return connectors, nil
 }
 
+func connectorError(err error) error {
+	switch {
+	case isNotFound(err):
+		return domain.ErrConnectorNotFound
+	case isAlreadyExists(err):
+		return domain.ErrConnectorAlreadyExists
+	case isRebalance(err):
+		return domain.ErrRebalanceInProgress
+	case isInvalidConfig(err):
+		return domain.ErrInvalidConnectorConfig
+	default:
+		return err
+	}
+}
+
 func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.Connector, error) {
 	const op = "connectors.kafkaconnect.GetConnectorByID"
 
@@ -116,21 +131,13 @@ func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.
 	var info connectorInfo
 
 	if err := c.do(ctx, http.MethodGet, path, nil, &info); err != nil {
-		if isNotFound(err) {
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
-		}
-
-		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
 
 	var status connectorStatus
 
 	if err := c.do(ctx, http.MethodGet, path+"/status", nil, &status); err != nil {
-		if isNotFound(err) {
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
-		}
-
-		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
 
 	config := info.Config
@@ -158,6 +165,58 @@ func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.
 	return connector, nil
 }
 
+func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config map[string]string) (domain.Connector, error) {
+	const op = "connectors.kafkaconnect.CreateConnector"
+
+	body := struct {
+		Name   string            `json:"name"`
+		Config map[string]string `json:"config"`
+	}{Name: name, Config: config}
+
+	var created connectorInfo
+
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = c.do(ctx, http.MethodPost, "/connectors", body, &created)
+		if err == nil {
+			break
+		}
+
+		if !isRebalance(err) || attempt == maxAttempts {
+			break
+		}
+
+		delay := retryDelay * time.Duration(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
+		}
+	}
+
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
+	}
+
+	pluginType := created.Config["connector.class"]
+
+	connector, err := domain.NewConnector(
+		created.Name,
+		pluginType,
+		c.sourceConfig(pluginType, created.Config),
+		domain.ConnectorStatusStarting,
+		make([]domain.Task, 0),
+		0,
+	)
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return connector, nil
+}
+
 func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	const op = "connectors.kafkaconnect.Delete"
 
@@ -165,17 +224,17 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 
 	var err error
 
-	for attempt := 1; attempt <= deleteMaxAttempts; attempt++ {
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodDelete, path, nil, nil)
 		if err == nil {
 			return nil
 		}
 
-		if !isRebalance(err) || attempt == deleteMaxAttempts {
+		if !isRebalance(err) || attempt == maxAttempts {
 			break
 		}
 
-		delay := deleteRetryDelay * time.Duration(attempt)
+		delay := retryDelay * time.Duration(attempt)
 
 		select {
 		case <-time.After(delay):
@@ -184,14 +243,7 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 		}
 	}
 
-	switch {
-	case isNotFound(err):
-		return fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
-	case isRebalance(err):
-		return fmt.Errorf("%s: %w", op, domain.ErrRebalanceInProgress)
-	default:
-		return fmt.Errorf("%s: %w", op, err)
-	}
+	return fmt.Errorf("%s: %w", op, connectorError(err))
 }
 
 func isNotFound(err error) bool {
@@ -200,6 +252,14 @@ func isNotFound(err error) bool {
 
 func isRebalance(err error) bool {
 	return strings.Contains(err.Error(), "rebalance")
+}
+
+func isAlreadyExists(err error) bool {
+	return strings.Contains(err.Error(), "already exists")
+}
+
+func isInvalidConfig(err error) bool {
+	return strings.Contains(err.Error(), "unexpected status 400")
 }
 
 func (c *HTTPClient) sourceConfig(pluginType string, config map[string]string) domain.SourceConfig {

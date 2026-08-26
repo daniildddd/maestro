@@ -169,3 +169,10 @@ var ErrRebalanceInProgress = &AppError{
 	Message:    "Kafka Connect is rebalancing, retry the request later",
 	LogLevel:   zapcore.WarnLevel,
 }
+
+var ErrConnectorAlreadyExists = &AppError{
+	HTTPStatus: http.StatusConflict,
+	Code:       "CONNECTOR_ALREADY_EXISTS",
+	Message:    "Connector already exists",
+	LogLevel:   zapcore.InfoLevel,
+}

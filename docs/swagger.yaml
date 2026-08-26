@@ -808,43 +808,74 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/v1/connectors/{id}/actions:
+  /api/v1/connectors/{id}/pause:
     post:
       tags: [connectors]
-      summary: Perform action on a connector
-      operationId: connectorAction
+      summary: Pause a connector
+      operationId: pauseConnector
       x-required-roles: [user]
       parameters:
         - $ref: '#/components/parameters/ConnectorIdPathParam'
-      requestBody:
-        description: Action to perform on the connector.
-        required: true
-        content:
-          application/json:
-            example:
-              action: pause
-            schema:
-              $ref: '#/components/schemas/ConnectorActionRequest'
       responses:
         '200':
           description: Successful response
           content:
             application/json:
-              example:
-                name: pg-connector
-                plugin_type: io.debezium.connector.postgresql.PostgresConnector
-                config:
-                  database_hostname: localhost
-                  database_port: '5432'
-                  database_user: postgres
-                  database_dbname: testdb
-                  plugin_name: pgoutput
-                status: running
-                tasks_count: 1
-                tasks:
-                  - id: 0
-                    state: running
-                    worker_id: worker-1
+              schema:
+                $ref: '#/components/schemas/Connector'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/resume:
+    post:
+      tags: [connectors]
+      summary: Resume a connector
+      operationId: resumeConnector
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connector'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/ConnectorNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/connectors/{id}/restart:
+    post:
+      tags: [connectors]
+      summary: Restart a connector
+      operationId: restartConnector
+      x-required-roles: [user]
+      parameters:
+        - $ref: '#/components/parameters/ConnectorIdPathParam'
+      requestBody:
+        description: Restart options. Defaults to restarting the connector only.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestartRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Connector'
         '400':
@@ -908,9 +939,9 @@ paths:
           content:
             application/json:
               example:
-                id: task-1
-                state: RUNNING
-                worker_id: worker-1
+                id: 0
+                state: running
+                worker_id: 172.23.0.2:8083
                 trace: null
               schema:
                 $ref: '#/components/schemas/TaskDetail'
@@ -1114,7 +1145,8 @@ components:
       required: true
       description: Task ID.
       schema:
-        type: string
+        type: integer
+        example: 0
     AuditLogIdPathParam:
       name: id
       in: path
@@ -1873,16 +1905,18 @@ components:
             database.hostname: maestro-postgres
             database.password: '********'
             plugin.name: pgoutput
-    ConnectorActionRequest:
-      description: Action to perform on a connector.
+    RestartRequest:
+      description: Restart options for a connector.
       type: object
-      required:
-        - action
       properties:
-        action:
-          type: string
-          enum: [pause, resume, restart]
-          example: pause
+        include_tasks:
+          type: boolean
+          description: Restart connector and all tasks.
+          example: true
+        only_failed:
+          type: boolean
+          description: Restart only failed connectors and tasks.
+          example: false
     TaskDetail:
       description: Detailed task information including the last error trace.
       type: object
@@ -1891,11 +1925,11 @@ components:
         - state
       properties:
         id:
-          type: string
-          example: task-1
+          type: integer
+          example: 0
         state:
           type: string
-          example: RUNNING
+          example: running
         worker_id:
           type: string
           nullable: true

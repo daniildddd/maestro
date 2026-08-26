@@ -23,6 +23,12 @@ type ConnectorsService interface {
 		name string,
 	) (domain.Connector, error)
 
+	CreateConnector(
+		ctx context.Context,
+		name string,
+		config map[string]string,
+	) (domain.Connector, error)
+
 	Delete(
 		ctx context.Context,
 		name string,
@@ -41,6 +47,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/connectors",
 			Handler: h.GetConnectors,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/connectors",
+			Handler: h.CreateConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 		{

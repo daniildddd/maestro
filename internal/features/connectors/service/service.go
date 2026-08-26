@@ -34,6 +34,18 @@ type KafkaConnect interface {
 		config map[string]string,
 	) (domain.Connector, error)
 
+	GetTaskByID(
+		ctx context.Context,
+		name string,
+		taskID int,
+	) (domain.Task, error)
+
+	RestartTask(
+		ctx context.Context,
+		name string,
+		taskID int,
+	) error
+
 	PauseConnector(
 		ctx context.Context,
 		name string,

@@ -35,6 +35,25 @@ func NewHTTPClient(cfg Config, registry *plugins.Registry) *HTTPClient {
 	}
 }
 
+type connectorInfo struct {
+	Name   string            `json:"name"`
+	Config map[string]string `json:"config"`
+}
+
+type connectorTask struct {
+	ID       int    `json:"id"`
+	State    string `json:"state"`
+	WorkerID string `json:"worker_id"`
+}
+
+type connectorStatus struct {
+	Connector struct {
+		State    string `json:"state"`
+		WorkerID string `json:"worker_id"`
+	} `json:"connector"`
+	Tasks []connectorTask `json:"tasks"`
+}
+
 type listResponse map[string]connectorExpansion
 
 type connectorExpansion struct {
@@ -42,11 +61,7 @@ type connectorExpansion struct {
 		Connector struct {
 			State string `json:"state"`
 		} `json:"connector"`
-		Tasks []struct {
-			ID       int    `json:"id"`
-			State    string `json:"state"`
-			WorkerID string `json:"worker_id"`
-		} `json:"tasks"`
+		Tasks []connectorTask `json:"tasks"`
 	} `json:"status"`
 	Info struct {
 		Config map[string]string `json:"config"`
@@ -91,6 +106,56 @@ func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, err
 	}
 
 	return connectors, nil
+}
+
+func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.Connector, error) {
+	const op = "connectors.kafkaconnect.GetConnectorByID"
+
+	path := "/connectors/" + url.PathEscape(name)
+
+	var info connectorInfo
+
+	if err := c.do(ctx, http.MethodGet, path, nil, &info); err != nil {
+		if isNotFound(err) {
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
+		}
+
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var status connectorStatus
+
+	if err := c.do(ctx, http.MethodGet, path+"/status", nil, &status); err != nil {
+		if isNotFound(err) {
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorNotFound)
+		}
+
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	config := info.Config
+	pluginType := config["connector.class"]
+
+	tasks := make([]domain.Task, 0, len(status.Tasks))
+	for _, t := range status.Tasks {
+		tasks = append(tasks, domain.Task{ID: t.ID, State: strings.ToLower(t.State), WorkerID: t.WorkerID})
+	}
+
+	connector, err := domain.NewConnector(
+		info.Name,
+		pluginType,
+		c.sourceConfig(pluginType, config),
+		domain.DeriveConnectorStatus(status.Connector.State, len(tasks)),
+		tasks,
+		len(tasks),
+	)
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	connector.WorkerID = status.Connector.WorkerID
+
+	return connector, nil
 }
 
 func (c *HTTPClient) Delete(ctx context.Context, name string) error {
@@ -145,6 +210,7 @@ func (c *HTTPClient) sourceConfig(pluginType string, config map[string]string) d
 	return domain.SourceConfig{}
 }
 
+//nolint:unparam // body будет использоваться запросами create/update
 func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any) error {
 	const op = "connectors.kafkaconnect.do"
 

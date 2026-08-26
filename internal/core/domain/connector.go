@@ -14,8 +14,8 @@ const (
 )
 
 var (
-	ErrInvalidConnector       = errors.New("invalid connector")
-	ErrInvalidConnectorStatus = errors.New("status must be one of: running, paused, failed, starting")
+	ErrInvalidConnector        = errors.New("invalid connector")
+	ErrInvalidConnectorStatus  = errors.New("status must be one of: running, paused, failed, starting")
 	ErrConnectorNotFound       = errors.New("connector not found")
 	ErrKafkaConnectUnavailable = errors.New("kafka connect unavailable")
 	ErrRebalanceInProgress     = errors.New("kafka connect rebalance in progress")
@@ -40,6 +40,7 @@ type Connector struct {
 	PluginType string
 	Config     SourceConfig
 	Status     string
+	WorkerID   string
 	TasksCount int
 	Tasks      []Task
 }

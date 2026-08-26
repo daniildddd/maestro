@@ -357,6 +357,48 @@ func pluginDisplayName(class string) string {
 	return class
 }
 
+type pluginConfigKey struct {
+	Name          string  `json:"name"`
+	Type          string  `json:"type"`
+	Required      bool    `json:"required"`
+	DefaultValue  *string `json:"default_value"`
+	Importance    string  `json:"importance"`
+	Documentation *string `json:"documentation"`
+	DisplayName   *string `json:"display_name"`
+}
+
+func (c *HTTPClient) GetConnectorPluginSchema(ctx context.Context, pluginID string) (domain.ConnectorPluginSchema, error) {
+	const op = "connectors.kafkaconnect.GetConnectorPluginSchema"
+
+	path := "/connector-plugins/" + url.PathEscape(pluginID) + "/config"
+
+	var resp []pluginConfigKey
+
+	if err := c.do(ctx, http.MethodGet, path, nil, &resp); err != nil {
+		if isNotFound(err) {
+			return domain.ConnectorPluginSchema{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorPluginNotFound)
+		}
+
+		return domain.ConnectorPluginSchema{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	fields := make([]domain.ConnectorPluginField, 0, len(resp))
+
+	for _, key := range resp {
+		fields = append(fields, domain.ConnectorPluginField{
+			Name:        key.Name,
+			Label:       key.DisplayName,
+			Description: key.Documentation,
+			Type:        key.Type,
+			Importance:  key.Importance,
+			Required:    key.Required,
+			Default:     key.DefaultValue,
+		})
+	}
+
+	return domain.ConnectorPluginSchema{Fields: fields}, nil
+}
+
 func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
 	return c.putConnectorAction(ctx, name, "pause")
 }

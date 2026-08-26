@@ -33,6 +33,11 @@ type KafkaConnect interface {
 		ctx context.Context,
 	) ([]domain.ConnectorPlugin, error)
 
+	GetConnectorPluginSchema(
+		ctx context.Context,
+		pluginID string,
+	) (domain.ConnectorPluginSchema, error)
+
 	CreateConnector(
 		ctx context.Context,
 		name string,

@@ -176,3 +176,10 @@ var ErrConnectorAlreadyExists = &AppError{
 	Message:    "Connector already exists",
 	LogLevel:   zapcore.InfoLevel,
 }
+
+var ErrConnectorTaskNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       "NOT_FOUND",
+	Message:    "Connector or task not found",
+	LogLevel:   zapcore.InfoLevel,
+}

@@ -3,11 +3,32 @@ package request
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
+
+func GetIntPathParam(r *http.Request, key string) (int, error) {
+	const op = "transport.request.GetIntPathParam"
+
+	param := r.PathValue(key)
+
+	val, err := strconv.Atoi(param)
+	if err != nil {
+		return 0, fmt.Errorf(
+			"%s: param=%q by key=%s not a valid integer: %w: %v",
+			op,
+			param,
+			key,
+			errs.ErrInvalidPathParam,
+			err,
+		)
+	}
+
+	return val, nil
+}
 
 func GetStringPathParam(r *http.Request, key string) (string, error) {
 	const op = "transport.request.GetStringPathParam"

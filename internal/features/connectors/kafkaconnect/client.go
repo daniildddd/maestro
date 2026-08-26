@@ -165,6 +165,67 @@ func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.
 	return connector, nil
 }
 
+func (c *HTTPClient) GetTaskByID(ctx context.Context, name string, taskID int) (domain.Task, error) {
+	const op = "connectors.kafkaconnect.GetTaskByID"
+
+	path := fmt.Sprintf("/connectors/%s/tasks/%d/status", url.PathEscape(name), taskID)
+
+	var state struct {
+		ID       int     `json:"id"`
+		State    string  `json:"state"`
+		WorkerID string  `json:"worker_id"`
+		Trace    *string `json:"trace"`
+	}
+
+	if err := c.do(ctx, http.MethodGet, path, nil, &state); err != nil {
+		if isNotFound(err) {
+			return domain.Task{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorTaskNotFound)
+		}
+
+		return domain.Task{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return domain.Task{
+		ID:       state.ID,
+		State:    strings.ToLower(state.State),
+		WorkerID: state.WorkerID,
+		Trace:    state.Trace,
+	}, nil
+}
+
+func (c *HTTPClient) RestartTask(ctx context.Context, name string, taskID int) error {
+	const op = "connectors.kafkaconnect.RestartTask"
+
+	path := fmt.Sprintf("/connectors/%s/tasks/%d/restart", url.PathEscape(name), taskID)
+
+	var err error
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		err = c.do(ctx, http.MethodPost, path, nil, nil)
+		if err == nil {
+			return nil
+		}
+
+		if !isRebalance(err) || attempt == maxAttempts {
+			break
+		}
+
+		delay := retryDelay * time.Duration(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return fmt.Errorf("%s: %w", op, ctx.Err())
+		}
+	}
+
+	if isNotFound(err) {
+		return fmt.Errorf("%s: %w", op, domain.ErrConnectorTaskNotFound)
+	}
+
+	return fmt.Errorf("%s: %w", op, err)
+}
+
 func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config map[string]string) (domain.Connector, error) {
 	const op = "connectors.kafkaconnect.CreateConnector"
 

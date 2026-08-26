@@ -21,12 +21,14 @@ var (
 	ErrRebalanceInProgress     = errors.New("kafka connect rebalance in progress")
 	ErrConnectorAlreadyExists  = errors.New("connector already exists")
 	ErrInvalidConnectorConfig  = errors.New("connector config is invalid")
+	ErrConnectorTaskNotFound   = errors.New("connector task not found")
 )
 
 type Task struct {
 	ID       int
 	State    string
 	WorkerID string
+	Trace    *string
 }
 
 type SourceConfig struct {

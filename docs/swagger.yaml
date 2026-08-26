@@ -889,41 +889,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/v1/connectors/{id}/metrics:
-    get:
-      tags: [connectors]
-      summary: Get connector metrics
-      operationId: getConnectorMetrics
-      x-required-roles: [user]
-      parameters:
-        - $ref: '#/components/parameters/ConnectorIdPathParam'
-        - $ref: '#/components/parameters/FromQueryParam'
-        - $ref: '#/components/parameters/ToQueryParam'
-        - $ref: '#/components/parameters/IntervalQueryParam'
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              example:
-                points:
-                  - timestamp: '2026-08-18T00:00:00Z'
-                    avg_lag_ms: 120
-                    max_lag_ms: 250
-                    avg_records_per_sec: 42
-                    avg_commit_latency_ms: 15
-                    max_commit_latency_ms: 30
-              schema:
-                $ref: '#/components/schemas/MetricsResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/ConnectorNotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
   /api/v1/connectors/{id}/tasks/{task_id}:
     get:
       tags: [connectors]
@@ -1208,28 +1173,6 @@ components:
       description: Filter audit log entries by acting user.
       schema:
         type: string
-    FromQueryParam:
-      name: from
-      in: query
-      description: Lower bound for the metrics window.
-      schema:
-        type: string
-        format: date-time
-    ToQueryParam:
-      name: to
-      in: query
-      description: Upper bound for the metrics window.
-      schema:
-        type: string
-        format: date-time
-    IntervalQueryParam:
-      name: interval
-      in: query
-      description: Aggregation bucket size, e.g. 1m, 5m, 1h, 1d.
-      schema:
-        type: string
-        pattern: '^[0-9]+(s|m|h|d)$'
-        example: 5m
     StartAtQueryParam:
       name: start_at
       in: query
@@ -1939,88 +1882,6 @@ components:
           nullable: true
           description: Last error stack trace, if any. Absent when the task has no errors.
           example: null
-    MetricsPoint:
-      description: One metrics sample at a point in time.
-      type: object
-      required:
-        - timestamp
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-          example: '2026-08-18T00:00:00Z'
-        avg_lag_ms:
-          type: integer
-          nullable: true
-          example: 120
-        max_lag_ms:
-          type: integer
-          nullable: true
-          example: 250
-        avg_records_per_sec:
-          type: integer
-          nullable: true
-          example: 42
-        avg_commit_latency_ms:
-          type: integer
-          nullable: true
-          example: 15
-        max_commit_latency_ms:
-          type: integer
-          nullable: true
-          example: 30
-    ConnectorListItem:
-      description: Connector summary shown in the list response (main screen).
-      type: object
-      required:
-        - name
-        - status
-        - tasks_count
-      properties:
-        name:
-          type: string
-          example: pg-connector
-        plugin_type:
-          type: string
-          nullable: true
-          description: Debezium/Kafka Connect connector class, from the connector config.
-          example: io.debezium.connector.postgresql.PostgresConnector
-        status:
-          $ref: '#/components/schemas/ConnectorStatus'
-        tasks_count:
-          type: integer
-          example: 1
-    ConnectorListResponse:
-      description: Paginated list of connectors.
-      type: object
-      required:
-        - data
-        - meta
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ConnectorListItem'
-          example:
-            - name: pg-connector
-              plugin_type: io.debezium.connector.postgresql.PostgresConnector
-              status: running
-              tasks_count: 1
-        meta:
-          $ref: '#/components/schemas/PaginationMeta'
-    MetricsResponse:
-      description: Time series of connector metrics.
-      type: object
-      required:
-        - points
-      properties:
-        points:
-          type: array
-          items:
-            $ref: '#/components/schemas/MetricsPoint'
-          example:
-            - timestamp: '2026-08-18T00:00:00Z'
-              avg_lag_ms: 120
     AuditLogListItem:
       description: Audit log entry summary.
       type: object

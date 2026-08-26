@@ -14,6 +14,7 @@ type ConnectorsHTTPHandler struct {
 	connectorsService ConnectorsService
 }
 
+//nolint:interfacebloat // the connectors service contract grows with connector features
 type ConnectorsService interface {
 	GetConnectors(
 		ctx context.Context,
@@ -24,6 +25,10 @@ type ConnectorsService interface {
 		ctx context.Context,
 		name string,
 	) (domain.Connector, error)
+
+	GetConnectorPlugins(
+		ctx context.Context,
+	) ([]domain.ConnectorPlugin, error)
 
 	CreateConnector(
 		ctx context.Context,
@@ -138,6 +143,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodPost,
 			Path:    "/connectors/{id}/restart",
 			Handler: h.RestartConnector,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/connector-plugins",
+			Handler: h.GetConnectorPlugins,
 			Roles:   []string{domain.RoleUser},
 		},
 	}

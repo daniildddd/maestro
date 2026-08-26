@@ -140,8 +140,7 @@ paths:
           $ref: '#/components/responses/InternalError'
 
   /api/v1/users/me:
-    delete:
-      tags: [users]
+    delete:      tags: [users]
       summary: Delete own account
       operationId: deleteOwnAccount
       x-required-roles: [user, admin]
@@ -1882,6 +1881,46 @@ components:
           nullable: true
           description: Last error stack trace, if any. Absent when the task has no errors.
           example: null
+    ConnectorListItem:
+      description: Connector summary shown in the list response (main screen).
+      type: object
+      required:
+        - name
+        - status
+        - tasks_count
+      properties:
+        name:
+          type: string
+          example: pg-connector
+        plugin_type:
+          type: string
+          nullable: true
+          description: Debezium/Kafka Connect connector class, from the connector config.
+          example: io.debezium.connector.postgresql.PostgresConnector
+        status:
+          $ref: '#/components/schemas/ConnectorStatus'
+        tasks_count:
+          type: integer
+          example: 1
+
+    ConnectorListResponse:
+      description: Paginated list of connectors.
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectorListItem'
+          example:
+            - name: pg-connector
+              plugin_type: io.debezium.connector.postgresql.PostgresConnector
+              status: running
+              tasks_count: 1
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     AuditLogListItem:
       description: Audit log entry summary.
       type: object

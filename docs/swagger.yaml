@@ -140,7 +140,32 @@ paths:
           $ref: '#/components/responses/InternalError'
 
   /api/v1/users/me:
-    delete:      tags: [users]
+    get:
+      tags: [users]
+      summary: Get current user
+      operationId: getMe
+      x-required-roles: [user, admin]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                id: 550e8400-e29b-41d4-a716-446655440000
+                username: jdoe
+                role: user
+                created_at: '2026-08-18T00:00:00Z'
+                updated_at: null
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [users]
       summary: Delete own account
       operationId: deleteOwnAccount
       x-required-roles: [user, admin]

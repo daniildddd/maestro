@@ -21,7 +21,7 @@ func (h *ConnectorsHTTPHandler) RestartConnector(w http.ResponseWriter, r *http.
 	log := logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
-	name, err := request.GetStringPathParam(r, "id")
+	connectorID, err := request.GetStringPathParam(r, "id")
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: parse path id: %w", op, err))
 
@@ -41,7 +41,7 @@ func (h *ConnectorsHTTPHandler) RestartConnector(w http.ResponseWriter, r *http.
 	includeTasks := req.IncludeTasks != nil && *req.IncludeTasks
 	onlyFailed := req.OnlyFailed != nil && *req.OnlyFailed
 
-	connector, err := h.connectorsService.RestartConnector(ctx, name, includeTasks, onlyFailed)
+	connector, err := h.connectorsService.RestartConnector(ctx, connectorID, includeTasks, onlyFailed)
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: restart connector: %w", op, err))
 

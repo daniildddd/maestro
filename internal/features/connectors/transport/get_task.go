@@ -33,7 +33,7 @@ func (h *ConnectorsHTTPHandler) GetConnectorTask(w http.ResponseWriter, r *http.
 	log := logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
-	name, err := request.GetStringPathParam(r, "id")
+	connectorID, err := request.GetStringPathParam(r, "id")
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: parse path id: %w", op, err))
 
@@ -47,7 +47,7 @@ func (h *ConnectorsHTTPHandler) GetConnectorTask(w http.ResponseWriter, r *http.
 		return
 	}
 
-	task, err := h.connectorsService.GetTaskByID(ctx, name, taskID)
+	task, err := h.connectorsService.GetTaskByID(ctx, connectorID, taskID)
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: get task: %w", op, err))
 

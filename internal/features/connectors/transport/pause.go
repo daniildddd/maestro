@@ -16,14 +16,14 @@ func (h *ConnectorsHTTPHandler) PauseConnector(w http.ResponseWriter, r *http.Re
 	log := logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
-	name, err := request.GetStringPathParam(r, "id")
+	connectorID, err := request.GetStringPathParam(r, "id")
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: parse path id: %w", op, err))
 
 		return
 	}
 
-	connector, err := h.connectorsService.PauseConnector(ctx, name)
+	connector, err := h.connectorsService.PauseConnector(ctx, connectorID)
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: pause connector: %w", op, err))
 

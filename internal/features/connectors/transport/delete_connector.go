@@ -16,14 +16,14 @@ func (h *ConnectorsHTTPHandler) DeleteConnector(w http.ResponseWriter, r *http.R
 	log := logger.FromContext(ctx)
 	responseHandler := core_http_response.NewHTTPResponseHandler(w, log)
 
-	name, err := request.GetStringPathParam(r, "id")
+	connectorID, err := request.GetStringPathParam(r, "id")
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: parse path id: %w", op, err))
 
 		return
 	}
 
-	if err := h.connectorsService.Delete(ctx, name); err != nil {
+	if err := h.connectorsService.Delete(ctx, connectorID); err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: delete connector: %w", op, err))
 
 		return

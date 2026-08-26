@@ -29,6 +29,18 @@ type ConnectorsService interface {
 		config map[string]string,
 	) (domain.Connector, error)
 
+	GetTaskByID(
+		ctx context.Context,
+		name string,
+		taskID int,
+	) (domain.Task, error)
+
+	RestartTask(
+		ctx context.Context,
+		name string,
+		taskID int,
+	) error
+
 	PauseConnector(
 		ctx context.Context,
 		name string,
@@ -82,6 +94,18 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodDelete,
 			Path:    "/connectors/{id}",
 			Handler: h.DeleteConnector,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/connectors/{id}/tasks/{task_id}",
+			Handler: h.GetConnectorTask,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/connectors/{id}/tasks/{task_id}/restart",
+			Handler: h.RestartConnectorTask,
 			Roles:   []string{domain.RoleUser},
 		},
 		{

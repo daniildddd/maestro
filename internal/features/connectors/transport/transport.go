@@ -36,6 +36,10 @@ type ConnectorsService interface {
 		filter *domain.ConnectorPluginSchemaFilter,
 	) (domain.ConnectorPluginSchema, error)
 
+	GetSMTPlugins(
+		ctx context.Context,
+	) ([]domain.ConnectorPlugin, error)
+
 	CreateConnector(
 		ctx context.Context,
 		name string,
@@ -161,6 +165,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/connector-plugins/{id}/schema",
 			Handler: h.GetConnectorPluginSchema,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodGet,
+			Path:    "/smt-plugins",
+			Handler: h.GetSMTPlugins,
 			Roles:   []string{domain.RoleUser},
 		},
 	}

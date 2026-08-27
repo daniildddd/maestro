@@ -12,13 +12,14 @@ import (
 )
 
 type PluginSchemaFieldResponse struct {
-	Name        string  `json:"name"`
-	Label       *string `json:"label,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Type        string  `json:"type"`
-	Importance  string  `json:"importance"`
-	Required    bool    `json:"required"`
-	Default     *string `json:"default,omitempty"`
+	Name        string   `json:"name"`
+	Label       *string  `json:"label,omitempty"`
+	Description *string  `json:"description,omitempty"`
+	Type        string   `json:"type"`
+	Importance  string   `json:"importance"`
+	Required    bool     `json:"required"`
+	Default     *string  `json:"default,omitempty"`
+	Values      []string `json:"values,omitempty"`
 }
 
 type PluginSchemaResponse struct {
@@ -37,6 +38,7 @@ func pluginSchemaResponseFromDomain(schema domain.ConnectorPluginSchema) PluginS
 			Importance:  f.Importance,
 			Required:    f.Required,
 			Default:     f.Default,
+			Values:      f.Values,
 		})
 	}
 

@@ -10,18 +10,14 @@ import (
 )
 
 type PluginListItemResponse struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID string `json:"id"`
 }
 
 func pluginListItemsFromDomain(plugins []domain.ConnectorPlugin) []PluginListItemResponse {
 	resp := make([]PluginListItemResponse, 0, len(plugins))
 
 	for _, p := range plugins {
-		resp = append(resp, PluginListItemResponse{
-			ID:   p.ID,
-			Name: p.Name,
-		})
+		resp = append(resp, PluginListItemResponse{ID: p.ID})
 	}
 
 	return resp

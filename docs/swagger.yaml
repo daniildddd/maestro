@@ -2087,6 +2087,14 @@ components:
           type: string
           nullable: true
           example: localhost
+        values:
+          type: array
+          items:
+            type: string
+          description: >-
+            Allowed values for fields with an enum validator, taken from Kafka
+            Connect validation. Absent when the field accepts arbitrary values.
+          example: [decoderbufs, pgoutput]
     PluginSchema:
       description: Configuration schema of a plugin.
       type: object

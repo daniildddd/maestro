@@ -422,6 +422,28 @@ func (c *HTTPClient) GetConnectorPluginSchema(ctx context.Context, pluginID stri
 	return domain.ConnectorPluginSchema{Fields: fields}, nil
 }
 
+func (c *HTTPClient) GetConnectorPluginSchemaWithValues(ctx context.Context, pluginID string) (domain.ConnectorPluginSchema, error) {
+	const op = "connectors.kafkaconnect.GetConnectorPluginSchemaWithValues"
+
+	schema, err := c.GetConnectorPluginSchema(ctx, pluginID)
+	if err != nil {
+		return domain.ConnectorPluginSchema{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	values, err := c.pluginRecommendedValues(ctx, pluginID)
+	if err != nil {
+		return domain.ConnectorPluginSchema{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	for i := range schema.Fields {
+		if v, ok := values[schema.Fields[i].Name]; ok {
+			schema.Fields[i].Values = v
+		}
+	}
+
+	return schema, nil
+}
+
 func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
 	return c.putConnectorAction(ctx, name, "pause")
 }
@@ -534,6 +556,55 @@ func (c *HTTPClient) getPlugins(ctx context.Context, connectorsOnly bool) ([]plu
 	}
 
 	return resp, nil
+}
+
+func (c *HTTPClient) pluginRecommendedValues(ctx context.Context, pluginID string) (map[string][]string, error) {
+	const op = "connectors.kafkaconnect.pluginRecommendedValues"
+
+	var infos struct {
+		Configs []struct {
+			Value struct {
+				Name              string   `json:"name"`
+				RecommendedValues []string `json:"recommended_values"`
+			} `json:"value"`
+		} `json:"configs"`
+	}
+
+	body := map[string]string{"connector.class": pluginID}
+
+	if err := c.do(ctx, http.MethodPut,
+		"/connector-plugins/"+url.PathEscape(pluginID)+"/config/validate",
+		body, &infos); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	values := make(map[string][]string)
+
+	for _, cfg := range infos.Configs {
+		if len(cfg.Value.RecommendedValues) == 0 {
+			continue
+		}
+
+		values[cfg.Value.Name] = uniqueStrings(cfg.Value.RecommendedValues)
+	}
+
+	return values, nil
+}
+
+func uniqueStrings(in []string) []string {
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+
+	for _, s := range in {
+		if _, ok := seen[s]; ok {
+			continue
+		}
+
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+
+	return out
 }
 
 func (c *HTTPClient) putConnectorAction(ctx context.Context, name, action string) (domain.Connector, error) {

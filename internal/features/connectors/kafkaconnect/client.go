@@ -339,10 +339,7 @@ func (c *HTTPClient) GetConnectorPlugins(ctx context.Context) ([]domain.Connecto
 	conPlugins := make([]domain.ConnectorPlugin, 0, len(infos))
 
 	for _, p := range infos {
-		conPlugins = append(conPlugins, domain.ConnectorPlugin{
-			ID:   p.Class,
-			Name: pluginDisplayName(p.Class),
-		})
+		conPlugins = append(conPlugins, domain.ConnectorPlugin{ID: p.Class})
 	}
 
 	return conPlugins, nil
@@ -363,21 +360,10 @@ func (c *HTTPClient) GetSMTPlugins(ctx context.Context) ([]domain.ConnectorPlugi
 			continue
 		}
 
-		plugins = append(plugins, domain.ConnectorPlugin{
-			ID:   p.Class,
-			Name: pluginDisplayName(p.Class),
-		})
+		plugins = append(plugins, domain.ConnectorPlugin{ID: p.Class})
 	}
 
 	return plugins, nil
-}
-
-func pluginDisplayName(class string) string {
-	if idx := strings.LastIndexByte(class, '.'); idx >= 0 {
-		return strings.Clone(class[idx+1:])
-	}
-
-	return class
 }
 
 type pluginConfigKey struct {

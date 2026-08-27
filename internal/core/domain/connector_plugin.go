@@ -35,6 +35,7 @@ type ConnectorPluginField struct {
 	Importance  string
 	Required    bool
 	Default     *string
+	Values      []string
 }
 
 type ConnectorPluginSchema struct {

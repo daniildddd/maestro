@@ -981,9 +981,7 @@ paths:
                   $ref: '#/components/schemas/PluginListItem'
               example:
                 - id: io.debezium.connector.postgresql.PostgresConnector
-                  name: PostgresConnector
                 - id: io.debezium.connector.mysql.MySqlConnector
-                  name: MySqlConnector
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1051,9 +1049,7 @@ paths:
                   $ref: '#/components/schemas/PluginListItem'
               example:
                 - id: org.apache.kafka.connect.transforms.InsertField$Value
-                  name: InsertField$Value
                 - id: org.apache.kafka.connect.transforms.ExtractField$Key
-                  name: ExtractField$Key
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2044,15 +2040,11 @@ components:
       type: object
       required:
         - id
-        - name
       properties:
         id:
           type: string
           description: Fully qualified plugin class name.
           example: io.debezium.connector.postgresql.PostgresConnector
-        name:
-          type: string
-          example: PostgresConnector
     PluginSchemaField:
       description: Configuration field description.
       type: object

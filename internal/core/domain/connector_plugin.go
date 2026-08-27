@@ -23,8 +23,7 @@ var (
 )
 
 type ConnectorPlugin struct {
-	ID   string
-	Name string
+	ID string
 }
 
 type ConnectorPluginField struct {

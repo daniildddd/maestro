@@ -16,7 +16,7 @@ func (s *ConnectorsService) GetConnectorPluginSchema(
 ) (domain.ConnectorPluginSchema, error) {
 	const op = "connectors.service.GetConnectorPluginSchema"
 
-	schema, err := s.connectors.GetConnectorPluginSchema(ctx, pluginID)
+	schema, err := s.connectors.GetConnectorPluginSchemaWithValues(ctx, pluginID)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrConnectorPluginNotFound):

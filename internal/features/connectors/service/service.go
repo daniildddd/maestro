@@ -38,6 +38,11 @@ type KafkaConnect interface {
 		pluginID string,
 	) (domain.ConnectorPluginSchema, error)
 
+	GetConnectorPluginSchemaWithValues(
+		ctx context.Context,
+		pluginID string,
+	) (domain.ConnectorPluginSchema, error)
+
 	GetSMTPlugins(
 		ctx context.Context,
 	) ([]domain.ConnectorPlugin, error)

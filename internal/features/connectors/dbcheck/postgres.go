@@ -294,6 +294,7 @@ func scanBool(ctx context.Context, conn *pgx.Conn, query string, args ...any) (b
 
 	return value, err
 }
+
 func publicationName(raw map[string]string) string {
 	if name := raw["publication.name"]; name != "" {
 		return name

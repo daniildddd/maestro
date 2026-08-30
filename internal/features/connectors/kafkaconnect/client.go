@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
@@ -16,22 +17,21 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
 
-const (
-	maxAttempts = 3
-	retryDelay  = 300 * time.Millisecond
-)
-
 type HTTPClient struct {
-	baseURL  string
-	client   *http.Client
-	registry *plugins.Registry
+	baseURL           string
+	client            *http.Client
+	registry          *plugins.Registry
+	retryMaxAttempts  int
+	retryInitialDelay time.Duration
 }
 
 func NewHTTPClient(cfg Config, registry *plugins.Registry) *HTTPClient {
 	return &HTTPClient{
-		baseURL:  cfg.BaseURL,
-		client:   &http.Client{Timeout: cfg.Timeout},
-		registry: registry,
+		baseURL:           cfg.BaseURL,
+		client:            &http.Client{Timeout: cfg.Timeout},
+		registry:          registry,
+		retryMaxAttempts:  cfg.RetryMaxAttempts,
+		retryInitialDelay: cfg.RetryInitialDelay,
 	}
 }
 
@@ -200,17 +200,17 @@ func (c *HTTPClient) RestartTask(ctx context.Context, name string, taskID int) e
 
 	var err error
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodPost, path, nil, nil)
 		if err == nil {
 			return nil
 		}
 
-		if !isRebalance(err) || attempt == maxAttempts {
+		if !isRebalance(err) || attempt == c.retryMaxAttempts {
 			break
 		}
 
-		delay := retryDelay * time.Duration(attempt)
+		delay := c.retryWait(attempt)
 
 		select {
 		case <-time.After(delay):
@@ -238,17 +238,17 @@ func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config ma
 
 	var err error
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodPost, "/connectors", body, &created)
 		if err == nil {
 			break
 		}
 
-		if !isRebalance(err) || attempt == maxAttempts {
+		if !isRebalance(err) || attempt == c.retryMaxAttempts {
 			break
 		}
 
-		delay := retryDelay * time.Duration(attempt)
+		delay := c.retryWait(attempt)
 
 		select {
 		case <-time.After(delay):
@@ -291,17 +291,17 @@ func (c *HTTPClient) UpdateConnector(ctx context.Context, name string, config ma
 
 	var err error
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodPut, "/connectors/"+url.PathEscape(name)+"/config", config, &updated)
 		if err == nil {
 			break
 		}
 
-		if !isRebalance(err) || attempt == maxAttempts {
+		if !isRebalance(err) || attempt == c.retryMaxAttempts {
 			break
 		}
 
-		delay := retryDelay * time.Duration(attempt)
+		delay := c.retryWait(attempt)
 
 		select {
 		case <-time.After(delay):
@@ -465,17 +465,17 @@ func (c *HTTPClient) RestartConnector(
 
 	var err error
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodPost, path, nil, nil)
 		if err == nil {
 			break
 		}
 
-		if !isRebalance(err) || attempt == maxAttempts {
+		if !isRebalance(err) || attempt == c.retryMaxAttempts {
 			break
 		}
 
-		delay := retryDelay * time.Duration(attempt)
+		delay := c.retryWait(attempt)
 
 		select {
 		case <-time.After(delay):
@@ -503,17 +503,17 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 
 	var err error
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodDelete, path, nil, nil)
 		if err == nil {
 			return nil
 		}
 
-		if !isRebalance(err) || attempt == maxAttempts {
+		if !isRebalance(err) || attempt == c.retryMaxAttempts {
 			break
 		}
 
-		delay := retryDelay * time.Duration(attempt)
+		delay := c.retryWait(attempt)
 
 		select {
 		case <-time.After(delay):
@@ -582,6 +582,19 @@ func (c *HTTPClient) ValidateConfig(
 	}
 
 	return checks, nil
+}
+
+func (c *HTTPClient) retryWait(attempt int) time.Duration {
+	base := c.retryInitialDelay << (attempt - 1)
+
+	span := base / 5
+	if span <= 0 {
+		return base
+	}
+
+	jitter := rand.Int63n(int64(2*span)+1) - int64(span) //nolint:gosec // jitter is not security-sensitive
+
+	return base + time.Duration(jitter)
 }
 
 //nolint:revive // connectorsOnly mirrors the kafka connect query parameter of the same name
@@ -659,17 +672,17 @@ func (c *HTTPClient) putConnectorAction(ctx context.Context, name, action string
 
 	var err error
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		err = c.do(ctx, http.MethodPut, path, nil, nil)
 		if err == nil {
 			break
 		}
 
-		if !isRebalance(err) || attempt == maxAttempts {
+		if !isRebalance(err) || attempt == c.retryMaxAttempts {
 			break
 		}
 
-		delay := retryDelay * time.Duration(attempt)
+		delay := c.retryWait(attempt)
 
 		select {
 		case <-time.After(delay):

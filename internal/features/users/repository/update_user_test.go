@@ -85,6 +85,27 @@ func TestUpdateUser(t *testing.T) {
 			wantNotIs: core_postgres_pool.ErrNoRows,
 		},
 		{
+			name:     "duplicate username maps to ErrUsernameConflict",
+			username: "updateduser",
+			setup: func(pool *MockPool, row *MockRow) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					QueryRow(mock.Anything, mock.Anything, []any{"updateduser", userID}).
+					Return(row).
+					Once()
+
+				row.EXPECT().
+					Scan(mock.Anything).
+					Return(core_postgres_pool.ErrDuplicate).
+					Once()
+			},
+			wantIs: errs.ErrUsernameConflict,
+		},
+		{
 			name:     "scan error is wrapped",
 			username: "updateduser",
 			setup: func(pool *MockPool, row *MockRow) {

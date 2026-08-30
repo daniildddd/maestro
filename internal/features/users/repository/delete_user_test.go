@@ -47,9 +47,24 @@ func TestDeleteUser(t *testing.T) {
 						mock.Anything,
 						[]any{userID},
 					).
-					Return(nil, nil).
+					Return(stubCommandTag{affected: 1}, nil).
 					Once()
 			},
+		},
+		{
+			name: "no rows maps to ErrUserNotFound",
+			setup: func(pool *MockPool) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					Exec(mock.Anything, mock.Anything, []any{userID}).
+					Return(stubCommandTag{affected: 0}, nil).
+					Once()
+			},
+			wantIs: errs.ErrUserNotFound,
 		},
 		{
 			name: "exec error is wrapped",

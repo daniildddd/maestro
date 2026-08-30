@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
+	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
 func (r *UsersRepository) DeleteUser(
@@ -20,13 +22,22 @@ func (r *UsersRepository) DeleteUser(
 	DELETE FROM users
 	WHERE id=$1`
 
-	_, err := r.pool.Exec(ctx, query, id)
+	tag, err := r.pool.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf(
 			"%s: exec query (id=%s): %w",
 			op,
 			id,
 			err,
+		)
+	}
+
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf(
+			"%s: user not found (id=%s): %w",
+			op,
+			id,
+			errs.ErrUserNotFound,
 		)
 	}
 

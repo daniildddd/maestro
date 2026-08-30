@@ -29,7 +29,7 @@ func (MongoDBAdapter) hostPort(config map[string]string) (host, port string) {
 		}
 	}
 
-	return splitHostPort(firstEntry(config["mongodb.hosts"]))
+	return "", ""
 }
 
 func (MongoDBAdapter) user(config map[string]string) string {

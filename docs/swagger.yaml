@@ -600,8 +600,8 @@ paths:
                 summary: PostgreSQL Connector with JSON Converter and SMT
                 value:
                   name: pg-connector
-                  plugin_type: io.debezium.connector.postgresql.PostgresConnector
                   config:
+                    connector.class: io.debezium.connector.postgresql.PostgresConnector
                     database.hostname: localhost
                     database.port: "5432"
                     database.user: postgres
@@ -616,7 +616,6 @@ paths:
                 summary: MySQL Connector with Avro Converter
                 value:
                   name: mysql-connector
-                  plugin_type: io.debezium.connector.mysql.MySqlConnector
                   config:
                     database.hostname: mysql
                     database.port: "3306"
@@ -665,53 +664,106 @@ paths:
       operationId: validateConnectorConfig
       x-required-roles: [user]
       requestBody:
-        description: Connector configuration to validate.
+        description: Connector plugin type and configuration to validate.
         required: true
         content:
           application/json:
-            example:
-              plugin_id: io.debezium.connector.postgresql.PostgresConnector
-              config:
-                database.hostname: localhost
-                database.port: '5432'
-                database.user: postgres
-                database.password: postgres
-                database.dbname: testdb
-                plugin.name: pgoutput
             schema:
               $ref: '#/components/schemas/ValidateConnectorRequest'
+            examples:
+              postgres_example:
+                summary: PostgreSQL connector configuration
+                value:
+                  plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                  config:
+                    connector.class: io.debezium.connector.postgresql.PostgresConnector
+                    database.hostname: localhost
+                    database.port: '5432'
+                    database.user: postgres
+                    database.password: postgres
+                    database.dbname: testdb
+                    plugin.name: pgoutput
       responses:
         '200':
-          description: Validation result
+          description: >
+            Validation result. The report always carries valid: true in a 200 response;
+            steps contain only ok, warning and skipped checks. If any check fails with
+            error severity, the endpoint returns 400 CONNECTOR_CONFIG_INVALID instead,
+            with the same report (valid: false) inside the details object.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationResult'
+                $ref: '#/components/schemas/ValidationReport'
               examples:
                 successful_validation:
                   summary: Validation passed
                   value:
                     valid: true
-                    results: []
-                failed_validation:
-                  summary: Validation failed with issues
-                  value:
-                    valid: false
-                    results:
-                      - field: database.hostname
-                        step: config_validation
-                        status: ERROR
-                        message: Unable to reach database host.
-                      - field: tasks.max
-                        step: config_validation
-                        status: WARNING
-                        message: Value '10' is unusually high. Recommend 1-5.
+                    steps:
+                      - id: config
+                        status: ok
+                        checks:
+                          - id: config.schema
+                            severity: ok
+                            message: Configuration matches the connector schema.
+                      - id: connection
+                        status: ok
+                        checks:
+                          - id: connection.auth
+                            severity: ok
+                            message: Database connection established.
         '400':
-          $ref: '#/components/responses/BadRequest'
+          description: >
+            The error code identifies the case. CONNECTOR_CONFIG_INVALID carries a
+            details object with the full validation report (valid: false, steps).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                connector_config_invalid:
+                  summary: Database checks rejected the configuration
+                  value:
+                    code: CONNECTOR_CONFIG_INVALID
+                    message: Connector configuration is invalid
+                    details:
+                      valid: false
+                      steps:
+                        - id: connection
+                          status: error
+                          checks:
+                            - id: connection.auth
+                              severity: error
+                              message: Failed to connect to the database.
+                              fix_hint: Check host, port and credentials.
+                connector_validation_unsupported:
+                  summary: No database checker for this connector type
+                  value:
+                    code: CONNECTOR_VALIDATION_UNSUPPORTED
+                    message: Validation is not supported for this connector type
+                validation_failed:
+                  summary: Missing plugin_type or config
+                  value:
+                    code: VALIDATION_FAILED
+                    message: Validation failed
+                invalid_request_body:
+                  summary: Malformed JSON body
+                  value:
+                    code: INVALID_REQUEST_BODY
+                    message: Invalid request body
+                invalid_content_type:
+                  summary: Content-Type is not application/json
+                  value:
+                    code: INVALID_CONTENT_TYPE
+                    message: Invalid content type
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/PluginNotFound'
+        '503':
+          $ref: '#/components/responses/KafkaConnectUnavailable'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -1536,6 +1588,15 @@ components:
           type: string
           description: Human-readable error description to display to the user.
           example: Provided configuration is invalid.
+        details:
+          type: object
+          nullable: true
+          description: >
+            Optional structured payload for error codes that carry one.
+            CONNECTOR_CONFIG_INVALID carries the full validation report
+            (ValidationReport with valid: false).
+          example:
+            valid: false
     User:
       type: object
       description: User record as stored in the users table.
@@ -1856,7 +1917,6 @@ components:
       type: object
       required:
         - name
-        - plugin_type
         - config
       properties:
         name:
@@ -1864,15 +1924,15 @@ components:
           minLength: 1
           maxLength: 128
           example: pg-connector
-        plugin_type:
-          type: string
-          description: Fully qualified connector class, e.g. io.debezium.connector.postgresql.PostgresConnector.
-          example: io.debezium.connector.postgresql.PostgresConnector
         config:
           type: object
           additionalProperties: true
-          description: Connector configuration including DB connection properties, converters, and optional SMTs.
+          description: >
+            Connector configuration including DB connection properties, converters,
+            and optional SMTs. Must carry the connector.class key: it is the single
+            source of truth for the connector type.
           example:
+            connector.class: io.debezium.connector.postgresql.PostgresConnector
             database.hostname: localhost
             plugin.name: pgoutput
     ConnectorUpdateRequest:
@@ -2105,69 +2165,134 @@ components:
               importance: HIGH
               required: true
               default: localhost
-    ValidationIssue:
+    ValidationCheckSeverity:
+      type: string
+      enum: [ok, warning, error, skipped]
+      description: |
+        Severity of a validation check.
+        ok — the check passed; warning — the configuration works but carries a risk;
+        error — the connector will not work and creation is blocked; skipped — not checked.
+      example: ok
+    ValidationStepID:
+      type: string
+      enum: [config, connection, permissions, cdc, tables]
+      description: Validation pipeline stage the check belongs to.
+      example: connection
+    ValidationCheck:
       description: Single validation finding.
       type: object
       required:
-        - field
-        - step
-        - status
+        - id
+        - severity
         - message
       properties:
-        field:
+        id:
           type: string
-          example: database.hostname
-        step:
-          type: string
-          example: config_validation
-        status:
-          type: string
-          enum: [ERROR, WARNING]
-          example: ERROR
+          example: connection.auth
+        severity:
+          $ref: '#/components/schemas/ValidationCheckSeverity'
         message:
           type: string
-          example: Unable to reach database host.
-    ValidationResult:
-      description: Result of connector configuration validation.
+          example: Failed to connect to the database.
+        fix_hint:
+          type: string
+          nullable: true
+          description: Suggestion on how to resolve the issue. Absent when there is nothing to fix.
+          example: Check host, port and credentials.
+        field:
+          type: string
+          nullable: true
+          description: Related config key, when the check is about one.
+          example: database.hostname
+        table:
+          type: string
+          nullable: true
+          description: Related table name, when the check is about one.
+          example: public.orders
+      example:
+        id: connection.auth
+        severity: error
+        message: Failed to connect to the database.
+        fix_hint: Check host, port and credentials.
+        field: database.hostname
+    ValidationStep:
+      description: One validation stage with its checks and aggregated status.
+      type: object
+      required:
+        - id
+        - status
+        - checks
+      properties:
+        id:
+          $ref: '#/components/schemas/ValidationStepID'
+        status:
+          $ref: '#/components/schemas/ValidationCheckSeverity'
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationCheck'
+      example:
+        id: connection
+        status: error
+        checks:
+          - id: connection.auth
+            severity: error
+            message: Failed to connect to the database.
+    ValidationReport:
+      description: |
+        Full validation report. valid is false when any step contains an error check.
+        A 200 response always has valid: true; valid: false is delivered inside the
+        details object of a 400 CONNECTOR_CONFIG_INVALID error.
       type: object
       required:
         - valid
-        - results
+        - steps
       properties:
         valid:
           type: boolean
           example: true
-        results:
+        steps:
           type: array
           items:
-            $ref: '#/components/schemas/ValidationIssue'
-          example:
-            - field: database.hostname
-              step: config_validation
-              status: ERROR
-              message: Unable to reach database host.
+            $ref: '#/components/schemas/ValidationStep'
+      example:
+        valid: true
+        steps:
+          - id: config
+            status: ok
+            checks:
+              - id: config.schema
+                severity: ok
+                message: Configuration matches the connector schema.
     ValidateConnectorRequest:
-      description: Connector configuration to validate.
+      description: Connector plugin type and configuration to validate.
       type: object
       required:
-        - plugin_id
+        - plugin_type
         - config
       properties:
-        plugin_id:
+        plugin_type:
           type: string
+          description: Kafka Connect connector class (plugin id).
           example: io.debezium.connector.postgresql.PostgresConnector
         config:
           type: object
-          additionalProperties: true
-          example:
-            database.hostname: localhost
-        transforms:
-          type: array
-          items:
+          description: Connector configuration as key-value strings.
+          additionalProperties:
             type: string
-
           example:
-            - InsertField$Value
+            connector.class: io.debezium.connector.postgresql.PostgresConnector
+            database.hostname: localhost
+            database.port: '5432'
+            database.user: postgres
+            database.password: postgres
+            database.dbname: testdb
+            plugin.name: pgoutput
+      example:
+        plugin_type: io.debezium.connector.postgresql.PostgresConnector
+        config:
+          database.hostname: localhost
+          database.port: '5432'
   securitySchemes:
     bearerAuth:
       type: http

@@ -91,6 +91,12 @@ type ConnectorsService interface {
 		ctx context.Context,
 		name string,
 	) error
+
+	ValidateConnector(
+		ctx context.Context,
+		pluginType string,
+		config map[string]string,
+	) (domain.ValidationReport, error)
 }
 
 func NewConnectorsHTTPHandler(connectorsService ConnectorsService) *ConnectorsHTTPHandler {
@@ -111,6 +117,12 @@ func (h *ConnectorsHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodPost,
 			Path:    "/connectors",
 			Handler: h.CreateConnector,
+			Roles:   []string{domain.RoleUser},
+		},
+		{
+			Method:  http.MethodPost,
+			Path:    "/connectors/validate",
+			Handler: h.ValidateConnector,
 			Roles:   []string{domain.RoleUser},
 		},
 		{

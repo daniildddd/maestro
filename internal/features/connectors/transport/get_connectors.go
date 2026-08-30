@@ -57,16 +57,18 @@ func (h *ConnectorsHTTPHandler) GetConnectors(w http.ResponseWriter, r *http.Req
 
 	responseHandler.JSONResponse(
 		ConnectorListResponse{
-			Data: connectorsResponseFromDomain(connectors),
-			Meta: Meta{Page: filter.Page, Limit: filter.Limit},
+			Data:  connectorsResponseFromDomain(connectors),
+			Meta:  Meta{Page: filter.Page, Limit: filter.Limit},
+			Total: len(connectors),
 		},
 		http.StatusOK,
 	)
 }
 
 type ConnectorListResponse struct {
-	Data []ConnectorResponse `json:"data"`
-	Meta Meta                `json:"meta"`
+	Data  []ConnectorResponse `json:"data"`
+	Meta  Meta                `json:"meta"`
+	Total int                 `json:"total"`
 }
 
 type ConnectorResponse struct {

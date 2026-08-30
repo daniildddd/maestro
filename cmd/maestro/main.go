@@ -19,6 +19,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
 	"github.com/daniildddd/maestro/internal/features/auth/transport"
+	"github.com/daniildddd/maestro/internal/features/connectors/dbcheck"
 	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 	connectorsservice "github.com/daniildddd/maestro/internal/features/connectors/service"
@@ -122,8 +123,11 @@ func run() int {
 		pluginRegistry,
 	)
 
+	dbCheckConfig := dbcheck.NewConfigMust()
+
 	connectorsService := connectorsservice.NewConnectorsService(
 		kafkaConnectClient,
+		dbcheck.NewPostgresChecker(dbCheckConfig),
 	)
 
 	connectorsTransportHTTP := connectorstransport.NewConnectorsHTTPHandler(connectorsService)

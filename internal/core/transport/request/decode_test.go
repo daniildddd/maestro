@@ -104,6 +104,20 @@ func TestDecodeAndValidate(t *testing.T) {
 			wantErr:     errs.ErrInvalidRequestBody,
 		},
 		{
+			name:        "trailing garbage after JSON returns ErrInvalidRequestBody",
+			contentType: "application/json",
+			body:        `{"username":"alice","password":"secret123"} trailing-garbage`,
+			dest:        &userReq{},
+			wantErr:     errs.ErrInvalidRequestBody,
+		},
+		{
+			name:        "second JSON value returns ErrInvalidRequestBody",
+			contentType: "application/json",
+			body:        `{"username":"alice","password":"secret123"} {"x":1}`,
+			dest:        &userReq{},
+			wantErr:     errs.ErrInvalidRequestBody,
+		},
+		{
 			name:        "body exceeds limit returns ErrInvalidRequestBody",
 			contentType: "application/json",
 			body:        `{"data":"` + strings.Repeat("a", testMaxBodyBytes+10) + `"}`,

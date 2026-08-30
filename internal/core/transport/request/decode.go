@@ -72,9 +72,6 @@ func DecodeAndValidate(
 		)
 	}
 
-	// Decode reads exactly one JSON value and stops afterwards, silently ignoring
-	// anything that follows. Reject a non-empty tail: only io.EOF (whitespace after
-	// the value) is acceptable.
 	if err = dec.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
 		return fmt.Errorf(
 			"%s: trailing data after json body: %w: %v",

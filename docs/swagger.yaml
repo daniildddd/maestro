@@ -254,6 +254,7 @@ paths:
                 meta:
                   page: 1
                   limit: 20
+                has_more: true
               schema:
                 $ref: '#/components/schemas/UserListResponse'
         '400':
@@ -571,6 +572,7 @@ paths:
                 meta:
                   page: 1
                   limit: 20
+                total: 7
               schema:
                 $ref: '#/components/schemas/ConnectorListResponse'
         '400':
@@ -1697,6 +1699,10 @@ components:
               updated_at: null
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+        has_more:
+          type: boolean
+          description: Whether another page of results exists. Computed by fetching one extra row, so no COUNT query is needed.
+          example: true
     UserLoginRequest:
       description: Login credentials.
       type: object
@@ -2024,6 +2030,10 @@ components:
               tasks_count: 1
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+        total:
+          type: integer
+          description: "Total number of connectors after filtering. Free to compute: the list is already fully loaded from Kafka Connect."
+          example: 7
     AuditLogListItem:
       description: Audit log entry summary.
       type: object

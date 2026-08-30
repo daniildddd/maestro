@@ -11,9 +11,8 @@ import (
 )
 
 type ConnectorCreateRequest struct {
-	Name       string            `json:"name"        validate:"required,min=1,max=128"`
-	PluginType string            `json:"plugin_type" validate:"required"`
-	Config     map[string]string `json:"config"      validate:"required"`
+	Name   string            `json:"name"   validate:"required,min=1,max=128"`
+	Config map[string]string `json:"config" validate:"required,min=1"`
 }
 
 type ConnectorCreateResponse struct {

@@ -6,15 +6,27 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
+type dbChecker interface {
+	Match(class string) bool
+
+	Check(
+		ctx context.Context,
+		config map[string]string,
+	) ([]domain.ValidationStep, error)
+}
+
 type ConnectorsService struct {
 	connectors KafkaConnect
+	checkers   []dbChecker
 }
 
 func NewConnectorsService(
 	connectors KafkaConnect,
+	checkers ...dbChecker,
 ) *ConnectorsService {
 	return &ConnectorsService{
 		connectors: connectors,
+		checkers:   checkers,
 	}
 }
 
@@ -92,4 +104,10 @@ type KafkaConnect interface {
 		ctx context.Context,
 		name string,
 	) error
+
+	ValidateConfig(
+		ctx context.Context,
+		pluginID string,
+		config map[string]string,
+	) ([]domain.ValidationCheck, error)
 }

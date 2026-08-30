@@ -675,6 +675,7 @@ paths:
                 summary: PostgreSQL connector configuration
                 value:
                   plugin_type: io.debezium.connector.postgresql.PostgresConnector
+                  name: pg-connector
                   config:
                     connector.class: io.debezium.connector.postgresql.PostgresConnector
                     database.hostname: localhost
@@ -2265,16 +2266,26 @@ components:
                 severity: ok
                 message: Configuration matches the connector schema.
     ValidateConnectorRequest:
-      description: Connector plugin type and configuration to validate.
+      description: Connector plugin type, proposed connector name, and configuration to validate.
       type: object
       required:
         - plugin_type
+        - name
         - config
       properties:
         plugin_type:
           type: string
           description: Kafka Connect connector class (plugin id).
           example: io.debezium.connector.postgresql.PostgresConnector
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: >-
+            Proposed connector name. Kafka Connect requires it during validation
+            (missing name fails the config step); the name format is enforced at
+            connector creation.
+          example: pg-connector
         config:
           type: object
           description: Connector configuration as key-value strings.
@@ -2290,6 +2301,7 @@ components:
             plugin.name: pgoutput
       example:
         plugin_type: io.debezium.connector.postgresql.PostgresConnector
+        name: pg-connector
         config:
           database.hostname: localhost
           database.port: '5432'

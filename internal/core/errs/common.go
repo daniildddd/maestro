@@ -17,6 +17,7 @@ type AppError struct {
 	Code       string
 	Message    string
 	LogLevel   zapcore.Level
+	Details    any
 }
 
 func (e *AppError) Error() string {
@@ -142,6 +143,20 @@ var ErrValidationFailed = &AppError{
 	HTTPStatus: http.StatusBadRequest,
 	Code:       "VALIDATION_FAILED",
 	Message:    "Validation failed",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrConnectorConfigInvalid = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "CONNECTOR_CONFIG_INVALID",
+	Message:    "Connector configuration is invalid",
+	LogLevel:   zapcore.InfoLevel,
+}
+
+var ErrConnectorValidationUnsupported = &AppError{
+	HTTPStatus: http.StatusBadRequest,
+	Code:       "CONNECTOR_VALIDATION_UNSUPPORTED",
+	Message:    "Validation is not supported for this connector type",
 	LogLevel:   zapcore.InfoLevel,
 }
 

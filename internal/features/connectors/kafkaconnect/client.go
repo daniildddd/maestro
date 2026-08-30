@@ -525,6 +525,65 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	return fmt.Errorf("%s: %w", op, connectorError(err))
 }
 
+type validateConfigResponse struct {
+	Configs []struct {
+		Value struct {
+			Name   string   `json:"name"`
+			Errors []string `json:"errors"`
+		} `json:"value"`
+	} `json:"configs"`
+}
+
+func (c *HTTPClient) ValidateConfig(
+	ctx context.Context,
+	pluginID string,
+	config map[string]string,
+) ([]domain.ValidationCheck, error) {
+	const op = "connectors.kafkaconnect.ValidateConfig"
+
+	var resp validateConfigResponse
+
+	if err := c.do(ctx, http.MethodPut,
+		"/connector-plugins/"+url.PathEscape(pluginID)+"/config/validate",
+		config, &resp); err != nil {
+		if isNotFound(err) {
+			return nil, fmt.Errorf("%s: %w", op, domain.ErrConnectorPluginNotFound)
+		}
+
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	checks := make([]domain.ValidationCheck, 0, len(resp.Configs))
+
+	for _, cfg := range resp.Configs {
+		if len(cfg.Value.Errors) == 0 {
+			continue
+		}
+
+		message := strings.Join(cfg.Value.Errors, "; ")
+		if message == "" {
+			message = "invalid value"
+		}
+
+		checks = append(checks, domain.ValidationCheck{
+			ID:       "config." + cfg.Value.Name,
+			Severity: domain.CheckSeverityError,
+			Message:  message,
+			Field:    cfg.Value.Name,
+		})
+	}
+
+	if len(checks) == 0 {
+		checks = append(checks, domain.ValidationCheck{
+			ID:       "config.schema",
+			Severity: domain.CheckSeverityOK,
+			Message:  "configuration accepted by Kafka Connect",
+		})
+	}
+
+	return checks, nil
+}
+
 //nolint:revive // connectorsOnly mirrors the kafka connect query parameter of the same name
 func (c *HTTPClient) getPlugins(ctx context.Context, connectorsOnly bool) ([]pluginInfo, error) {
 	const op = "connectors.kafkaconnect.getPlugins"

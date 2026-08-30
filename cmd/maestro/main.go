@@ -110,6 +110,7 @@ func run() int {
 	pluginRegistry := plugins.NewRegistry(
 		plugins.PostgresAdapter{},
 		plugins.MySQLAdapter{},
+		plugins.MariaDBAdapter{},
 		plugins.MongoDBAdapter{},
 		plugins.SQLServerAdapter{},
 		plugins.OracleAdapter{},

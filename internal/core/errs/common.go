@@ -215,3 +215,10 @@ var ErrSmtPluginNotFound = &AppError{
 	Message:    "SMT plugin not found",
 	LogLevel:   zapcore.InfoLevel,
 }
+
+var ErrNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       codeNotFound,
+	Message:    "Not found",
+	LogLevel:   zapcore.InfoLevel,
+}

@@ -8,7 +8,9 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/daniildddd/maestro/internal/core/errs"
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
+	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
 type HTTPServer struct {
@@ -43,6 +45,18 @@ func (s *HTTPServer) RegisterRoute(route ...Route) {
 		pattern := v.Method + " " + v.Path
 		s.mux.Handle(pattern, v.WithMiddleware())
 	}
+}
+
+func (s *HTTPServer) RegisterNotFound(log *core_logger.Logger) {
+	s.mux.Handle("/api/v1/{rest...}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		responseHandler := core_http_response.NewHTTPResponseHandler(
+			core_http_response.NewResponseWriter(w),
+			log,
+		)
+		responseHandler.ErrorResponse(
+			fmt.Errorf("route not found: %s %s: %w", r.Method, r.URL.Path, errs.ErrNotFound),
+		)
+	}))
 }
 
 func (s *HTTPServer) Run(ctx context.Context) error {

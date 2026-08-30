@@ -106,6 +106,9 @@ linters:
         - name: unexported-return
           disabled: true
 
+        - name: exported
+          disabled: true
+
         - name: line-length-limit
           disabled: true
 

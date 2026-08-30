@@ -175,6 +175,7 @@ func run() int {
 	)
 
 	srv.RegisterAPIRouters(publicV1, privateV1)
+	srv.RegisterNotFound(logger)
 
 	if err = srv.Run(ctx); err != nil {
 		logger.Error("HTTP server stopped", zap.Error(err))

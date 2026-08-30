@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"context"
+	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -101,6 +102,67 @@ func TestNewHTTPServer(t *testing.T) {
 		srv := server.NewHTTPServer(cfg, log)
 
 		must.NotNil(srv)
+	})
+}
+
+//nolint:paralleltest // binds real OS ports; cannot run concurrently with other Run tests
+func TestHTTPServer_RegisterNotFound(t *testing.T) {
+	t.Run("unknown paths and wrong methods return JSON 404", func(t *testing.T) {
+		must := require.New(t)
+
+		addr := freeAddr(t)
+
+		srv := server.NewHTTPServer(server.Config{Addr: addr}, nopLogger())
+
+		srv.RegisterRoute(server.Route{
+			Method: http.MethodGet,
+			Path:   "/api/v1/known",
+			Handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusNoContent)
+			},
+		})
+		srv.RegisterNotFound(nopLogger())
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		errCh := runAndAwaitListening(ctx, t, srv, addr)
+
+		base := "http://" + addr
+
+		resp, err := http.Get(base + "/api/v1/known")
+		must.NoError(err)
+		must.Equal(http.StatusNoContent, resp.StatusCode)
+		_ = resp.Body.Close() //nolint:errcheck // test-only
+
+		resp, err = http.Get(base + "/api/v1/definitely-not-here")
+		must.NoError(err)
+
+		body, readErr := io.ReadAll(resp.Body)
+		must.NoError(readErr)
+
+		_ = resp.Body.Close() //nolint:errcheck // test-only
+
+		must.Equal(http.StatusNotFound, resp.StatusCode)
+		must.Contains(string(body), `"code":"NOT_FOUND"`)
+		must.Contains(string(body), `"message":"Not found"`)
+
+		req, err := http.NewRequest(http.MethodPost, base+"/api/v1/known", http.NoBody)
+		must.NoError(err)
+
+		resp, err = http.DefaultClient.Do(req)
+		must.NoError(err)
+
+		body, readErr = io.ReadAll(resp.Body)
+		must.NoError(readErr)
+
+		_ = resp.Body.Close() //nolint:errcheck // test-only
+
+		must.Equal(http.StatusNotFound, resp.StatusCode)
+		must.Contains(string(body), `"code":"NOT_FOUND"`)
+
+		cancel()
+		must.NoError(awaitRunResult(t, errCh))
 	})
 }
 

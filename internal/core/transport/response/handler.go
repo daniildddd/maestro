@@ -47,6 +47,7 @@ func (rh *HTTPResponseHandler) ErrorResponse(err error) {
 			ErrorResponse{
 				Code:    appErr.Code,
 				Message: appErr.Message,
+				Details: appErr.Details,
 			},
 			appErr.HTTPStatus,
 		)

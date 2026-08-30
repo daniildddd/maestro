@@ -29,6 +29,10 @@ func NewConfigMust() Config {
 }
 
 func (c Config) Validate() error {
+	if c.Timeout <= 0 {
+		return fmt.Errorf("timeout must be positive, got %s", c.Timeout)
+	}
+
 	if c.RetryMaxAttempts <= 0 {
 		return fmt.Errorf("retry max attempts must be positive, got %d", c.RetryMaxAttempts)
 	}

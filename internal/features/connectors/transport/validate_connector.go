@@ -13,7 +13,7 @@ import (
 
 type ConnectorValidateRequest struct {
 	PluginType string            `json:"plugin_type" validate:"required"`
-	Config     map[string]string `json:"config"      validate:"required"`
+	Config     map[string]string `json:"config"      validate:"required,min=1"`
 }
 
 type validateCheckResponse struct {

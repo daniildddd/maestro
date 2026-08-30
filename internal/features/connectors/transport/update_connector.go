@@ -10,7 +10,7 @@ import (
 )
 
 type ConnectorUpdateRequest struct {
-	Config map[string]string `json:"config" validate:"required"`
+	Config map[string]string `json:"config" validate:"required,min=1"`
 }
 
 func (h *ConnectorsHTTPHandler) UpdateConnector(w http.ResponseWriter, r *http.Request) {

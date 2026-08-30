@@ -10,13 +10,18 @@ import (
 func (s *UsersService) GetUsers(
 	ctx context.Context,
 	filter *domain.UserFilter,
-) ([]domain.User, error) {
+) ([]domain.User, bool, error) {
 	const op = "users.service.GetUsers"
 
 	users, err := s.usersRepository.GetUsers(ctx, filter)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return users, nil
+	hasMore := len(users) > filter.Limit
+	if hasMore {
+		users = users[:filter.Limit]
+	}
+
+	return users, hasMore, nil
 }

@@ -62,7 +62,7 @@ func TestGetUsers(t *testing.T) {
 							createdAt,
 							&updatedAt,
 						),
-					}, nil).
+					}, false, nil).
 					Once()
 			},
 			wantStatus: http.StatusOK,
@@ -97,7 +97,7 @@ func TestGetUsers(t *testing.T) {
 							createdAt,
 							nil,
 						),
-					}, nil).
+					}, false, nil).
 					Once()
 			},
 			wantStatus: http.StatusOK,
@@ -137,7 +137,7 @@ func TestGetUsers(t *testing.T) {
 							createdAt,
 							nil,
 						),
-					}, nil).
+					}, false, nil).
 					Once()
 			},
 			wantStatus: http.StatusOK,
@@ -163,7 +163,7 @@ func TestGetUsers(t *testing.T) {
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
 					GetUsers(mock.Anything, mock.Anything).
-					Return(nil, nil).
+					Return(nil, false, nil).
 					Once()
 			},
 			wantStatus: http.StatusOK,
@@ -173,6 +173,35 @@ func TestGetUsers(t *testing.T) {
 					Page:  2,
 					Limit: 10,
 				},
+			},
+		},
+		{
+			name:  "has more returns flag",
+			query: "page=1&limit=1",
+			setupMock: func(m *MockUsersService) {
+				m.EXPECT().
+					GetUsers(mock.Anything, mock.Anything).
+					Return([]domain.User{
+						mustNewUser(t, userID, "dave", "hash", "user", createdAt, nil),
+					}, true, nil).
+					Once()
+			},
+			wantStatus: http.StatusOK,
+			wantBody: transport.GetUsersResponse{
+				Data: []transport.UserDTOResponse{
+					{
+						ID:        userID.String(),
+						Username:  "dave",
+						Role:      "user",
+						CreatedAt: createdAt,
+						UpdatedAt: nil,
+					},
+				},
+				Meta: transport.PaginationMeta{
+					Page:  1,
+					Limit: 1,
+				},
+				HasMore: true,
 			},
 		},
 		{
@@ -209,7 +238,7 @@ func TestGetUsers(t *testing.T) {
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
 					GetUsers(mock.Anything, mock.Anything).
-					Return(nil, errs.ErrInternal).
+					Return(nil, false, errs.ErrInternal).
 					Once()
 			},
 			wantStatus: http.StatusInternalServerError,

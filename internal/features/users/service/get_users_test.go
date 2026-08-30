@@ -36,13 +36,14 @@ func TestGetUsers(t *testing.T) {
 	createdAt := time.Now().Add(-time.Hour)
 
 	tests := []struct {
-		name      string
-		setupMock func(repo *MockUsersRepository)
-		wantIs    error
-		wantUsers []domain.User
+		name        string
+		setupMock   func(repo *MockUsersRepository)
+		wantIs      error
+		wantUsers   []domain.User
+		wantHasMore bool
 	}{
 		{
-			name: "success returns users",
+			name: "success returns users without has more",
 			setupMock: func(repo *MockUsersRepository) {
 				repo.EXPECT().
 					GetUsers(mock.Anything, filter).
@@ -70,6 +71,51 @@ func TestGetUsers(t *testing.T) {
 			},
 		},
 		{
+			name: "exactly limit rows has no more",
+			setupMock: func(repo *MockUsersRepository) {
+				users := make([]domain.User, 0, filter.Limit)
+				for range filter.Limit {
+					users = append(users, mustNewUser(t, userID, "user", "hash", "user", createdAt, nil))
+				}
+
+				repo.EXPECT().
+					GetUsers(mock.Anything, filter).
+					Return(users, nil).
+					Once()
+			},
+			wantUsers: func() []domain.User {
+				users := make([]domain.User, 0, filter.Limit)
+				for range filter.Limit {
+					users = append(users, mustNewUser(t, userID, "user", "hash", "user", createdAt, nil))
+				}
+
+				return users
+			}(),
+		},
+		{
+			name: "extra row truncates and sets has more",
+			setupMock: func(repo *MockUsersRepository) {
+				users := make([]domain.User, 0, filter.Limit+1)
+				for range filter.Limit + 1 {
+					users = append(users, mustNewUser(t, userID, "user", "hash", "user", createdAt, nil))
+				}
+
+				repo.EXPECT().
+					GetUsers(mock.Anything, filter).
+					Return(users, nil).
+					Once()
+			},
+			wantUsers: func() []domain.User {
+				users := make([]domain.User, 0, filter.Limit)
+				for range filter.Limit {
+					users = append(users, mustNewUser(t, userID, "user", "hash", "user", createdAt, nil))
+				}
+
+				return users
+			}(),
+			wantHasMore: true,
+		},
+		{
 			name: "repository error is wrapped",
 			setupMock: func(repo *MockUsersRepository) {
 				repo.EXPECT().
@@ -92,7 +138,7 @@ func TestGetUsers(t *testing.T) {
 
 			svc := newTestService(t, repo)
 
-			users, err := svc.GetUsers(context.Background(), filter)
+			users, hasMore, err := svc.GetUsers(context.Background(), filter)
 
 			if tt.wantIs != nil {
 				must.Error(err)
@@ -103,6 +149,7 @@ func TestGetUsers(t *testing.T) {
 
 			must.NoError(err)
 			is.Equal(tt.wantUsers, users)
+			is.Equal(tt.wantHasMore, hasMore)
 		})
 	}
 }

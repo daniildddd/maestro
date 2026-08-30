@@ -90,7 +90,7 @@ func buildGetUsersQuery(filter *domain.UserFilter) (query string, args []any) {
 		sb.WriteString(strings.Join(conditions, " AND "))
 	}
 
-	args = append(args, filter.Limit, offset(filter.Page, filter.Limit))
+	args = append(args, filter.Limit+1, offset(filter.Page, filter.Limit))
 	fmt.Fprintf( //nolint:revive // writing to strings.Builder cannot fail
 		&sb,
 		" ORDER BY created_at LIMIT $%d OFFSET $%d",

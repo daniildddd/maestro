@@ -20,7 +20,7 @@ type UsersService interface {
 	GetUsers(
 		ctx context.Context,
 		filter *domain.UserFilter,
-	) ([]domain.User, error)
+	) ([]domain.User, bool, error)
 
 	CreateUser(
 		ctx context.Context,

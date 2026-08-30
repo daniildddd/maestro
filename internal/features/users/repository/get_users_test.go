@@ -52,7 +52,7 @@ func TestGetUsers(t *testing.T) {
 							return time.Until(deadline) <= opTimeout
 						}),
 						"\n\tSELECT id, username, password_hash, role, created_at, updated_at\n\tFROM users ORDER BY created_at LIMIT $1 OFFSET $2",
-						[]any{20, 0},
+						[]any{21, 0},
 					).
 					Return(rows, nil).
 					Once()
@@ -102,7 +102,7 @@ func TestGetUsers(t *testing.T) {
 					Query(
 						mock.Anything,
 						"\n\tSELECT id, username, password_hash, role, created_at, updated_at\n\tFROM users WHERE username=$1 AND role=$2 ORDER BY created_at LIMIT $3 OFFSET $4",
-						[]any{"alice", "admin", 10, 10},
+						[]any{"alice", "admin", 11, 10},
 					).
 					Return(rows, nil).
 					Once()
@@ -136,7 +136,7 @@ func TestGetUsers(t *testing.T) {
 					Query(
 						mock.Anything,
 						"\n\tSELECT id, username, password_hash, role, created_at, updated_at\n\tFROM users WHERE username=$1 ORDER BY created_at LIMIT $2 OFFSET $3",
-						[]any{"alice", 20, 0},
+						[]any{"alice", 21, 0},
 					).
 					Return(rows, nil).
 					Once()
@@ -170,7 +170,7 @@ func TestGetUsers(t *testing.T) {
 					Query(
 						mock.Anything,
 						"\n\tSELECT id, username, password_hash, role, created_at, updated_at\n\tFROM users WHERE role=$1 ORDER BY created_at LIMIT $2 OFFSET $3",
-						[]any{"admin", 20, 0},
+						[]any{"admin", 21, 0},
 					).
 					Return(rows, nil).
 					Once()

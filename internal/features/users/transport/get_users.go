@@ -13,8 +13,9 @@ import (
 )
 
 type GetUsersResponse struct {
-	Data []UserDTOResponse `json:"data"`
-	Meta PaginationMeta    `json:"meta"`
+	Data    []UserDTOResponse `json:"data"`
+	Meta    PaginationMeta    `json:"meta"`
+	HasMore bool              `json:"has_more"`
 }
 
 type PaginationMeta struct {
@@ -73,7 +74,7 @@ func (h *UsersHTTPHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := h.usersService.GetUsers(ctx, filter)
+	users, hasMore, err := h.usersService.GetUsers(ctx, filter)
 	if err != nil {
 		responseHandler.ErrorResponse(
 			fmt.Errorf("%s: get users: %w", op, err),
@@ -84,11 +85,9 @@ func (h *UsersHTTPHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	responseHandler.JSONResponse(
 		GetUsersResponse{
-			Data: usersDTOFromDomains(users),
-			Meta: PaginationMeta{
-				Page:  filter.Page,
-				Limit: filter.Limit,
-			},
+			Data:    usersDTOFromDomains(users),
+			Meta:    PaginationMeta{Page: filter.Page, Limit: filter.Limit},
+			HasMore: hasMore,
 		},
 		http.StatusOK,
 	)

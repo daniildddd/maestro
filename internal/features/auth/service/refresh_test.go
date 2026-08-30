@@ -121,6 +121,27 @@ func TestRefresh(t *testing.T) {
 			wantErrIs: errs.ErrInternal,
 		},
 		{
+			name:        "token not found maps to ErrInvalidRefreshToken",
+			rawOldToken: "old-raw",
+			setupMocks: func(
+				repo *MockAuthRepository,
+				_ *MockAccessTokenGenerator,
+				refreshGen *MockRefreshTokenManager,
+			) {
+				refreshGen.EXPECT().
+					Hash("old-raw").
+					Return("old-hash").
+					Once()
+
+				repo.EXPECT().
+					GetRefreshTokenByHash(mock.Anything, "old-hash").
+					Return(domain.RefreshToken{}, errs.ErrRefreshTokenNotFound).
+					Once()
+			},
+			wantErr:   true,
+			wantErrIs: errs.ErrInvalidRefreshToken,
+		},
+		{
 			name:        "expired token returns ErrExpiredRefreshToken",
 			rawOldToken: "old-raw",
 			setupMocks: func(

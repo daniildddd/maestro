@@ -20,6 +20,15 @@ func (s *AuthService) Refresh(
 
 	storedToken, err := s.authRepository.GetRefreshTokenByHash(ctx, oldHash)
 	if err != nil {
+		if errors.Is(err, errs.ErrRefreshTokenNotFound) {
+			return domain.TokenPair{}, fmt.Errorf(
+				"%s: refresh token not found: %w: %v",
+				op,
+				errs.ErrInvalidRefreshToken,
+				err,
+			)
+		}
+
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: get refresh token: %w",
 			op,

@@ -43,6 +43,17 @@ func (r *UsersRepository) UpdateUser(
 			)
 		}
 
+		if errors.Is(err, postgres.ErrDuplicate) {
+			return domain.User{}, fmt.Errorf(
+				"%s: update user (user_id=%s, username=%s): %w: %v",
+				op,
+				id,
+				username,
+				errs.ErrUsernameConflict,
+				err,
+			)
+		}
+
 		return domain.User{}, fmt.Errorf(
 			"%s: scan row (user_id=%s): %w",
 			op,

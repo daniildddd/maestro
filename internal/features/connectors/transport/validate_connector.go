@@ -2,6 +2,7 @@ package transport
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
@@ -13,6 +14,7 @@ import (
 
 type ConnectorValidateRequest struct {
 	PluginType string            `json:"plugin_type" validate:"required"`
+	Name       string            `json:"name"        validate:"required,min=1,max=128"`
 	Config     map[string]string `json:"config"      validate:"required,min=1"`
 }
 
@@ -81,7 +83,11 @@ func (h *ConnectorsHTTPHandler) ValidateConnector(w http.ResponseWriter, r *http
 		return
 	}
 
-	report, err := h.connectorsService.ValidateConnector(ctx, req.PluginType, req.Config)
+	validateConfig := make(map[string]string, len(req.Config)+1)
+	maps.Copy(validateConfig, req.Config)
+	validateConfig["name"] = req.Name
+
+	report, err := h.connectorsService.ValidateConnector(ctx, req.PluginType, validateConfig)
 	if err != nil {
 		responseHandler.ErrorResponse(fmt.Errorf("%s: validate connector: %w", op, err))
 

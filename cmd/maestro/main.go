@@ -16,6 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/security/refresh"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	"github.com/daniildddd/maestro/internal/core/transport/server"
+	"github.com/daniildddd/maestro/internal/features/auth/cleanup"
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
 	"github.com/daniildddd/maestro/internal/features/auth/transport"
@@ -69,6 +70,14 @@ func run() int {
 	defer postgresPool.Close()
 
 	authRepository := repository.NewAuthRepository(postgresPool)
+
+	refreshTokenCleanup := cleanup.NewWorker(
+		authRepository,
+		logger,
+		cleanup.NewConfigMust(),
+	)
+
+	go refreshTokenCleanup.Run(ctx)
 
 	bcryptHasher, err := hasher.NewBcryptHasher(hasher.NewConfigMust())
 	if err != nil {

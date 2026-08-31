@@ -11,6 +11,15 @@ packages:
     interfaces:
       AuthService:
 
+  github.com/daniildddd/maestro/internal/features/auth/cleanup:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "cleanup_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      ExpiredTokenCleaner:
+
   github.com/daniildddd/maestro/internal/features/auth/service:
     config:
       dir: "{{.InterfaceDir}}"

@@ -74,4 +74,10 @@ type AuthRepository interface {
 		ctx context.Context,
 		token string,
 	) error
+
+	RotateRefreshToken(
+		ctx context.Context,
+		oldHash string,
+		newToken domain.RefreshToken,
+	) error
 }

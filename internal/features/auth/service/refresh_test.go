@@ -63,11 +63,6 @@ func TestRefresh(t *testing.T) {
 					Return(domain.User{ID: userID, Role: "admin"}, nil).
 					Once()
 
-				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "old-hash").
-					Return(nil).
-					Once()
-
 				refreshGen.EXPECT().
 					Generate().
 					Return("new-raw", expiresAt, nil).
@@ -79,8 +74,9 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					SaveRefreshToken(
+					RotateRefreshToken(
 						mock.Anything,
+						"old-hash",
 						mock.MatchedBy(func(token domain.RefreshToken) bool {
 							return token.UserID == userID && token.TokenHash == "new-hash"
 						}),
@@ -234,7 +230,7 @@ func TestRefresh(t *testing.T) {
 			wantErrIs: errs.ErrInternal,
 		},
 		{
-			name:        "delete old refresh token error is wrapped",
+			name:        "rotate refresh token error is wrapped",
 			rawOldToken: "old-raw",
 			setupMocks: func(
 				repo *MockAuthRepository,
@@ -262,8 +258,18 @@ func TestRefresh(t *testing.T) {
 					Return(domain.User{ID: userID}, nil).
 					Once()
 
+				refreshGen.EXPECT().
+					Generate().
+					Return("new-raw", expiresAt, nil).
+					Once()
+
+				refreshGen.EXPECT().
+					Hash("new-raw").
+					Return("new-hash").
+					Once()
+
 				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "old-hash").
+					RotateRefreshToken(mock.Anything, "old-hash", mock.Anything).
 					Return(errs.ErrInternal).
 					Once()
 			},
@@ -297,11 +303,6 @@ func TestRefresh(t *testing.T) {
 				repo.EXPECT().
 					GetUserByID(mock.Anything, userID).
 					Return(domain.User{ID: userID}, nil).
-					Once()
-
-				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "old-hash").
-					Return(nil).
 					Once()
 
 				refreshGen.EXPECT().
@@ -341,11 +342,6 @@ func TestRefresh(t *testing.T) {
 					Return(domain.User{ID: userID}, nil).
 					Once()
 
-				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "old-hash").
-					Return(nil).
-					Once()
-
 				refreshGen.EXPECT().
 					Generate().
 					Return("new-raw", time.Now().Add(-time.Hour), nil).
@@ -359,7 +355,7 @@ func TestRefresh(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:        "save new refresh token error is wrapped",
+			name:        "rotate not found maps to ErrInvalidRefreshToken",
 			rawOldToken: "old-raw",
 			setupMocks: func(
 				repo *MockAuthRepository,
@@ -387,11 +383,6 @@ func TestRefresh(t *testing.T) {
 					Return(domain.User{ID: userID}, nil).
 					Once()
 
-				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "old-hash").
-					Return(nil).
-					Once()
-
 				refreshGen.EXPECT().
 					Generate().
 					Return("new-raw", expiresAt, nil).
@@ -403,12 +394,12 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					SaveRefreshToken(mock.Anything, mock.Anything).
-					Return(errs.ErrInternal).
+					RotateRefreshToken(mock.Anything, "old-hash", mock.Anything).
+					Return(errs.ErrRefreshTokenNotFound).
 					Once()
 			},
 			wantErr:   true,
-			wantErrIs: errs.ErrInternal,
+			wantErrIs: errs.ErrInvalidRefreshToken,
 		},
 		{
 			name:        "generate access token error is wrapped",
@@ -439,11 +430,6 @@ func TestRefresh(t *testing.T) {
 					Return(domain.User{ID: userID, Role: "admin"}, nil).
 					Once()
 
-				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "old-hash").
-					Return(nil).
-					Once()
-
 				refreshGen.EXPECT().
 					Generate().
 					Return("new-raw", expiresAt, nil).
@@ -455,7 +441,7 @@ func TestRefresh(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					SaveRefreshToken(mock.Anything, mock.Anything).
+					RotateRefreshToken(mock.Anything, "old-hash", mock.Anything).
 					Return(nil).
 					Once()
 

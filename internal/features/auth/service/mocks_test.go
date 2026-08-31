@@ -537,6 +537,53 @@ func (_c *MockAuthRepository_GetUserByName_Call) RunAndReturn(run func(ctx conte
 	return _c
 }
 
+// RotateRefreshToken provides a mock function for the type MockAuthRepository
+func (_mock *MockAuthRepository) RotateRefreshToken(ctx context.Context, oldHash string, newToken domain.RefreshToken) error {
+	ret := _mock.Called(ctx, oldHash, newToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RotateRefreshToken")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, domain.RefreshToken) error); ok {
+		r0 = returnFunc(ctx, oldHash, newToken)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockAuthRepository_RotateRefreshToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RotateRefreshToken'
+type MockAuthRepository_RotateRefreshToken_Call struct {
+	*mock.Call
+}
+
+// RotateRefreshToken is a helper method to define mock.On call
+//   - ctx
+//   - oldHash
+//   - newToken
+func (_e *MockAuthRepository_Expecter) RotateRefreshToken(ctx interface{}, oldHash interface{}, newToken interface{}) *MockAuthRepository_RotateRefreshToken_Call {
+	return &MockAuthRepository_RotateRefreshToken_Call{Call: _e.mock.On("RotateRefreshToken", ctx, oldHash, newToken)}
+}
+
+func (_c *MockAuthRepository_RotateRefreshToken_Call) Run(run func(ctx context.Context, oldHash string, newToken domain.RefreshToken)) *MockAuthRepository_RotateRefreshToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(domain.RefreshToken))
+	})
+	return _c
+}
+
+func (_c *MockAuthRepository_RotateRefreshToken_Call) Return(err error) *MockAuthRepository_RotateRefreshToken_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockAuthRepository_RotateRefreshToken_Call) RunAndReturn(run func(ctx context.Context, oldHash string, newToken domain.RefreshToken) error) *MockAuthRepository_RotateRefreshToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // SaveRefreshToken provides a mock function for the type MockAuthRepository
 func (_mock *MockAuthRepository) SaveRefreshToken(ctx context.Context, token domain.RefreshToken) error {
 	ret := _mock.Called(ctx, token)

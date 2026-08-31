@@ -63,15 +63,6 @@ func (s *AuthService) Refresh(
 		)
 	}
 
-	err = s.authRepository.DeleteRefreshToken(ctx, storedToken.TokenHash)
-	if err != nil {
-		return domain.TokenPair{}, fmt.Errorf(
-			"%s: delete refresh token: %w",
-			op,
-			err,
-		)
-	}
-
 	rawNewRefresh, expiresAt, err := s.refreshGen.Generate()
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
@@ -96,10 +87,19 @@ func (s *AuthService) Refresh(
 		)
 	}
 
-	err = s.authRepository.SaveRefreshToken(ctx, newRefreshToken)
+	err = s.authRepository.RotateRefreshToken(ctx, storedToken.TokenHash, newRefreshToken)
 	if err != nil {
+		if errors.Is(err, errs.ErrRefreshTokenNotFound) {
+			return domain.TokenPair{}, fmt.Errorf(
+				"%s: refresh token already rotated: %w: %v",
+				op,
+				errs.ErrInvalidRefreshToken,
+				err,
+			)
+		}
+
 		return domain.TokenPair{}, fmt.Errorf(
-			"%s: save refresh token: %w",
+			"%s: rotate refresh token: %w",
 			op,
 			err,
 		)

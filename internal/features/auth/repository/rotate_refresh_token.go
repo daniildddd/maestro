@@ -2,11 +2,15 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
+	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 )
+
+const maxDeadlockRetries = 3
 
 func (r *AuthRepository) RotateRefreshToken(
 	ctx context.Context,
@@ -14,6 +18,29 @@ func (r *AuthRepository) RotateRefreshToken(
 	newToken domain.RefreshToken,
 ) error {
 	const op = "auth.repository.RotateRefreshToken"
+
+	var err error
+
+	for attempt := 1; attempt <= maxDeadlockRetries; attempt++ {
+		err = r.rotateOnce(ctx, oldHash, newToken)
+		if err == nil {
+			return nil
+		}
+
+		if !errors.Is(err, core_postgres_pool.ErrDeadlock) || attempt == maxDeadlockRetries {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
+	return fmt.Errorf("%s: retries exhausted: %w", op, err)
+}
+
+func (r *AuthRepository) rotateOnce(
+	ctx context.Context,
+	oldHash string,
+	newToken domain.RefreshToken,
+) error {
+	const op = "auth.repository.rotateOnce"
 
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()

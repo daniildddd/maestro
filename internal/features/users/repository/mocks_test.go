@@ -39,6 +39,62 @@ func (_m *MockPool) EXPECT() *MockPool_Expecter {
 	return &MockPool_Expecter{mock: &_m.Mock}
 }
 
+// Begin provides a mock function for the type MockPool
+func (_mock *MockPool) Begin(ctx context.Context) (postgres.Tx, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Begin")
+	}
+
+	var r0 postgres.Tx
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) (postgres.Tx, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) postgres.Tx); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(postgres.Tx)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockPool_Begin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Begin'
+type MockPool_Begin_Call struct {
+	*mock.Call
+}
+
+// Begin is a helper method to define mock.On call
+//   - ctx
+func (_e *MockPool_Expecter) Begin(ctx interface{}) *MockPool_Begin_Call {
+	return &MockPool_Begin_Call{Call: _e.mock.On("Begin", ctx)}
+}
+
+func (_c *MockPool_Begin_Call) Run(run func(ctx context.Context)) *MockPool_Begin_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *MockPool_Begin_Call) Return(tx postgres.Tx, err error) *MockPool_Begin_Call {
+	_c.Call.Return(tx, err)
+	return _c
+}
+
+func (_c *MockPool_Begin_Call) RunAndReturn(run func(ctx context.Context) (postgres.Tx, error)) *MockPool_Begin_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Close provides a mock function for the type MockPool
 func (_mock *MockPool) Close() {
 	_mock.Called()

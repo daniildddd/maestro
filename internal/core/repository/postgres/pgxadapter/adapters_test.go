@@ -41,6 +41,12 @@ var mapErrorsTable = []mapErrorsCase{
 		code:   "23505",
 	},
 	{
+		name:   "not null violation",
+		source: &pgconn.PgError{Code: "23502"},
+		target: core_postgres_pool.ErrValidation,
+		code:   "23502",
+	},
+	{
 		name:   "check violation",
 		source: &pgconn.PgError{Code: "23514"},
 		target: core_postgres_pool.ErrValidation,

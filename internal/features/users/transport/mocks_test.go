@@ -392,8 +392,8 @@ func (_c *MockUsersService_GetUsers_Call) Run(run func(ctx context.Context, filt
 	return _c
 }
 
-func (_c *MockUsersService_GetUsers_Call) Return(users []domain.User, hasMore bool, err error) *MockUsersService_GetUsers_Call {
-	_c.Call.Return(users, hasMore, err)
+func (_c *MockUsersService_GetUsers_Call) Return(users []domain.User, b bool, err error) *MockUsersService_GetUsers_Call {
+	_c.Call.Return(users, b, err)
 	return _c
 }
 

@@ -50,6 +50,39 @@ type PgxCommandTag struct {
 	pgconn.CommandTag
 }
 
+type PgxTx struct {
+	pgx.Tx
+}
+
+func (t PgxTx) Exec(
+	ctx context.Context,
+	sql string,
+	args ...any,
+) (core_postgres_pool.CommandTag, error) {
+	tag, err := t.Tx.Exec(ctx, sql, args...)
+	if err != nil {
+		return nil, mapErrors(err)
+	}
+
+	return PgxCommandTag{tag}, nil
+}
+
+func (t PgxTx) QueryRow(
+	ctx context.Context,
+	sql string,
+	args ...any,
+) core_postgres_pool.Row {
+	return PgxRow{t.Tx.QueryRow(ctx, sql, args...)}
+}
+
+func (t PgxTx) Commit(ctx context.Context) error {
+	return mapErrors(t.Tx.Commit(ctx))
+}
+
+func (t PgxTx) Rollback(ctx context.Context) error {
+	return mapErrors(t.Tx.Rollback(ctx))
+}
+
 func mapErrors(err error) error {
 	const op = "postgres.pgxadapter.mapErrors"
 
@@ -62,6 +95,7 @@ func mapErrors(err error) error {
 	}
 
 	const (
+		pgxNotNullViolation    = "23502"
 		pgxForeignKeyViolation = "23503"
 		pgxUniqueViolation     = "23505"
 		pgxCheckViolation      = "23514"
@@ -72,6 +106,14 @@ func mapErrors(err error) error {
 
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
+		case pgxNotNullViolation, pgxCheckViolation:
+			return fmt.Errorf(
+				"%s: %w: %w",
+				op,
+				core_postgres_pool.ErrValidation,
+				err,
+			)
+
 		case pgxForeignKeyViolation:
 			return fmt.Errorf(
 				"%s: %w: %w",
@@ -85,14 +127,6 @@ func mapErrors(err error) error {
 				"%s: %w: %w",
 				op,
 				core_postgres_pool.ErrDuplicate,
-				err,
-			)
-
-		case pgxCheckViolation:
-			return fmt.Errorf(
-				"%s: %w: %w",
-				op,
-				core_postgres_pool.ErrValidation,
 				err,
 			)
 

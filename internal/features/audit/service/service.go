@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
@@ -23,4 +25,9 @@ type AuditRepository interface {
 		ctx context.Context,
 		filter *domain.AuditLogFilter,
 	) ([]domain.AuditEvent, error)
+
+	GetLogByID(
+		ctx context.Context,
+		id uuid.UUID,
+	) (domain.AuditEvent, error)
 }

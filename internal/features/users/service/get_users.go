@@ -20,7 +20,10 @@ func (s *UsersService) GetUsers(
 
 	hasMore := len(users) > filter.Limit
 	if hasMore {
-		users = users[:filter.Limit]
+		trimmed := make([]domain.User, 0, filter.Limit)
+		trimmed = append(trimmed, users[:filter.Limit]...)
+
+		users = trimmed
 	}
 
 	return users, hasMore, nil

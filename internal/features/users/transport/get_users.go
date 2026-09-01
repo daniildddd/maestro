@@ -59,12 +59,9 @@ func (h *UsersHTTPHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var appErr *errs.AppError
 
-		switch {
-		case errors.Is(err, domain.ErrInvalidRole),
-			errors.Is(err, domain.ErrInvalidUsername):
+		if errors.Is(err, domain.ErrInvalidRole) ||
+			errors.Is(err, domain.ErrInvalidUsername) {
 			appErr = errs.ErrValidationFailed
-		default:
-			appErr = errs.ErrInternal
 		}
 
 		responseHandler.ErrorResponse(

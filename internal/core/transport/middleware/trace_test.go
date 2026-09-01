@@ -16,9 +16,11 @@ import (
 	"github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/core/security/access"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
+//nolint:maintidx // table-driven test: complexity comes from per-case assertions
 func TestTrace(t *testing.T) {
 	t.Parallel()
 
@@ -162,6 +164,7 @@ func TestTrace(t *testing.T) {
 
 			req := newTestRequest(t, tt.method, tt.path, nil)
 			req = req.WithContext(logger.ToContext(req.Context(), log))
+			req = req.WithContext(reqctx.WithClientInfo(req.Context(), "203.0.113.7", "test-agent"))
 			rec := httptest.NewRecorder()
 
 			chained := middleware.Trace()(nextHandler)
@@ -182,6 +185,8 @@ func TestTrace(t *testing.T) {
 			ctxMap := logs[0].ContextMap()
 			must.Equal(tt.method, ctxMap["method"])
 			must.Equal(tt.path, ctxMap["path"])
+			must.Equal("203.0.113.7", ctxMap["client_ip"])
+			must.Equal("test-agent", ctxMap["user_agent"])
 			must.Equal(int64(tt.wantStatus), ctxMap["status"])
 
 			latency, ok := ctxMap["latency"].(time.Duration)
@@ -226,6 +231,7 @@ func TestTrace(t *testing.T) {
 			http.Header{"Authorization": []string{"Bearer valid"}},
 		)
 		req = req.WithContext(logger.ToContext(req.Context(), log))
+		req = req.WithContext(reqctx.WithClientInfo(req.Context(), "203.0.113.7", "test-agent"))
 		rec := httptest.NewRecorder()
 
 		chained := middleware.Trace()(middleware.Auth(verifier)(nextHandler))
@@ -251,6 +257,7 @@ func TestTrace(t *testing.T) {
 
 		req := newTestRequest(t, http.MethodGet, "/api/v1/health", nil)
 		req = req.WithContext(logger.ToContext(req.Context(), log))
+		req = req.WithContext(reqctx.WithClientInfo(req.Context(), "203.0.113.7", "test-agent"))
 		rec := httptest.NewRecorder()
 
 		chained := middleware.Trace()(nextHandler)

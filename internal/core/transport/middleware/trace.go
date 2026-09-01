@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/daniildddd/maestro/internal/core/logger"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
@@ -24,6 +25,8 @@ func Trace() Middleware {
 			fields := []zap.Field{
 				zap.String("method", r.Method),
 				zap.String("path", r.URL.Path),
+				zap.String("client_ip", reqctx.ClientIP(r.Context())),
+				zap.String("user_agent", reqctx.UserAgent(r.Context())),
 				zap.Duration("latency", time.Since(before)),
 			}
 

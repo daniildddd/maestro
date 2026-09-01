@@ -16,6 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/security/refresh"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	"github.com/daniildddd/maestro/internal/core/transport/server"
+	auditrepository "github.com/daniildddd/maestro/internal/features/audit/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/cleanup"
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
@@ -71,6 +72,8 @@ func run() int {
 
 	authRepository := repository.NewAuthRepository(postgresPool)
 
+	auditRepository := auditrepository.NewAuditRepository(postgresPool, logger)
+
 	refreshTokenCleanup := cleanup.NewWorker(
 		authRepository,
 		logger,
@@ -100,6 +103,7 @@ func run() int {
 		bcryptHasher,
 		accessManager,
 		refreshManager,
+		auditRepository,
 	)
 
 	authTransportHTTP := transport.NewAuthHTTPHandler(
@@ -147,6 +151,7 @@ func run() int {
 	baseMW := []middleware.Middleware{
 		middleware.CORS(cfgMiddleware.AllowedOrigins),
 		middleware.RequestID(),
+		middleware.ClientInfo(),
 		middleware.Logger(logger),
 		middleware.Trace(),
 		middleware.Recovery(),

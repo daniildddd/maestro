@@ -216,6 +216,13 @@ var ErrSmtPluginNotFound = &AppError{
 	LogLevel:   zapcore.InfoLevel,
 }
 
+var ErrAuditLogNotFound = &AppError{
+	HTTPStatus: http.StatusNotFound,
+	Code:       "AUDIT_LOG_NOT_FOUND",
+	Message:    "Audit log with provided ID not found",
+	LogLevel:   zapcore.InfoLevel,
+}
+
 var ErrNotFound = &AppError{
 	HTTPStatus: http.StatusNotFound,
 	Code:       codeNotFound,

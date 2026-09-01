@@ -30,4 +30,9 @@ type AuditRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) (domain.AuditEvent, error)
+
+	DeleteLogByID(
+		ctx context.Context,
+		id uuid.UUID,
+	) error
 }

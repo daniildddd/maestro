@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -98,6 +101,7 @@ func (s *AuthService) Login(
 	}
 
 	s.auditor.Record(ctx, domain.AuditEvent{
+		ID:          uuid.New(),
 		Action:      domain.ActionAuthLogin,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     user.ID,
@@ -108,6 +112,7 @@ func (s *AuthService) Login(
 		RequestID:   reqctx.RequestID(ctx).String(),
 		IP:          reqctx.ClientIP(ctx),
 		UserAgent:   reqctx.UserAgent(ctx),
+		CreatedAt:   time.Now(),
 	})
 
 	return domain.TokenPair{
@@ -122,6 +127,7 @@ func (s *AuthService) recordLoginFailure(
 	username string,
 ) {
 	s.auditor.Record(ctx, domain.AuditEvent{
+		ID:            uuid.New(),
 		Action:        domain.ActionAuthLogin,
 		Outcome:       domain.OutcomeFailure,
 		FailureReason: "invalid_credentials",
@@ -130,5 +136,6 @@ func (s *AuthService) recordLoginFailure(
 		RequestID:     reqctx.RequestID(ctx).String(),
 		IP:            reqctx.ClientIP(ctx),
 		UserAgent:     reqctx.UserAgent(ctx),
+		CreatedAt:     time.Now(),
 	})
 }

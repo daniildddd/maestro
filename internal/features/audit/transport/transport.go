@@ -24,6 +24,11 @@ type AuditService interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) (domain.AuditEvent, error)
+
+	DeleteLogByID(
+		ctx context.Context,
+		id uuid.UUID,
+	) error
 }
 
 func NewAuditHTTPHandler(
@@ -46,6 +51,12 @@ func (h *AuditHTTPHandler) PrivateRoutes() []core_http_server.Route {
 			Method:  http.MethodGet,
 			Path:    "/audit-logs/{id}",
 			Handler: h.GetLogByID,
+			Roles:   []string{domain.RoleAdmin},
+		},
+		{
+			Method:  http.MethodDelete,
+			Path:    "/audit-logs/{id}",
+			Handler: h.DeleteLogByID,
 			Roles:   []string{domain.RoleAdmin},
 		},
 	}

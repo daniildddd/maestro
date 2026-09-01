@@ -17,6 +17,8 @@ import (
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	"github.com/daniildddd/maestro/internal/core/transport/server"
 	auditrepository "github.com/daniildddd/maestro/internal/features/audit/repository"
+	auditservice "github.com/daniildddd/maestro/internal/features/audit/service"
+	audittransport "github.com/daniildddd/maestro/internal/features/audit/transport"
 	"github.com/daniildddd/maestro/internal/features/auth/cleanup"
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
@@ -73,6 +75,10 @@ func run() int {
 	authRepository := repository.NewAuthRepository(postgresPool)
 
 	auditRepository := auditrepository.NewAuditRepository(postgresPool, logger)
+
+	auditService := auditservice.NewAuditService(auditRepository)
+
+	auditTransportHTTP := audittransport.NewAuditHTTPHandler(auditService)
 
 	refreshTokenCleanup := cleanup.NewWorker(
 		authRepository,
@@ -175,6 +181,10 @@ func run() int {
 	privateRoutes = append(
 		privateRoutes,
 		connectorsTransportHTTP.PrivateRoutes()...,
+	)
+	privateRoutes = append(
+		privateRoutes,
+		auditTransportHTTP.PrivateRoutes()...,
 	)
 
 	privateV1 := server.NewAPIVersionRouter(

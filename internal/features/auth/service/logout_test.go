@@ -1,12 +1,12 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
@@ -23,7 +23,7 @@ func TestLogout(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:     "success deletes token by hash",
+			name:     "success deletes token by hash and records audit",
 			rawToken: "raw-token",
 			setupMocks: func(
 				repo *MockAuthRepository,
@@ -35,8 +35,31 @@ func TestLogout(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
+					GetRefreshTokenByHash(mock.Anything, "hashed-token").
+					Return(domain.RefreshToken{UserID: userID}, nil).
+					Once()
+
+				repo.EXPECT().
 					DeleteRefreshToken(mock.Anything, "hashed-token").
 					Return(nil).
+					Once()
+			},
+		},
+		{
+			name:     "unknown token is idempotent success",
+			rawToken: "raw-token",
+			setupMocks: func(
+				repo *MockAuthRepository,
+				refreshGen *MockRefreshTokenManager,
+			) {
+				refreshGen.EXPECT().
+					Hash("raw-token").
+					Return("hashed-token").
+					Once()
+
+				repo.EXPECT().
+					GetRefreshTokenByHash(mock.Anything, "hashed-token").
+					Return(domain.RefreshToken{}, errs.ErrRefreshTokenNotFound).
 					Once()
 			},
 		},
@@ -53,8 +76,8 @@ func TestLogout(t *testing.T) {
 					Once()
 
 				repo.EXPECT().
-					DeleteRefreshToken(mock.Anything, "hashed-token").
-					Return(errs.ErrInternal).
+					GetRefreshTokenByHash(mock.Anything, "hashed-token").
+					Return(domain.RefreshToken{}, errs.ErrInternal).
 					Once()
 			},
 			wantErr: true,
@@ -72,7 +95,7 @@ func TestLogout(t *testing.T) {
 
 			svc := newTestService(repo, nil, nil, refreshGen)
 
-			err := svc.Logout(context.Background(), tt.rawToken)
+			err := svc.Logout(testCtx(), tt.rawToken)
 
 			if tt.wantErr {
 				must.Error(err)

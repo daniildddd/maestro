@@ -457,15 +457,13 @@ paths:
       tags: [audit]
       summary: Get audit logs list
       operationId: getAuditLogs
-      x-required-roles: [user, admin]
+      x-required-roles: [admin]
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/ActionQueryParam'
         - $ref: '#/components/parameters/ConnectorQueryParam'
         - $ref: '#/components/parameters/ActorQueryParam'
-        - $ref: '#/components/parameters/StartAtQueryParam'
-        - $ref: '#/components/parameters/EndAtQueryParam'
       responses:
         '200':
           description: Successful response
@@ -483,6 +481,7 @@ paths:
                 meta:
                   page: 1
                   limit: 20
+                has_more: true
               schema:
                 $ref: '#/components/schemas/AuditLogListResponse'
         '400':
@@ -499,7 +498,7 @@ paths:
       tags: [audit]
       summary: Get specific audit log by ID
       operationId: getAuditLogById
-      x-required-roles: [user, admin]
+      x-required-roles: [admin]
       parameters:
         - $ref: '#/components/parameters/AuditLogIdPathParam'
       responses:
@@ -1243,7 +1242,7 @@ components:
     ActionQueryParam:
       name: action
       in: query
-      description: Filter audit log entries by action.
+      description: Filter audit log entries by action (exact match, e.g. connector.deleted).
       schema:
         type: string
     ConnectorQueryParam:
@@ -1258,20 +1257,6 @@ components:
       description: Filter audit log entries by acting user.
       schema:
         type: string
-    StartAtQueryParam:
-      name: start_at
-      in: query
-      description: Lower bound on entry creation time (inclusive)
-      schema:
-        type: string
-        format: date-time
-    EndAtQueryParam:
-      name: end_at
-      in: query
-      description: Upper bound on entry creation time (inclusive)
-      schema:
-        type: string
-        format: date-time
     RefreshTokenCookieParam:
       name: refresh_token
       in: cookie
@@ -2095,6 +2080,7 @@ components:
       required:
         - data
         - meta
+        - has_more
       properties:
         data:
           type: array
@@ -2106,6 +2092,10 @@ components:
               action: create_connector
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+        has_more:
+          type: boolean
+          description: Whether another page of results exists. Computed by fetching one extra row, so no COUNT query is needed.
+          example: true
     PluginListItem:
       description: Available plugin summary.
       type: object

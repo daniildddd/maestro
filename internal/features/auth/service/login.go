@@ -7,6 +7,7 @@ import (
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
 func (s *AuthService) Login(
@@ -28,6 +29,8 @@ func (s *AuthService) Login(
 	user, err := s.authRepository.GetUserByName(ctx, username)
 	if err != nil {
 		if errors.Is(err, errs.ErrUserNotFound) {
+			s.recordLoginFailure(ctx, username)
+
 			return domain.TokenPair{}, fmt.Errorf(
 				"%s: user not found: %w: %v",
 				op,
@@ -45,6 +48,8 @@ func (s *AuthService) Login(
 
 	err = s.passwordHasher.Verify(user.PasswordHash, password)
 	if err != nil {
+		s.recordLoginFailure(ctx, username)
+
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: verify password (username=%s): %w: %v",
 			op,
@@ -92,9 +97,38 @@ func (s *AuthService) Login(
 		)
 	}
 
+	s.auditor.Record(ctx, domain.AuditEvent{
+		Action:      domain.ActionAuthLogin,
+		Outcome:     domain.OutcomeSuccess,
+		ActorID:     user.ID,
+		ActorLogin:  user.Username,
+		SubjectType: domain.AuditSubjectUser,
+		SubjectID:   user.ID.String(),
+		SubjectName: user.Username,
+		RequestID:   reqctx.RequestID(ctx).String(),
+		IP:          reqctx.ClientIP(ctx),
+		UserAgent:   reqctx.UserAgent(ctx),
+	})
+
 	return domain.TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: rawToken,
 		ExpiresAt:    expiresAt,
 	}, nil
+}
+
+func (s *AuthService) recordLoginFailure(
+	ctx context.Context,
+	username string,
+) {
+	s.auditor.Record(ctx, domain.AuditEvent{
+		Action:        domain.ActionAuthLogin,
+		Outcome:       domain.OutcomeFailure,
+		FailureReason: "invalid_credentials",
+		SubjectType:   domain.AuditSubjectUser,
+		SubjectName:   username,
+		RequestID:     reqctx.RequestID(ctx).String(),
+		IP:            reqctx.ClientIP(ctx),
+		UserAgent:     reqctx.UserAgent(ctx),
+	})
 }

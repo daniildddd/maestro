@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -305,7 +304,7 @@ func TestLogin(t *testing.T) {
 
 			svc := newTestService(repo, hasher, accessGen, refreshGen)
 
-			pair, err := svc.Login(context.Background(), tt.username, tt.password)
+			pair, err := svc.Login(testCtx(), tt.username, tt.password)
 
 			if tt.wantErr {
 				must.Error(err)

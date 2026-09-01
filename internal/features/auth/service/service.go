@@ -14,6 +14,7 @@ type AuthService struct {
 	passwordHasher PasswordHasher
 	accessGen      AccessTokenGenerator
 	refreshGen     RefreshTokenManager
+	auditor        AuditRecorder
 }
 
 func NewAuthService(
@@ -21,13 +22,22 @@ func NewAuthService(
 	passwordHasher PasswordHasher,
 	accessGen AccessTokenGenerator,
 	refreshGen RefreshTokenManager,
+	auditor AuditRecorder,
 ) *AuthService {
 	return &AuthService{
 		authRepository: authRepository,
 		passwordHasher: passwordHasher,
 		accessGen:      accessGen,
 		refreshGen:     refreshGen,
+		auditor:        auditor,
 	}
+}
+
+type AuditRecorder interface {
+	Record(
+		ctx context.Context,
+		event domain.AuditEvent,
+	)
 }
 
 type PasswordHasher interface {

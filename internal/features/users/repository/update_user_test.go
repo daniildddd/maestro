@@ -26,12 +26,13 @@ func TestUpdateUser(t *testing.T) {
 	updatedAt := time.Now().Add(-time.Minute)
 
 	tests := []struct {
-		name      string
-		username  string
-		setup     func(pool *MockPool, row *MockRow)
-		wantIs    error
-		wantNotIs error
-		wantUser  domain.User
+		name       string
+		username   string
+		setup      func(pool *MockPool, row *MockRow)
+		wantIs     error
+		wantNotIs  error
+		wantBefore domain.User
+		wantAfter  domain.User
 	}{
 		{
 			name:     "success updates username",
@@ -58,9 +59,14 @@ func TestUpdateUser(t *testing.T) {
 					Return(row).
 					Once()
 
-				scanUserIntoRow(row, mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, &updatedAt))
+				scanUserPairIntoRow(
+					row,
+					mustNewUser(t, userID, "olduser", "hash", "user", createdAt, &updatedAt),
+					mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, &updatedAt),
+				)
 			},
-			wantUser: mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, &updatedAt),
+			wantBefore: mustNewUser(t, userID, "olduser", "hash", "user", createdAt, &updatedAt),
+			wantAfter:  mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, &updatedAt),
 		},
 		{
 			name:     "no rows maps to ErrUserNotFound",
@@ -140,7 +146,7 @@ func TestUpdateUser(t *testing.T) {
 
 			repo := repository.NewUsersRepository(pool)
 
-			user, err := repo.UpdateUser(context.Background(), userID, tt.username)
+			before, after, err := repo.UpdateUser(context.Background(), userID, tt.username)
 
 			if tt.wantIs != nil {
 				must.Error(err)
@@ -154,7 +160,8 @@ func TestUpdateUser(t *testing.T) {
 			}
 
 			must.NoError(err)
-			is.Equal(tt.wantUser, user)
+			is.Equal(tt.wantBefore, before)
+			is.Equal(tt.wantAfter, after)
 		})
 	}
 }

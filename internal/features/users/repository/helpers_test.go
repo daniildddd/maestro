@@ -41,6 +41,22 @@ func scanUserIntoRow(row *MockRow, u domain.User) {
 		Once()
 }
 
+func scanUserPairIntoRow(row *MockRow, before, after domain.User) {
+	row.EXPECT().
+		Scan(mock.Anything).
+		Run(func(dest ...any) {
+			ptrs, ok := dest[0].([]any)
+			if !ok {
+				return
+			}
+
+			fillUserDest([]any{ptrs[:6]}, before)
+			fillUserDest([]any{ptrs[6:]}, after)
+		}).
+		Return(nil).
+		Once()
+}
+
 func scanUserIntoRows(rows *MockRows, u domain.User) {
 	rows.EXPECT().
 		Scan(mock.Anything).

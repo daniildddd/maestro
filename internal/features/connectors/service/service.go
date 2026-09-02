@@ -18,16 +18,26 @@ type dbChecker interface {
 type ConnectorsService struct {
 	connectors KafkaConnect
 	checkers   []dbChecker
+	auditor    AuditRecorder
 }
 
 func NewConnectorsService(
 	connectors KafkaConnect,
+	auditor AuditRecorder,
 	checkers ...dbChecker,
 ) *ConnectorsService {
 	return &ConnectorsService{
 		connectors: connectors,
 		checkers:   checkers,
+		auditor:    auditor,
 	}
+}
+
+type AuditRecorder interface {
+	Record(
+		ctx context.Context,
+		event domain.AuditEvent,
+	)
 }
 
 //nolint:interfacebloat // the kafka connect client contract grows with connector features

@@ -10,7 +10,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
+	core_postgres_pool "github.com/daniildddd/maestro/internal/core/repository/postgres"
 	"github.com/daniildddd/maestro/internal/features/users/repository"
 )
 
@@ -20,22 +22,26 @@ func TestDeleteUser(t *testing.T) {
 	const opTimeout = 100 * time.Millisecond
 
 	userID := uuid.New()
+	createdAt := time.Now().Add(-time.Hour)
+	updatedAt := time.Now().Add(-time.Minute)
 
 	tests := []struct {
-		name   string
-		setup  func(pool *MockPool)
-		wantIs error
+		name      string
+		setup     func(pool *MockPool, row *MockRow)
+		wantIs    error
+		wantNotIs error
+		wantUser  domain.User
 	}{
 		{
-			name: "success deletes user by id within op timeout",
-			setup: func(pool *MockPool) {
+			name: "success deletes user and returns deleted state",
+			setup: func(pool *MockPool, row *MockRow) {
 				pool.EXPECT().
 					OpTimeout().
 					Return(opTimeout).
 					Once()
 
 				pool.EXPECT().
-					Exec(
+					QueryRow(
 						mock.MatchedBy(func(ctx context.Context) bool {
 							deadline, ok := ctx.Deadline()
 							if !ok {
@@ -47,36 +53,50 @@ func TestDeleteUser(t *testing.T) {
 						mock.Anything,
 						[]any{userID},
 					).
-					Return(stubCommandTag{affected: 1}, nil).
+					Return(row).
 					Once()
+
+				scanUserIntoRow(row, mustNewUser(t, userID, "deleteduser", "hash", "user", createdAt, &updatedAt))
 			},
+			wantUser: mustNewUser(t, userID, "deleteduser", "hash", "user", createdAt, &updatedAt),
 		},
 		{
 			name: "no rows maps to ErrUserNotFound",
-			setup: func(pool *MockPool) {
+			setup: func(pool *MockPool, row *MockRow) {
 				pool.EXPECT().
 					OpTimeout().
 					Return(opTimeout).
 					Once()
 
 				pool.EXPECT().
-					Exec(mock.Anything, mock.Anything, []any{userID}).
-					Return(stubCommandTag{affected: 0}, nil).
+					QueryRow(mock.Anything, mock.Anything, []any{userID}).
+					Return(row).
+					Once()
+
+				row.EXPECT().
+					Scan(mock.Anything).
+					Return(core_postgres_pool.ErrNoRows).
 					Once()
 			},
-			wantIs: errs.ErrUserNotFound,
+			wantIs:    errs.ErrUserNotFound,
+			wantNotIs: core_postgres_pool.ErrNoRows,
 		},
 		{
-			name: "exec error is wrapped",
-			setup: func(pool *MockPool) {
+			name: "scan error is wrapped",
+			setup: func(pool *MockPool, row *MockRow) {
 				pool.EXPECT().
 					OpTimeout().
 					Return(opTimeout).
 					Once()
 
 				pool.EXPECT().
-					Exec(mock.Anything, mock.Anything, []any{userID}).
-					Return(nil, errs.ErrInternal).
+					QueryRow(mock.Anything, mock.Anything, []any{userID}).
+					Return(row).
+					Once()
+
+				row.EXPECT().
+					Scan(mock.Anything).
+					Return(errs.ErrInternal).
 					Once()
 			},
 			wantIs: errs.ErrInternal,
@@ -90,20 +110,26 @@ func TestDeleteUser(t *testing.T) {
 			must := require.New(t)
 
 			pool := NewMockPool(t)
-			tt.setup(pool)
+			row := NewMockRow(t)
+			tt.setup(pool, row)
 
 			repo := repository.NewUsersRepository(pool)
 
-			err := repo.DeleteUser(context.Background(), userID)
+			deleted, err := repo.DeleteUser(context.Background(), userID)
 
 			if tt.wantIs != nil {
 				must.Error(err)
 				is.ErrorIs(err, tt.wantIs)
 
+				if tt.wantNotIs != nil {
+					must.NotErrorIs(err, tt.wantNotIs)
+				}
+
 				return
 			}
 
 			must.NoError(err)
+			is.Equal(tt.wantUser, deleted)
 		})
 	}
 }

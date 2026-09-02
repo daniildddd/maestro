@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -181,7 +180,7 @@ func TestChangeOwnPassword(t *testing.T) {
 
 			svc := newTestServiceWithHasher(repo, hasher)
 
-			err := svc.ChangeOwnPassword(context.Background(), userID, tt.oldPass, tt.newPass)
+			err := svc.ChangeOwnPassword(testCtx(), userID, tt.oldPass, tt.newPass)
 
 			if tt.wantIs != nil {
 				must.Error(err)

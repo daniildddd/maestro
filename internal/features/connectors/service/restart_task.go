@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
 func (s *ConnectorsService) RestartTask(ctx context.Context, name string, taskID int) error {
@@ -24,6 +28,25 @@ func (s *ConnectorsService) RestartTask(ctx context.Context, name string, taskID
 			return fmt.Errorf("%s: %w", op, err)
 		}
 	}
+
+	actorID := reqctx.UserID(ctx)
+
+	s.auditor.Record(ctx, domain.AuditEvent{
+		ID:          uuid.New(),
+		Action:      domain.ActionConnectorRestarted,
+		Outcome:     domain.OutcomeSuccess,
+		ActorID:     actorID,
+		SubjectType: domain.AuditSubjectConnector,
+		SubjectID:   name,
+		SubjectName: name,
+		StateAfter: map[string]any{
+			"task_id": taskID,
+		},
+		RequestID: reqctx.RequestID(ctx).String(),
+		IP:        reqctx.ClientIP(ctx),
+		UserAgent: reqctx.UserAgent(ctx),
+		CreatedAt: time.Now(),
+	})
 
 	return nil
 }

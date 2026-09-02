@@ -155,7 +155,7 @@ func TestCreateUser(t *testing.T) {
 			hasher := NewMockPasswordHasher(t)
 			tt.setupMock(repo, hasher)
 
-			svc := service.NewUsersService(repo, hasher)
+			svc := service.NewUsersService(repo, hasher, noopAuditor{})
 
 			user, err := svc.CreateUser(
 				context.Background(),

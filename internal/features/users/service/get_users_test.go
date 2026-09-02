@@ -24,6 +24,7 @@ func newTestService(
 	return service.NewUsersService(
 		usersRepository,
 		NewMockPasswordHasher(t),
+		noopAuditor{},
 	)
 }
 

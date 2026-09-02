@@ -11,16 +11,26 @@ import (
 type UsersService struct {
 	usersRepository UsersRepository
 	passwordHasher  PasswordHasher
+	auditor         AuditRecorder
 }
 
 func NewUsersService(
 	usersRepository UsersRepository,
 	passwordHasher PasswordHasher,
+	auditor AuditRecorder,
 ) *UsersService {
 	return &UsersService{
 		usersRepository: usersRepository,
 		passwordHasher:  passwordHasher,
+		auditor:         auditor,
 	}
+}
+
+type AuditRecorder interface {
+	Record(
+		ctx context.Context,
+		event domain.AuditEvent,
+	)
 }
 
 type PasswordHasher interface {

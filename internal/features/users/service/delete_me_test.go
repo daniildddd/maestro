@@ -19,7 +19,7 @@ func newTestServiceWithHasher(
 	usersRepository service.UsersRepository,
 	passwordHasher service.PasswordHasher,
 ) *service.UsersService {
-	return service.NewUsersService(usersRepository, passwordHasher)
+	return service.NewUsersService(usersRepository, passwordHasher, noopAuditor{})
 }
 
 func TestDeleteMe(t *testing.T) {

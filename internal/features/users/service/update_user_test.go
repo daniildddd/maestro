@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -77,7 +76,7 @@ func TestUpdateUser(t *testing.T) {
 
 			svc := newTestServiceWithHasher(repo, hasher)
 
-			user, err := svc.UpdateUser(context.Background(), userID, tt.username)
+			user, err := svc.UpdateUser(testCtx(), userID, tt.username)
 
 			if tt.wantIs != nil {
 				must.Error(err)

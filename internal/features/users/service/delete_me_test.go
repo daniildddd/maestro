@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -133,7 +132,7 @@ func TestDeleteMe(t *testing.T) {
 
 			svc := newTestServiceWithHasher(repo, hasher)
 
-			err := svc.DeleteMe(context.Background(), userID, password)
+			err := svc.DeleteMe(testCtx(), userID, password)
 
 			if tt.wantIs != nil {
 				must.Error(err)

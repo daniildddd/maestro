@@ -75,5 +75,5 @@ type UsersRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 		username string,
-	) (domain.User, error)
+	) (before, after domain.User, err error)
 }

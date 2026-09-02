@@ -29,7 +29,7 @@ func (s *UsersService) UpdateUser(
 		)
 	}
 
-	user, err := s.usersRepository.UpdateUser(ctx, id, username)
+	before, after, err := s.usersRepository.UpdateUser(ctx, id, username)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -42,11 +42,15 @@ func (s *UsersService) UpdateUser(
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
 		SubjectType: domain.AuditSubjectUser,
-		SubjectID:   user.ID.String(),
-		SubjectName: user.Username,
+		SubjectID:   after.ID.String(),
+		SubjectName: after.Username,
+		StateBefore: map[string]any{
+			"username": before.Username,
+			"role":     before.Role,
+		},
 		StateAfter: map[string]any{
-			"username": user.Username,
-			"role":     user.Role,
+			"username": after.Username,
+			"role":     after.Role,
 		},
 		RequestID: reqctx.RequestID(ctx).String(),
 		IP:        reqctx.ClientIP(ctx),
@@ -54,5 +58,5 @@ func (s *UsersService) UpdateUser(
 		CreatedAt: time.Now(),
 	})
 
-	return user, nil
+	return after, nil
 }

@@ -32,14 +32,11 @@ func TestUpdateUser(t *testing.T) {
 			setupMocks: func(repo *MockUsersRepository, _ *MockPasswordHasher) {
 				repo.EXPECT().
 					UpdateUser(mock.Anything, userID, "updateduser").
-					Return(mustNewUser(t,
-						userID,
-						"updateduser",
-						"hash",
-						"user",
-						createdAt,
+					Return(
+						mustNewUser(t, userID, "olduser", "hash", "user", createdAt, nil),
+						mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, nil),
 						nil,
-					), nil).
+					).
 					Once()
 			},
 			wantUser: mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, nil),
@@ -57,7 +54,7 @@ func TestUpdateUser(t *testing.T) {
 			setupMocks: func(repo *MockUsersRepository, _ *MockPasswordHasher) {
 				repo.EXPECT().
 					UpdateUser(mock.Anything, userID, "updateduser").
-					Return(domain.User{}, errs.ErrUserNotFound).
+					Return(domain.User{}, domain.User{}, errs.ErrUserNotFound).
 					Once()
 			},
 			wantIs: errs.ErrUserNotFound,

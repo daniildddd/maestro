@@ -71,14 +71,20 @@ type MockPasswordHasher_Hash_Call struct {
 }
 
 // Hash is a helper method to define mock.On call
-//   - password
-func (_e *MockPasswordHasher_Expecter) Hash(password interface{}) *MockPasswordHasher_Hash_Call {
+//   - password string
+func (_e *MockPasswordHasher_Expecter) Hash(password any) *MockPasswordHasher_Hash_Call {
 	return &MockPasswordHasher_Hash_Call{Call: _e.mock.On("Hash", password)}
 }
 
 func (_c *MockPasswordHasher_Hash_Call) Run(run func(password string)) *MockPasswordHasher_Hash_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -116,15 +122,26 @@ type MockPasswordHasher_Verify_Call struct {
 }
 
 // Verify is a helper method to define mock.On call
-//   - hash
-//   - plain
-func (_e *MockPasswordHasher_Expecter) Verify(hash interface{}, plain interface{}) *MockPasswordHasher_Verify_Call {
+//   - hash string
+//   - plain string
+func (_e *MockPasswordHasher_Expecter) Verify(hash any, plain any) *MockPasswordHasher_Verify_Call {
 	return &MockPasswordHasher_Verify_Call{Call: _e.mock.On("Verify", hash, plain)}
 }
 
 func (_c *MockPasswordHasher_Verify_Call) Run(run func(hash string, plain string)) *MockPasswordHasher_Verify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -189,16 +206,32 @@ type MockUsersRepository_ChangePassword_Call struct {
 }
 
 // ChangePassword is a helper method to define mock.On call
-//   - ctx
-//   - id
-//   - passwordHash
-func (_e *MockUsersRepository_Expecter) ChangePassword(ctx interface{}, id interface{}, passwordHash interface{}) *MockUsersRepository_ChangePassword_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - passwordHash string
+func (_e *MockUsersRepository_Expecter) ChangePassword(ctx any, id any, passwordHash any) *MockUsersRepository_ChangePassword_Call {
 	return &MockUsersRepository_ChangePassword_Call{Call: _e.mock.On("ChangePassword", ctx, id, passwordHash)}
 }
 
 func (_c *MockUsersRepository_ChangePassword_Call) Run(run func(ctx context.Context, id uuid.UUID, passwordHash string)) *MockUsersRepository_ChangePassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -245,15 +278,26 @@ type MockUsersRepository_CreateUser_Call struct {
 }
 
 // CreateUser is a helper method to define mock.On call
-//   - ctx
-//   - user
-func (_e *MockUsersRepository_Expecter) CreateUser(ctx interface{}, user interface{}) *MockUsersRepository_CreateUser_Call {
+//   - ctx context.Context
+//   - user domain.User
+func (_e *MockUsersRepository_Expecter) CreateUser(ctx any, user any) *MockUsersRepository_CreateUser_Call {
 	return &MockUsersRepository_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, user)}
 }
 
 func (_c *MockUsersRepository_CreateUser_Call) Run(run func(ctx context.Context, user domain.User)) *MockUsersRepository_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(domain.User))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 domain.User
+		if args[1] != nil {
+			arg1 = args[1].(domain.User)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -291,15 +335,26 @@ type MockUsersRepository_DeleteUser_Call struct {
 }
 
 // DeleteUser is a helper method to define mock.On call
-//   - ctx
-//   - id
-func (_e *MockUsersRepository_Expecter) DeleteUser(ctx interface{}, id interface{}) *MockUsersRepository_DeleteUser_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockUsersRepository_Expecter) DeleteUser(ctx any, id any) *MockUsersRepository_DeleteUser_Call {
 	return &MockUsersRepository_DeleteUser_Call{Call: _e.mock.On("DeleteUser", ctx, id)}
 }
 
 func (_c *MockUsersRepository_DeleteUser_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockUsersRepository_DeleteUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -346,15 +401,26 @@ type MockUsersRepository_GetUserByID_Call struct {
 }
 
 // GetUserByID is a helper method to define mock.On call
-//   - ctx
-//   - id
-func (_e *MockUsersRepository_Expecter) GetUserByID(ctx interface{}, id interface{}) *MockUsersRepository_GetUserByID_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockUsersRepository_Expecter) GetUserByID(ctx any, id any) *MockUsersRepository_GetUserByID_Call {
 	return &MockUsersRepository_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
 func (_c *MockUsersRepository_GetUserByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockUsersRepository_GetUserByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -403,15 +469,26 @@ type MockUsersRepository_GetUsers_Call struct {
 }
 
 // GetUsers is a helper method to define mock.On call
-//   - ctx
-//   - filter
-func (_e *MockUsersRepository_Expecter) GetUsers(ctx interface{}, filter interface{}) *MockUsersRepository_GetUsers_Call {
+//   - ctx context.Context
+//   - filter *domain.UserFilter
+func (_e *MockUsersRepository_Expecter) GetUsers(ctx any, filter any) *MockUsersRepository_GetUsers_Call {
 	return &MockUsersRepository_GetUsers_Call{Call: _e.mock.On("GetUsers", ctx, filter)}
 }
 
 func (_c *MockUsersRepository_GetUsers_Call) Run(run func(ctx context.Context, filter *domain.UserFilter)) *MockUsersRepository_GetUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*domain.UserFilter))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *domain.UserFilter
+		if args[1] != nil {
+			arg1 = args[1].(*domain.UserFilter)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -427,7 +504,7 @@ func (_c *MockUsersRepository_GetUsers_Call) RunAndReturn(run func(ctx context.C
 }
 
 // UpdateUser provides a mock function for the type MockUsersRepository
-func (_mock *MockUsersRepository) UpdateUser(ctx context.Context, id uuid.UUID, username string) (domain.User, error) {
+func (_mock *MockUsersRepository) UpdateUser(ctx context.Context, id uuid.UUID, username string) (domain.User, domain.User, error) {
 	ret := _mock.Called(ctx, id, username)
 
 	if len(ret) == 0 {
@@ -435,8 +512,9 @@ func (_mock *MockUsersRepository) UpdateUser(ctx context.Context, id uuid.UUID, 
 	}
 
 	var r0 domain.User
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (domain.User, error)); ok {
+	var r1 domain.User
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (domain.User, domain.User, error)); ok {
 		return returnFunc(ctx, id, username)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) domain.User); ok {
@@ -444,12 +522,17 @@ func (_mock *MockUsersRepository) UpdateUser(ctx context.Context, id uuid.UUID, 
 	} else {
 		r0 = ret.Get(0).(domain.User)
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) domain.User); ok {
 		r1 = returnFunc(ctx, id, username)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(domain.User)
 	}
-	return r0, r1
+	if returnFunc, ok := ret.Get(2).(func(context.Context, uuid.UUID, string) error); ok {
+		r2 = returnFunc(ctx, id, username)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
 }
 
 // MockUsersRepository_UpdateUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUser'
@@ -458,26 +541,42 @@ type MockUsersRepository_UpdateUser_Call struct {
 }
 
 // UpdateUser is a helper method to define mock.On call
-//   - ctx
-//   - id
-//   - username
-func (_e *MockUsersRepository_Expecter) UpdateUser(ctx interface{}, id interface{}, username interface{}) *MockUsersRepository_UpdateUser_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - username string
+func (_e *MockUsersRepository_Expecter) UpdateUser(ctx any, id any, username any) *MockUsersRepository_UpdateUser_Call {
 	return &MockUsersRepository_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, id, username)}
 }
 
 func (_c *MockUsersRepository_UpdateUser_Call) Run(run func(ctx context.Context, id uuid.UUID, username string)) *MockUsersRepository_UpdateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
 
-func (_c *MockUsersRepository_UpdateUser_Call) Return(user domain.User, err error) *MockUsersRepository_UpdateUser_Call {
-	_c.Call.Return(user, err)
+func (_c *MockUsersRepository_UpdateUser_Call) Return(before domain.User, after domain.User, err error) *MockUsersRepository_UpdateUser_Call {
+	_c.Call.Return(before, after, err)
 	return _c
 }
 
-func (_c *MockUsersRepository_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, username string) (domain.User, error)) *MockUsersRepository_UpdateUser_Call {
+func (_c *MockUsersRepository_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, username string) (domain.User, domain.User, error)) *MockUsersRepository_UpdateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

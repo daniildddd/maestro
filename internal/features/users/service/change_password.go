@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
 func (s *UsersService) ChangePassword(
@@ -40,6 +42,21 @@ func (s *UsersService) ChangePassword(
 	if err = s.usersRepository.ChangePassword(ctx, id, passwordHash); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	actorID := reqctx.UserID(ctx)
+
+	s.auditor.Record(ctx, domain.AuditEvent{
+		ID:          uuid.New(),
+		Action:      domain.ActionUserPasswordChanged,
+		Outcome:     domain.OutcomeSuccess,
+		ActorID:     actorID,
+		SubjectType: domain.AuditSubjectUser,
+		SubjectID:   id.String(),
+		RequestID:   reqctx.RequestID(ctx).String(),
+		IP:          reqctx.ClientIP(ctx),
+		UserAgent:   reqctx.UserAgent(ctx),
+		CreatedAt:   time.Now(),
+	})
 
 	return nil
 }

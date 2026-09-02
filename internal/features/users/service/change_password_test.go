@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/uuid"
@@ -86,7 +85,7 @@ func TestChangePassword(t *testing.T) {
 
 			svc := newTestServiceWithHasher(repo, hasher)
 
-			err := svc.ChangePassword(context.Background(), userID, tt.newPass)
+			err := svc.ChangePassword(testCtx(), userID, tt.newPass)
 
 			if tt.wantIs != nil {
 				must.Error(err)

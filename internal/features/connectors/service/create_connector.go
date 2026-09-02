@@ -88,7 +88,7 @@ func (s *ConnectorsService) secretKeys(
 		return nil, false
 	}
 
-	schema, err := s.connectors.GetConnectorPluginSchemaWithValues(ctx, pluginID)
+	schema, err := s.connectors.GetConnectorPluginSchema(ctx, pluginID)
 	if err != nil {
 		return nil, false
 	}

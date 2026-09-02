@@ -56,7 +56,7 @@ func TestDeleteMe(t *testing.T) {
 
 				repo.EXPECT().
 					DeleteUser(mock.Anything, userID).
-					Return(nil).
+					Return(domain.User{}, nil).
 					Once()
 			},
 		},
@@ -114,7 +114,7 @@ func TestDeleteMe(t *testing.T) {
 
 				repo.EXPECT().
 					DeleteUser(mock.Anything, userID).
-					Return(errs.ErrInternal).
+					Return(domain.User{}, errs.ErrInternal).
 					Once()
 			},
 			wantIs: errs.ErrInternal,

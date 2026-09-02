@@ -14,6 +14,11 @@ type UsersService struct {
 	auditor         AuditRecorder
 }
 
+const (
+	stateKeyUsername = "username"
+	stateKeyRole     = "role"
+)
+
 func NewUsersService(
 	usersRepository UsersRepository,
 	passwordHasher PasswordHasher,
@@ -63,7 +68,7 @@ type UsersRepository interface {
 	DeleteUser(
 		ctx context.Context,
 		id uuid.UUID,
-	) error
+	) (deleted domain.User, err error)
 
 	ChangePassword(
 		ctx context.Context,

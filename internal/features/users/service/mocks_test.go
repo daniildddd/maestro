@@ -313,20 +313,29 @@ func (_c *MockUsersRepository_CreateUser_Call) RunAndReturn(run func(ctx context
 }
 
 // DeleteUser provides a mock function for the type MockUsersRepository
-func (_mock *MockUsersRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
+func (_mock *MockUsersRepository) DeleteUser(ctx context.Context, id uuid.UUID) (domain.User, error) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DeleteUser")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+	var r0 domain.User
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (domain.User, error)); ok {
+		return returnFunc(ctx, id)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) domain.User); ok {
 		r0 = returnFunc(ctx, id)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(domain.User)
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // MockUsersRepository_DeleteUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteUser'
@@ -359,12 +368,12 @@ func (_c *MockUsersRepository_DeleteUser_Call) Run(run func(ctx context.Context,
 	return _c
 }
 
-func (_c *MockUsersRepository_DeleteUser_Call) Return(err error) *MockUsersRepository_DeleteUser_Call {
-	_c.Call.Return(err)
+func (_c *MockUsersRepository_DeleteUser_Call) Return(deleted domain.User, err error) *MockUsersRepository_DeleteUser_Call {
+	_c.Call.Return(deleted, err)
 	return _c
 }
 
-func (_c *MockUsersRepository_DeleteUser_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) error) *MockUsersRepository_DeleteUser_Call {
+func (_c *MockUsersRepository_DeleteUser_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID) (domain.User, error)) *MockUsersRepository_DeleteUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

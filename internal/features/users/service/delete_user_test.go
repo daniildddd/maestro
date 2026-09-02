@@ -1,14 +1,15 @@
 package service_test
 
 import (
-	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
@@ -16,6 +17,7 @@ func TestDeleteUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()
+	createdAt := time.Now().Add(-time.Hour)
 
 	tests := []struct {
 		name      string
@@ -23,11 +25,11 @@ func TestDeleteUser(t *testing.T) {
 		wantIs    error
 	}{
 		{
-			name: "success deletes user",
+			name: "success deletes user and records audit",
 			setupMock: func(repo *MockUsersRepository) {
 				repo.EXPECT().
 					DeleteUser(mock.Anything, userID).
-					Return(nil).
+					Return(mustNewUser(t, userID, "deleteduser", "hash", "user", createdAt, nil), nil).
 					Once()
 			},
 		},
@@ -36,7 +38,7 @@ func TestDeleteUser(t *testing.T) {
 			setupMock: func(repo *MockUsersRepository) {
 				repo.EXPECT().
 					DeleteUser(mock.Anything, userID).
-					Return(errs.ErrUserNotFound).
+					Return(domain.User{}, errs.ErrUserNotFound).
 					Once()
 			},
 			wantIs: errs.ErrUserNotFound,
@@ -54,7 +56,7 @@ func TestDeleteUser(t *testing.T) {
 
 			svc := newTestService(t, repo)
 
-			err := svc.DeleteUser(context.Background(), userID)
+			err := svc.DeleteUser(testCtx(), userID)
 
 			if tt.wantIs != nil {
 				must.Error(err)

@@ -45,12 +45,12 @@ func (s *UsersService) UpdateUser(
 		SubjectID:   after.ID.String(),
 		SubjectName: after.Username,
 		StateBefore: map[string]any{
-			"username": before.Username,
-			"role":     before.Role,
+			stateKeyUsername: before.Username,
+			stateKeyRole:     before.Role,
 		},
 		StateAfter: map[string]any{
-			"username": after.Username,
-			"role":     after.Role,
+			stateKeyUsername: after.Username,
+			stateKeyRole:     after.Role,
 		},
 		RequestID: reqctx.RequestID(ctx).String(),
 		IP:        reqctx.ClientIP(ctx),

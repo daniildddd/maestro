@@ -3,8 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/daniildddd/maestro/internal/core/domain"
+	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
 func (s *UsersService) DeleteUser(
@@ -13,10 +17,30 @@ func (s *UsersService) DeleteUser(
 ) error {
 	const op = "users.service.DeleteUser"
 
-	err := s.usersRepository.DeleteUser(ctx, id)
+	deleted, err := s.usersRepository.DeleteUser(ctx, id)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	actorID := reqctx.UserID(ctx)
+
+	s.auditor.Record(ctx, domain.AuditEvent{
+		ID:          uuid.New(),
+		Action:      domain.ActionUserDeleted,
+		Outcome:     domain.OutcomeSuccess,
+		ActorID:     actorID,
+		SubjectType: domain.AuditSubjectUser,
+		SubjectID:   deleted.ID.String(),
+		SubjectName: deleted.Username,
+		StateBefore: map[string]any{
+			stateKeyUsername: deleted.Username,
+			stateKeyRole:     deleted.Role,
+		},
+		RequestID: reqctx.RequestID(ctx).String(),
+		IP:        reqctx.ClientIP(ctx),
+		UserAgent: reqctx.UserAgent(ctx),
+		CreatedAt: time.Now(),
+	})
 
 	return nil
 }

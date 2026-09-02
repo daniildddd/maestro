@@ -31,7 +31,7 @@ func (s *UsersService) DeleteMe(
 		)
 	}
 
-	if err = s.usersRepository.DeleteUser(ctx, userID); err != nil {
+	if _, err = s.usersRepository.DeleteUser(ctx, userID); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

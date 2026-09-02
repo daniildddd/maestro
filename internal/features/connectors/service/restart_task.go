@@ -13,10 +13,10 @@ import (
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
-func (s *ConnectorsService) RestartTask(ctx context.Context, name string, taskID int) error {
+func (s *ConnectorsService) RestartTask(ctx context.Context, connectorName string, taskID int) error {
 	const op = "connectors.service.RestartTask"
 
-	if err := s.connectors.RestartTask(ctx, name, taskID); err != nil {
+	if err := s.connectors.RestartTask(ctx, connectorName, taskID); err != nil {
 		switch {
 		case errors.Is(err, domain.ErrConnectorTaskNotFound):
 			return fmt.Errorf("%s: %w", op, errs.ErrConnectorTaskNotFound)
@@ -33,12 +33,12 @@ func (s *ConnectorsService) RestartTask(ctx context.Context, name string, taskID
 
 	s.auditor.Record(ctx, domain.AuditEvent{
 		ID:          uuid.New(),
-		Action:      domain.ActionConnectorRestarted,
+		Action:      domain.ActionConnectorTaskRestarted,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
 		SubjectType: domain.AuditSubjectConnector,
-		SubjectID:   name,
-		SubjectName: name,
+		SubjectID:   connectorName,
+		SubjectName: connectorName,
 		StateAfter: map[string]any{
 			"task_id": taskID,
 		},

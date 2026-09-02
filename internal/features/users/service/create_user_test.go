@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -158,7 +157,7 @@ func TestCreateUser(t *testing.T) {
 			svc := service.NewUsersService(repo, hasher, noopAuditor{})
 
 			user, err := svc.CreateUser(
-				context.Background(),
+				testCtx(),
 				tt.username,
 				tt.password,
 				tt.role,

@@ -148,6 +148,7 @@ func run() int {
 
 	connectorsService := connectorsservice.NewConnectorsService(
 		kafkaConnectClient,
+		auditRepository,
 		dbcheck.NewPostgresChecker(dbCheckConfig),
 	)
 

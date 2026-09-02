@@ -122,6 +122,7 @@ func run() int {
 	usersService := usersservice.NewUsersService(
 		usersRepository,
 		bcryptHasher,
+		auditRepository,
 	)
 
 	usersTransportHTTP := userstransport.NewUsersHTTPHandler(usersService)

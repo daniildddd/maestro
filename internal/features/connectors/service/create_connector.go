@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -47,7 +46,7 @@ func (s *ConnectorsService) CreateConnector(
 		SubjectType: domain.AuditSubjectConnector,
 		SubjectID:   connector.Name,
 		SubjectName: connector.Name,
-		StateAfter:  maskedConfig(config),
+		StateAfter:  s.maskedConfig(ctx, config),
 		RequestID:   reqctx.RequestID(ctx).String(),
 		IP:          reqctx.ClientIP(ctx),
 		UserAgent:   reqctx.UserAgent(ctx),
@@ -57,11 +56,19 @@ func (s *ConnectorsService) CreateConnector(
 	return connector, nil
 }
 
-func maskedConfig(config map[string]string) map[string]any {
+func (s *ConnectorsService) maskedConfig(
+	ctx context.Context,
+	config map[string]string,
+) map[string]any {
+	secretKeys, ok := s.secretKeys(ctx, config["connector.class"])
+	if !ok {
+		return nil
+	}
+
 	masked := make(map[string]any, len(config))
 
 	for key, value := range config {
-		if isSecretKey(key) {
+		if _, isSecret := secretKeys[key]; isSecret {
 			masked[key] = "***"
 
 			continue
@@ -73,10 +80,26 @@ func maskedConfig(config map[string]string) map[string]any {
 	return masked
 }
 
-func isSecretKey(key string) bool {
-	lower := strings.ToLower(key)
+func (s *ConnectorsService) secretKeys(
+	ctx context.Context,
+	pluginID string,
+) (map[string]struct{}, bool) {
+	if pluginID == "" {
+		return nil, false
+	}
 
-	return strings.Contains(lower, "password") ||
-		strings.Contains(lower, "secret") ||
-		strings.Contains(lower, "token")
+	schema, err := s.connectors.GetConnectorPluginSchemaWithValues(ctx, pluginID)
+	if err != nil {
+		return nil, false
+	}
+
+	keys := make(map[string]struct{}, len(schema.Fields))
+
+	for _, field := range schema.Fields {
+		if field.Type == "PASSWORD" {
+			keys[field.Name] = struct{}{}
+		}
+	}
+
+	return keys, true
 }

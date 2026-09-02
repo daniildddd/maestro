@@ -21,12 +21,13 @@ const (
 	ActionUserPasswordChanged Action = "user.password_changed"
 	ActionUserPasswordReset   Action = "user.password_reset"
 
-	ActionConnectorCreated   Action = "connector.created"
-	ActionConnectorUpdated   Action = "connector.updated"
-	ActionConnectorDeleted   Action = "connector.deleted"
-	ActionConnectorPaused    Action = "connector.paused"
-	ActionConnectorResumed   Action = "connector.resumed"
-	ActionConnectorRestarted Action = "connector.restarted"
+	ActionConnectorCreated       Action = "connector.created"
+	ActionConnectorUpdated       Action = "connector.updated"
+	ActionConnectorDeleted       Action = "connector.deleted"
+	ActionConnectorPaused        Action = "connector.paused"
+	ActionConnectorResumed       Action = "connector.resumed"
+	ActionConnectorRestarted     Action = "connector.restarted"
+	ActionConnectorTaskRestarted Action = "connector.task_restarted"
 )
 
 type Outcome string
@@ -132,7 +133,8 @@ func (a Action) IsValid() bool {
 		ActionConnectorDeleted,
 		ActionConnectorPaused,
 		ActionConnectorResumed,
-		ActionConnectorRestarted:
+		ActionConnectorRestarted,
+		ActionConnectorTaskRestarted:
 		return true
 	default:
 		return false

@@ -19,7 +19,6 @@ const (
 
 var (
 	ErrConnectorPluginNotFound = errors.New("connector plugin not found")
-	ErrSMTPluginNotFound       = errors.New("smt plugin not found")
 )
 
 type ConnectorPlugin struct {

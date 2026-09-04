@@ -140,14 +140,14 @@ func TestNewUserFilter(t *testing.T) {
 			wantLim:  20,
 		},
 		{
-			name:     "defaults applied",
+			name:     "zero page and limit get defaults",
 			page:     0,
 			limit:    0,
 			wantPage: 1,
 			wantLim:  20,
 		},
 		{
-			name:     "values kept",
+			name:     "explicit page limit and filters kept",
 			page:     3,
 			limit:    50,
 			username: "alice",
@@ -240,7 +240,7 @@ func TestValidatePassword(t *testing.T) {
 		wantErr  error
 	}{
 		{
-			name:     "valid password",
+			name:     "typical password accepted",
 			password: "secret123",
 			wantErr:  nil,
 		},
@@ -325,7 +325,7 @@ func TestValidateUsername(t *testing.T) {
 		wantErr  error
 	}{
 		{
-			name:     "valid username",
+			name:     "typical username accepted",
 			username: "alice",
 			wantErr:  nil,
 		},

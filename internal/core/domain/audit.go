@@ -83,9 +83,9 @@ func NewAuditLogFilter(
 		Action: Action(action),
 		Actor:  actor,
 	}
-	f.Normalize()
+	f.normalize()
 
-	if err := f.Validate(); err != nil {
+	if err := f.validate(); err != nil {
 		return nil, fmt.Errorf(
 			"%s: %w", op, err,
 		)
@@ -94,7 +94,7 @@ func NewAuditLogFilter(
 	return f, nil
 }
 
-func (f *AuditLogFilter) Normalize() {
+func (f *AuditLogFilter) normalize() {
 	if f.Page <= 0 {
 		f.Page = 1
 	}
@@ -108,17 +108,17 @@ func (f *AuditLogFilter) Normalize() {
 	}
 }
 
-func (f *AuditLogFilter) Validate() error {
-	const op = "domain.AuditLogFilter.Validate"
+func (f *AuditLogFilter) validate() error {
+	const op = "domain.AuditLogFilter.validate"
 
-	if f.Action != "" && !f.Action.IsValid() {
+	if f.Action != "" && !f.Action.isValid() {
 		return fmt.Errorf("%s: action=%s: %w", op, f.Action, ErrInvalidAuditAction)
 	}
 
 	return nil
 }
 
-func (a Action) IsValid() bool {
+func (a Action) isValid() bool {
 	switch a {
 	case ActionAuthLogin,
 		ActionAuthRefresh,

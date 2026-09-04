@@ -37,27 +37,27 @@ func TestRWriter_WriteHeader(t *testing.T) {
 		statusCode int
 	}{
 		{
-			name:       "200 OK",
+			name:       "200 status passes through",
 			statusCode: http.StatusOK,
 		},
 		{
-			name:       "201 Created",
+			name:       "201 status passes through",
 			statusCode: http.StatusCreated,
 		},
 		{
-			name:       "204 No Content",
+			name:       "204 status passes through",
 			statusCode: http.StatusNoContent,
 		},
 		{
-			name:       "400 Bad Request",
+			name:       "400 status passes through",
 			statusCode: http.StatusBadRequest,
 		},
 		{
-			name:       "404 Not Found",
+			name:       "404 status passes through",
 			statusCode: http.StatusNotFound,
 		},
 		{
-			name:       "500 Internal Server Error",
+			name:       "500 status passes through",
 			statusCode: http.StatusInternalServerError,
 		},
 	}

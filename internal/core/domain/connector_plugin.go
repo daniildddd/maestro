@@ -46,28 +46,13 @@ func NewConnectorPluginSchemaFilter(importance string) (*ConnectorPluginSchemaFi
 	const op = "core.domain.NewConnectorPluginSchemaFilter"
 
 	f := &ConnectorPluginSchemaFilter{Importance: importance}
-	f.Normalize()
+	f.normalize()
 
-	if err := f.Validate(); err != nil {
+	if err := f.validate(); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return f, nil
-}
-
-func (f *ConnectorPluginSchemaFilter) Normalize() {
-	if f.Importance == "" {
-		f.Importance = PluginSchemaFilterHigh
-	}
-}
-
-func (f *ConnectorPluginSchemaFilter) Validate() error {
-	switch f.Importance {
-	case PluginSchemaFilterHigh, PluginSchemaFilterMedium, PluginSchemaFilterAll:
-		return nil
-	default:
-		return errors.New("importance must be one of: high, medium, all")
-	}
 }
 
 func (f *ConnectorPluginSchemaFilter) Apply(fields []ConnectorPluginField) []ConnectorPluginField {
@@ -80,6 +65,23 @@ func (f *ConnectorPluginSchemaFilter) Apply(fields []ConnectorPluginField) []Con
 	}
 
 	return matched
+}
+
+func (f *ConnectorPluginSchemaFilter) normalize() {
+	if f.Importance == "" {
+		f.Importance = PluginSchemaFilterHigh
+	}
+}
+
+func (f *ConnectorPluginSchemaFilter) validate() error {
+	const op = "domain.ConnectorPluginSchemaFilter.validate"
+
+	switch f.Importance {
+	case PluginSchemaFilterHigh, PluginSchemaFilterMedium, PluginSchemaFilterAll:
+		return nil
+	default:
+		return fmt.Errorf("%s: importance=%s: must be one of: high, medium, all", op, f.Importance)
+	}
 }
 
 func (f *ConnectorPluginSchemaFilter) matches(field ConnectorPluginField) bool {

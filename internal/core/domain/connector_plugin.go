@@ -17,9 +17,7 @@ const (
 	PluginSchemaFilterAll    = "all"
 )
 
-var (
-	ErrConnectorPluginNotFound = errors.New("connector plugin not found")
-)
+var ErrConnectorPluginNotFound = errors.New("connector plugin not found")
 
 type ConnectorPlugin struct {
 	ID string

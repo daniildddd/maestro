@@ -15,7 +15,7 @@ func TestComposeStepStatus(t *testing.T) {
 		want   CheckSeverity
 	}{
 		{
-			name:   "ok",
+			name:   "single ok check stays ok",
 			checks: []ValidationCheck{{Severity: CheckSeverityOK}},
 			want:   CheckSeverityOK,
 		},
@@ -37,17 +37,17 @@ func TestComposeStepStatus(t *testing.T) {
 			want: CheckSeverityError,
 		},
 		{
-			name:   "only skipped",
+			name:   "only skipped checks stay skipped",
 			checks: []ValidationCheck{{Severity: CheckSeveritySkipped}},
 			want:   CheckSeveritySkipped,
 		},
 		{
-			name:   "only warning",
+			name:   "only warning checks stay warning",
 			checks: []ValidationCheck{{Severity: CheckSeverityWarning}},
 			want:   CheckSeverityWarning,
 		},
 		{
-			name: "empty",
+			name: "no checks default to skipped",
 			want: CheckSeveritySkipped,
 		},
 	}

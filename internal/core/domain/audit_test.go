@@ -24,14 +24,14 @@ func TestNewAuditLogFilter(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			name:      "defaults applied",
+			name:      "zero page and limit get defaults",
 			page:      0,
 			limit:     0,
 			wantPage:  1,
 			wantLimit: 20,
 		},
 		{
-			name:       "values kept",
+			name:       "explicit page limit and action kept",
 			page:       3,
 			limit:      50,
 			action:     "connector.created",

@@ -154,3 +154,56 @@ func TestRequestId(t *testing.T) {
 		})
 	})
 }
+
+func TestClientInfo(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns ip and user agent when set in context", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		ctx := reqctx.WithClientInfo(context.Background(), "192.168.1.10", "curl/8.7.1")
+
+		is.Equal("192.168.1.10", reqctx.ClientIP(ctx))
+		is.Equal("curl/8.7.1", reqctx.UserAgent(ctx))
+	})
+
+	t.Run("overwrites client info when set multiple times", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		ctx := reqctx.WithClientInfo(context.Background(), "10.0.0.1", "first")
+		ctx = reqctx.WithClientInfo(ctx, "10.0.0.2", "second")
+
+		is.Equal("10.0.0.2", reqctx.ClientIP(ctx))
+		is.Equal("second", reqctx.UserAgent(ctx))
+	})
+
+	t.Run("accepts empty values without panic", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		ctx := reqctx.WithClientInfo(context.Background(), "", "")
+
+		is.Empty(reqctx.ClientIP(ctx))
+		is.Empty(reqctx.UserAgent(ctx))
+	})
+
+	t.Run("panics when client ip not in context", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		is.PanicsWithValue("clientIP not found in context", func() {
+			reqctx.ClientIP(context.Background())
+		})
+	})
+
+	t.Run("panics when user agent not in context", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		is.PanicsWithValue("userAgent not found in context", func() {
+			reqctx.UserAgent(context.Background())
+		})
+	})
+}

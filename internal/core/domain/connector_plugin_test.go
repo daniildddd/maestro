@@ -20,17 +20,17 @@ func TestNewConnectorPluginSchemaFilter(t *testing.T) {
 		wantErr    bool
 	}{
 		{
-			name:       "high accepted",
+			name:       "high importance accepted",
 			importance: "high",
 			want:       domain.ConnectorPluginSchemaFilter{Importance: domain.PluginSchemaFilterHigh},
 		},
 		{
-			name:       "medium accepted",
+			name:       "medium importance accepted",
 			importance: "medium",
 			want:       domain.ConnectorPluginSchemaFilter{Importance: domain.PluginSchemaFilterMedium},
 		},
 		{
-			name:       "all accepted",
+			name:       "all importance accepted",
 			importance: "all",
 			want:       domain.ConnectorPluginSchemaFilter{Importance: domain.PluginSchemaFilterAll},
 		},

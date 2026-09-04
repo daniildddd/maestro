@@ -46,6 +46,41 @@ func TestNewUser(t *testing.T) {
 			role:         "root",
 			wantErr:      domain.ErrInvalidRole,
 		},
+		{
+			name:         "username too long rejected",
+			username:     strings.Repeat("a", 33),
+			passwordHash: "hashed-password-123",
+			role:         "admin",
+			wantErr:      domain.ErrInvalidUsername,
+		},
+		{
+			name:         "username with invalid characters rejected",
+			username:     "bad name!",
+			passwordHash: "hashed-password-123",
+			role:         "admin",
+			wantErr:      domain.ErrInvalidUsername,
+		},
+		{
+			name:         "username with non-ascii rejected",
+			username:     "пользователь",
+			passwordHash: "hashed-password-123",
+			role:         "admin",
+			wantErr:      domain.ErrInvalidUsername,
+		},
+		{
+			name:         "username with emoji rejected",
+			username:     "user😀",
+			passwordHash: "hashed-password-123",
+			role:         "admin",
+			wantErr:      domain.ErrInvalidUsername,
+		},
+		{
+			name:         "empty role rejected",
+			username:     "alice",
+			passwordHash: "hashed-password-123",
+			role:         "",
+			wantErr:      domain.ErrInvalidRole,
+		},
 	}
 
 	for _, tt := range tests {
@@ -83,56 +118,92 @@ func TestNewUser(t *testing.T) {
 	}
 }
 
-func TestUser_Validate(t *testing.T) {
+func TestNewUserFilter(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name     string
+		page     int
+		limit    int
 		username string
-		role     string
+		userRole string
+		wantPage int
+		wantLim  int
 		wantErr  error
 	}{
 		{
-			name:     "valid user returns no error",
+			name:     "valid username filter accepted",
+			page:     1,
+			limit:    20,
+			username: "user_name-1",
+			wantPage: 1,
+			wantLim:  20,
+		},
+		{
+			name:     "defaults applied",
+			page:     0,
+			limit:    0,
+			wantPage: 1,
+			wantLim:  20,
+		},
+		{
+			name:     "values kept",
+			page:     3,
+			limit:    50,
 			username: "alice",
-			role:     "admin",
-			wantErr:  nil,
+			userRole: "admin",
+			wantPage: 3,
+			wantLim:  50,
 		},
 		{
-			name:     "valid user with user role returns no error",
-			username: "alice",
-			role:     "user",
-			wantErr:  nil,
+			name:     "negative page normalized",
+			page:     -5,
+			limit:    10,
+			wantPage: 1,
+			wantLim:  10,
 		},
 		{
-			name:     "username too short rejected",
-			username: "ab",
-			role:     "admin",
-			wantErr:  domain.ErrInvalidUsername,
+			name:     "negative limit normalized",
+			page:     1,
+			limit:    -5,
+			wantPage: 1,
+			wantLim:  20,
 		},
 		{
-			name:     "username too long rejected",
-			username: strings.Repeat("a", 33),
-			role:     "admin",
-			wantErr:  domain.ErrInvalidUsername,
-		},
-		{
-			name:     "username with invalid characters rejected",
-			username: "bad name!",
-			role:     "admin",
-			wantErr:  domain.ErrInvalidUsername,
+			name:     "limit capped at 100",
+			page:     1,
+			limit:    500,
+			wantPage: 1,
+			wantLim:  100,
 		},
 		{
 			name:     "unknown role rejected",
-			username: "alice",
-			role:     "root",
+			page:     1,
+			limit:    20,
+			userRole: "root",
 			wantErr:  domain.ErrInvalidRole,
 		},
 		{
-			name:     "empty role rejected",
-			username: "alice",
-			role:     "",
-			wantErr:  domain.ErrInvalidRole,
+			name:     "empty role accepted",
+			page:     1,
+			limit:    20,
+			userRole: "",
+			wantPage: 1,
+			wantLim:  20,
+		},
+		{
+			name:     "invalid username rejected",
+			page:     1,
+			limit:    20,
+			username: "bad name!",
+			wantErr:  domain.ErrInvalidUsername,
+		},
+		{
+			name:     "non-ascii username rejected",
+			page:     1,
+			limit:    20,
+			username: "пользователь",
+			wantErr:  domain.ErrInvalidUsername,
 		},
 	}
 
@@ -142,12 +213,97 @@ func TestUser_Validate(t *testing.T) {
 
 			must := require.New(t)
 
-			user := domain.User{
-				Username: tt.username,
-				Role:     tt.role,
+			filter, err := domain.NewUserFilter(tt.page, tt.limit, tt.username, tt.userRole)
+
+			if tt.wantErr != nil {
+				must.ErrorIs(err, tt.wantErr)
+				must.Nil(filter)
+
+				return
 			}
 
-			err := user.Validate()
+			must.NoError(err)
+			must.Equal(tt.wantPage, filter.Page)
+			must.Equal(tt.wantLim, filter.Limit)
+			must.Equal(tt.username, filter.Username)
+			must.Equal(tt.userRole, filter.UserRole)
+		})
+	}
+}
+
+func TestValidatePassword(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		password string
+		wantErr  error
+	}{
+		{
+			name:     "valid password",
+			password: "secret123",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password with spaces",
+			password: "my pass phrase",
+			wantErr:  nil,
+		},
+		//nolint:gosec // test fixture: unicode password string, not a real credential
+		{
+			name:     "valid password with unicode",
+			password: "секретный пароль",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password exactly 8 chars",
+			password: "12345678",
+			wantErr:  nil,
+		},
+		{
+			name:     "valid password exactly 128 chars",
+			password: strings.Repeat("a", 128),
+			wantErr:  nil,
+		},
+		{
+			name:     "password too short rejected",
+			password: "1234567",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password too long rejected",
+			password: strings.Repeat("a", 129),
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "empty password rejected",
+			password: "",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password with newline rejected",
+			password: "secret\n123",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password with tab rejected",
+			password: "secret\t123",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+		{
+			name:     "password with del char rejected",
+			password: "secret\x7F123",
+			wantErr:  domain.ErrInvalidPassword,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			err := domain.ValidatePassword(tt.password)
 
 			if tt.wantErr != nil {
 				must.ErrorIs(err, tt.wantErr)
@@ -232,91 +388,6 @@ func TestValidateUsername(t *testing.T) {
 			must := require.New(t)
 
 			err := domain.ValidateUsername(tt.username)
-
-			if tt.wantErr != nil {
-				must.ErrorIs(err, tt.wantErr)
-
-				return
-			}
-
-			must.NoError(err)
-		})
-	}
-}
-
-func TestValidatePassword(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		password string
-		wantErr  error
-	}{
-		{
-			name:     "valid password",
-			password: "secret123",
-			wantErr:  nil,
-		},
-		{
-			name:     "valid password with spaces",
-			password: "my pass phrase",
-			wantErr:  nil,
-		},
-		//nolint:gosec // test fixture: unicode password string, not a real credential
-		{
-			name:     "valid password with unicode",
-			password: "секретный пароль",
-			wantErr:  nil,
-		},
-		{
-			name:     "valid password exactly 8 chars",
-			password: "12345678",
-			wantErr:  nil,
-		},
-		{
-			name:     "valid password exactly 128 chars",
-			password: strings.Repeat("a", 128),
-			wantErr:  nil,
-		},
-		{
-			name:     "password too short rejected",
-			password: "1234567",
-			wantErr:  domain.ErrInvalidPassword,
-		},
-		{
-			name:     "password too long rejected",
-			password: strings.Repeat("a", 129),
-			wantErr:  domain.ErrInvalidPassword,
-		},
-		{
-			name:     "empty password rejected",
-			password: "",
-			wantErr:  domain.ErrInvalidPassword,
-		},
-		{
-			name:     "password with newline rejected",
-			password: "secret\n123",
-			wantErr:  domain.ErrInvalidPassword,
-		},
-		{
-			name:     "password with tab rejected",
-			password: "secret\t123",
-			wantErr:  domain.ErrInvalidPassword,
-		},
-		{
-			name:     "password with del char rejected",
-			password: "secret\x7F123",
-			wantErr:  domain.ErrInvalidPassword,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			must := require.New(t)
-
-			err := domain.ValidatePassword(tt.password)
 
 			if tt.wantErr != nil {
 				must.ErrorIs(err, tt.wantErr)

@@ -10,6 +10,19 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	RoleUser  = "user"
+	RoleAdmin = "admin"
+)
+
+var (
+	ErrInvalidRole     = errors.New("role must be one of: user, admin")
+	ErrInvalidPassword = errors.New("password must be 8-128 chars without control characters")
+	ErrInvalidUsername = errors.New("username must be 3-32 chars from [a-zA-Z0-9_-]")
+)
+
+var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 type User struct {
 	ID           uuid.UUID
 	Username     string
@@ -17,6 +30,13 @@ type User struct {
 	Role         string
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
+}
+
+type UserFilter struct {
+	Page     int
+	Limit    int
+	Username string
+	UserRole string
 }
 
 func NewUser(
@@ -38,15 +58,15 @@ func NewUser(
 		UpdatedAt:    updatedAt,
 	}
 
-	if err := u.Validate(); err != nil {
+	if err := u.validate(); err != nil {
 		return User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return u, nil
 }
 
-func (u User) Validate() error {
-	const op = "domain.User.Validate"
+func (u User) validate() error {
+	const op = "domain.User.validate"
 
 	if err := ValidateUsername(u.Username); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -57,54 +77,6 @@ func (u User) Validate() error {
 	}
 
 	return nil
-}
-
-const (
-	RoleUser  = "user"
-	RoleAdmin = "admin"
-)
-
-var ErrInvalidRole = errors.New("role must be one of: user, admin")
-
-var ErrInvalidPassword = errors.New("password must be 8-128 chars without control characters")
-
-func ValidatePassword(password string) error {
-	if n := utf8.RuneCountInString(password); n < 8 || n > 128 {
-		return ErrInvalidPassword
-	}
-
-	for _, r := range password {
-		if r < 0x20 || r == 0x7F {
-			return ErrInvalidPassword
-		}
-	}
-
-	return nil
-}
-
-var ErrInvalidUsername = errors.New("username must be 3-32 chars from [a-zA-Z0-9_-]")
-
-var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-
-func ValidateUsername(username string) error {
-	const op = "core.domain.ValidateUsername"
-
-	if len(username) < 3 || len(username) > 32 {
-		return fmt.Errorf("%s: username=%s: %w", op, username, ErrInvalidUsername)
-	}
-
-	if !usernameRegex.MatchString(username) {
-		return fmt.Errorf("%s: username=%s: %w", op, username, ErrInvalidUsername)
-	}
-
-	return nil
-}
-
-type UserFilter struct {
-	Page     int
-	Limit    int
-	Username string
-	UserRole string
 }
 
 func NewUserFilter(
@@ -121,9 +93,9 @@ func NewUserFilter(
 		Username: username,
 		UserRole: userRole,
 	}
-	f.Normalize()
+	f.normalize()
 
-	if err := f.Validate(); err != nil {
+	if err := f.validate(); err != nil {
 		return nil, fmt.Errorf(
 			"%s: %w", op, err,
 		)
@@ -132,7 +104,7 @@ func NewUserFilter(
 	return f, nil
 }
 
-func (u *UserFilter) Normalize() {
+func (u *UserFilter) normalize() {
 	if u.Page <= 0 {
 		u.Page = 1
 	}
@@ -146,8 +118,8 @@ func (u *UserFilter) Normalize() {
 	}
 }
 
-func (u *UserFilter) Validate() error {
-	const op = "domain.UserFilter.Validate"
+func (u *UserFilter) validate() error {
+	const op = "domain.UserFilter.validate"
 
 	if u.UserRole != "" && u.UserRole != RoleUser && u.UserRole != RoleAdmin {
 		return fmt.Errorf("%s: %w", op, ErrInvalidRole)
@@ -157,6 +129,34 @@ func (u *UserFilter) Validate() error {
 		if err := ValidateUsername(u.Username); err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
+	}
+
+	return nil
+}
+
+func ValidatePassword(password string) error {
+	if n := utf8.RuneCountInString(password); n < 8 || n > 128 {
+		return ErrInvalidPassword
+	}
+
+	for _, r := range password {
+		if r < 0x20 || r == 0x7F {
+			return ErrInvalidPassword
+		}
+	}
+
+	return nil
+}
+
+func ValidateUsername(username string) error {
+	const op = "core.domain.ValidateUsername"
+
+	if len(username) < 3 || len(username) > 32 {
+		return fmt.Errorf("%s: username=%s: %w", op, username, ErrInvalidUsername)
+	}
+
+	if !usernameRegex.MatchString(username) {
+		return fmt.Errorf("%s: username=%s: %w", op, username, ErrInvalidUsername)
 	}
 
 	return nil

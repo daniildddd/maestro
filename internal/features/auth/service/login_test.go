@@ -87,6 +87,20 @@ func TestLogin(t *testing.T) {
 			},
 		},
 		{
+			name:     "invalid username is rejected before repository call",
+			username: "ab",
+			password: "secret123",
+			setupMocks: func(
+				_ *MockAuthRepository,
+				_ *MockPasswordHasher,
+				_ *MockAccessTokenGenerator,
+				_ *MockRefreshTokenManager,
+			) {
+			},
+			wantErr:   true,
+			wantErrIs: errs.ErrValidationFailed,
+		},
+		{
 			name:     "user not found maps to ErrInvalidCredentials",
 			username: "alice",
 			password: "secret123",

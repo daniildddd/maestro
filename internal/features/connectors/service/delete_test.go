@@ -20,7 +20,7 @@ func TestConnectorsServiceDelete(t *testing.T) {
 		wantIs    error
 	}{
 		{
-			name: "delete succeeds",
+			name: "success deletes existing connector",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					GetConnectorByID(mock.Anything, "pg-connector").

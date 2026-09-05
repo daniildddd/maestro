@@ -106,6 +106,65 @@ func TestNewHTTPServer(t *testing.T) {
 }
 
 //nolint:paralleltest // binds real OS ports; cannot run concurrently with other Run tests
+func TestHTTPServer_RegisterAPIRouters(t *testing.T) {
+	t.Run("registers handlers from all api version routers", func(t *testing.T) {
+		must := require.New(t)
+
+		v1Routes := []server.Route{
+			{Method: http.MethodGet, Path: "/old", Handler: func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte("v1")) //nolint:errcheck // test-only
+			}},
+		}
+		v2Routes := []server.Route{
+			{Method: http.MethodGet, Path: "/new", Handler: func(w http.ResponseWriter, _ *http.Request) {
+				_, _ = w.Write([]byte("v2")) //nolint:errcheck // test-only
+			}},
+		}
+
+		addr := freeAddr(t)
+
+		srv := server.NewHTTPServer(server.Config{Addr: addr}, nopLogger())
+		srv.RegisterAPIRouters(
+			server.NewAPIVersionRouter(v1Routes, server.ApiVersion1),
+			server.NewAPIVersionRouter(v2Routes, "v2"),
+		)
+		srv.RegisterNotFound(nopLogger())
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		errCh := runAndAwaitListening(ctx, t, srv, addr)
+
+		base := "http://" + addr
+
+		resp, err := http.Get(base + "/api/v1/old")
+		must.NoError(err)
+
+		body, readErr := io.ReadAll(resp.Body)
+		must.NoError(readErr)
+
+		_ = resp.Body.Close() //nolint:errcheck // test-only
+
+		must.Equal(http.StatusOK, resp.StatusCode)
+		must.Equal("v1", string(body))
+
+		resp, err = http.Get(base + "/api/v2/new")
+		must.NoError(err)
+
+		body, readErr = io.ReadAll(resp.Body)
+		must.NoError(readErr)
+
+		_ = resp.Body.Close() //nolint:errcheck // test-only
+
+		must.Equal(http.StatusOK, resp.StatusCode)
+		must.Equal("v2", string(body))
+
+		cancel()
+		must.NoError(awaitRunResult(t, errCh))
+	})
+}
+
+//nolint:paralleltest // binds real OS ports; cannot run concurrently with other Run tests
 func TestHTTPServer_RegisterNotFound(t *testing.T) {
 	t.Run("unknown paths and wrong methods return JSON 404", func(t *testing.T) {
 		must := require.New(t)

@@ -20,7 +20,7 @@ func TestLogout(t *testing.T) {
 			repo *MockAuthRepository,
 			refreshGen *MockRefreshTokenManager,
 		)
-		wantErr bool
+		wantErrIs error
 	}{
 		{
 			name:     "success deletes token by hash and records audit",
@@ -64,6 +64,30 @@ func TestLogout(t *testing.T) {
 			},
 		},
 		{
+			name:     "delete error is wrapped and unwrappable via errors.Is",
+			rawToken: "raw-token",
+			setupMocks: func(
+				repo *MockAuthRepository,
+				refreshGen *MockRefreshTokenManager,
+			) {
+				refreshGen.EXPECT().
+					Hash("raw-token").
+					Return("hashed-token").
+					Once()
+
+				repo.EXPECT().
+					GetRefreshTokenByHash(mock.Anything, "hashed-token").
+					Return(domain.RefreshToken{UserID: userID}, nil).
+					Once()
+
+				repo.EXPECT().
+					DeleteRefreshToken(mock.Anything, "hashed-token").
+					Return(errs.ErrInternal).
+					Once()
+			},
+			wantErrIs: errs.ErrInternal,
+		},
+		{
 			name:     "repository error is wrapped and unwrappable via errors.Is",
 			rawToken: "raw-token",
 			setupMocks: func(
@@ -80,7 +104,7 @@ func TestLogout(t *testing.T) {
 					Return(domain.RefreshToken{}, errs.ErrInternal).
 					Once()
 			},
-			wantErr: true,
+			wantErrIs: errs.ErrInternal,
 		},
 	}
 
@@ -97,9 +121,9 @@ func TestLogout(t *testing.T) {
 
 			err := svc.Logout(testCtx(), tt.rawToken)
 
-			if tt.wantErr {
+			if tt.wantErrIs != nil {
 				must.Error(err)
-				must.ErrorIs(err, errs.ErrInternal)
+				must.ErrorIs(err, tt.wantErrIs)
 
 				return
 			}

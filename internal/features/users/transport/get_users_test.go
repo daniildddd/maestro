@@ -176,7 +176,7 @@ func TestGetUsers(t *testing.T) {
 			},
 		},
 		{
-			name:  "has more returns flag",
+			name:  "service has more flag returned in response",
 			query: "page=1&limit=1",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().

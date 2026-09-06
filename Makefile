@@ -63,7 +63,7 @@ lint-fix: ## Auto-fix linter issues
 	@golangci-lint run --fix ./...
 
 lint-actions: ## Lint GitHub Actions workflows with actionlint
-	@docker compose run --rm actionlint -color
+	@go tool actionlint -color
 
 lint-dockerfile: ## Lint Dockerfile with hadolint
 	@docker compose run --rm hadolint cmd/maestro/Dockerfile

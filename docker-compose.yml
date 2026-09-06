@@ -85,14 +85,6 @@ services:
 
     restart: "no"
 
-  actionlint:
-    image: rhysd/actionlint:1.7.12
-    volumes:
-      - .:/code:ro
-    working_dir: /code
-
-    restart: "no"
-
   hadolint:
     image: hadolint/hadolint:v2.15.1
     volumes:

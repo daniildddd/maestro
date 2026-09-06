@@ -89,7 +89,7 @@ func TestCreateConnector(t *testing.T) {
 			wantCode:   "INVALID_REQUEST_BODY",
 		},
 		{
-			name: "existing connector error propagates as conflict",
+			name: "service error returns mapped error",
 			body: validBody,
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

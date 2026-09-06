@@ -42,6 +42,11 @@ jobs:
           go mod tidy
           git diff --exit-code go.mod go.sum
 
+      - name: Check generated mocks are up to date
+        run: |
+          go tool mockery
+          git diff --exit-code
+
       - name: Build
         run: go build ./...
 

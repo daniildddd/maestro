@@ -30,39 +30,67 @@ func mustNewUser(
 	return user
 }
 
+type userRowFixture struct {
+	id           uuid.UUID
+	username     string
+	passwordHash string
+	role         string
+	createdAt    time.Time
+	updatedAt    *time.Time
+}
+
 //nolint:unparam // test helper mirrors the users table row; any argument may vary per test
-func scanUserIntoRow(row *MockRow, u domain.User) {
+func mustUserRow(
+	id uuid.UUID,
+	username string,
+	passwordHash string,
+	role string,
+	createdAt time.Time,
+	updatedAt *time.Time,
+) userRowFixture {
+	return userRowFixture{
+		id:           id,
+		username:     username,
+		passwordHash: passwordHash,
+		role:         role,
+		createdAt:    createdAt,
+		updatedAt:    updatedAt,
+	}
+}
+
+//nolint:unparam // test helper mirrors the users table row; any argument may vary per test
+func scanUserIntoRow(row *MockRow, fixture userRowFixture) {
 	row.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			fillUserDest(dest, u)
+			fillUserDest(dest, fixture)
 		}).
 		Return(nil).
 		Once()
 }
 
-func fillUserDest(ptrs []any, u domain.User) {
+func fillUserDest(ptrs []any, row userRowFixture) {
 	if idPtr, ok := ptrs[0].(*uuid.UUID); ok {
-		*idPtr = u.ID
+		*idPtr = row.id
 	}
 
 	if usernamePtr, ok := ptrs[1].(*string); ok {
-		*usernamePtr = u.Username
+		*usernamePtr = row.username
 	}
 
 	if passwordHashPtr, ok := ptrs[2].(*string); ok {
-		*passwordHashPtr = u.PasswordHash
+		*passwordHashPtr = row.passwordHash
 	}
 
 	if rolePtr, ok := ptrs[3].(*string); ok {
-		*rolePtr = u.Role
+		*rolePtr = row.role
 	}
 
 	if createdAtPtr, ok := ptrs[4].(*time.Time); ok {
-		*createdAtPtr = u.CreatedAt
+		*createdAtPtr = row.createdAt
 	}
 
 	if updatedAtPtr, ok := ptrs[5].(**time.Time); ok {
-		*updatedAtPtr = u.UpdatedAt
+		*updatedAtPtr = row.updatedAt
 	}
 }

@@ -40,16 +40,15 @@ func TestGetConnectorPluginSchema(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		query      string
+		path       string
 		setupMock  func(m *MockConnectorsService)
 		wantStatus int
 		wantCode   string
 		wantBody   transport.PluginSchemaResponse
-		rawRequest bool
 	}{
 		{
-			name:  "success returns schema fields",
-			query: "importance=all",
+			name: "success returns schema fields",
+			path: "/connector-plugins/{id}/config?importance=all",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().
 					GetConnectorPluginSchema(mock.Anything, "{id}", mock.Anything).
@@ -80,22 +79,22 @@ func TestGetConnectorPluginSchema(t *testing.T) {
 		},
 		{
 			name:       "missing path id returns error",
+			path:       "/connector-plugins//config?importance=all",
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,
 			wantCode:   "INVALID_PATH_PARAM",
-			rawRequest: true,
 		},
 		{
-			name:  "invalid importance returns error",
-			query: "importance=bogus",
+			name: "invalid importance returns error",
+			path: "/connector-plugins/{id}/config?importance=bogus",
 			setupMock: func(_ *MockConnectorsService) {
 			},
 			wantStatus: http.StatusBadRequest,
 			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
-			name:  "service error returns mapped error",
-			query: "importance=all",
+			name: "service error returns mapped error",
+			path: "/connector-plugins/{id}/config?importance=all",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().
 					GetConnectorPluginSchema(mock.Anything, "{id}", mock.Anything).
@@ -122,10 +121,7 @@ func TestGetConnectorPluginSchema(t *testing.T) {
 			rec := httptest.NewRecorder()
 			rw := core_http_response.NewResponseWriter(rec)
 
-			req := newConnectorsRequest(t, http.MethodGet, "/connector-plugins/{id}/config?"+tt.query, "")
-			if tt.rawRequest {
-				req = newConnectorsRequestWithoutPathValues(t, http.MethodGet, "/connector-plugins/{id}/config?"+tt.query, "")
-			}
+			req := newConnectorsRequest(t, http.MethodGet, tt.path, "")
 
 			handler.GetConnectorPluginSchema(rw, req)
 

@@ -62,17 +62,38 @@ type MockUsersService_ChangeOwnPassword_Call struct {
 }
 
 // ChangeOwnPassword is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - oldPassword
-//   - newPassword
-func (_e *MockUsersService_Expecter) ChangeOwnPassword(ctx interface{}, userID interface{}, oldPassword interface{}, newPassword interface{}) *MockUsersService_ChangeOwnPassword_Call {
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - oldPassword string
+//   - newPassword string
+func (_e *MockUsersService_Expecter) ChangeOwnPassword(ctx any, userID any, oldPassword any, newPassword any) *MockUsersService_ChangeOwnPassword_Call {
 	return &MockUsersService_ChangeOwnPassword_Call{Call: _e.mock.On("ChangeOwnPassword", ctx, userID, oldPassword, newPassword)}
 }
 
 func (_c *MockUsersService_ChangeOwnPassword_Call) Run(run func(ctx context.Context, userID uuid.UUID, oldPassword string, newPassword string)) *MockUsersService_ChangeOwnPassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -110,16 +131,32 @@ type MockUsersService_ChangePassword_Call struct {
 }
 
 // ChangePassword is a helper method to define mock.On call
-//   - ctx
-//   - id
-//   - newPassword
-func (_e *MockUsersService_Expecter) ChangePassword(ctx interface{}, id interface{}, newPassword interface{}) *MockUsersService_ChangePassword_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - newPassword string
+func (_e *MockUsersService_Expecter) ChangePassword(ctx any, id any, newPassword any) *MockUsersService_ChangePassword_Call {
 	return &MockUsersService_ChangePassword_Call{Call: _e.mock.On("ChangePassword", ctx, id, newPassword)}
 }
 
 func (_c *MockUsersService_ChangePassword_Call) Run(run func(ctx context.Context, id uuid.UUID, newPassword string)) *MockUsersService_ChangePassword_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -166,17 +203,38 @@ type MockUsersService_CreateUser_Call struct {
 }
 
 // CreateUser is a helper method to define mock.On call
-//   - ctx
-//   - username
-//   - password
-//   - role
-func (_e *MockUsersService_Expecter) CreateUser(ctx interface{}, username interface{}, password interface{}, role interface{}) *MockUsersService_CreateUser_Call {
+//   - ctx context.Context
+//   - username string
+//   - password string
+//   - role string
+func (_e *MockUsersService_Expecter) CreateUser(ctx any, username any, password any, role any) *MockUsersService_CreateUser_Call {
 	return &MockUsersService_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, username, password, role)}
 }
 
 func (_c *MockUsersService_CreateUser_Call) Run(run func(ctx context.Context, username string, password string, role string)) *MockUsersService_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
 	})
 	return _c
 }
@@ -214,16 +272,32 @@ type MockUsersService_DeleteMe_Call struct {
 }
 
 // DeleteMe is a helper method to define mock.On call
-//   - ctx
-//   - userID
-//   - password
-func (_e *MockUsersService_Expecter) DeleteMe(ctx interface{}, userID interface{}, password interface{}) *MockUsersService_DeleteMe_Call {
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - password string
+func (_e *MockUsersService_Expecter) DeleteMe(ctx any, userID any, password any) *MockUsersService_DeleteMe_Call {
 	return &MockUsersService_DeleteMe_Call{Call: _e.mock.On("DeleteMe", ctx, userID, password)}
 }
 
 func (_c *MockUsersService_DeleteMe_Call) Run(run func(ctx context.Context, userID uuid.UUID, password string)) *MockUsersService_DeleteMe_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -261,15 +335,26 @@ type MockUsersService_DeleteUser_Call struct {
 }
 
 // DeleteUser is a helper method to define mock.On call
-//   - ctx
-//   - id
-func (_e *MockUsersService_Expecter) DeleteUser(ctx interface{}, id interface{}) *MockUsersService_DeleteUser_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockUsersService_Expecter) DeleteUser(ctx any, id any) *MockUsersService_DeleteUser_Call {
 	return &MockUsersService_DeleteUser_Call{Call: _e.mock.On("DeleteUser", ctx, id)}
 }
 
 func (_c *MockUsersService_DeleteUser_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockUsersService_DeleteUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -316,15 +401,26 @@ type MockUsersService_GetUserByID_Call struct {
 }
 
 // GetUserByID is a helper method to define mock.On call
-//   - ctx
-//   - id
-func (_e *MockUsersService_Expecter) GetUserByID(ctx interface{}, id interface{}) *MockUsersService_GetUserByID_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockUsersService_Expecter) GetUserByID(ctx any, id any) *MockUsersService_GetUserByID_Call {
 	return &MockUsersService_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
 func (_c *MockUsersService_GetUserByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockUsersService_GetUserByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -379,15 +475,26 @@ type MockUsersService_GetUsers_Call struct {
 }
 
 // GetUsers is a helper method to define mock.On call
-//   - ctx
-//   - filter
-func (_e *MockUsersService_Expecter) GetUsers(ctx interface{}, filter interface{}) *MockUsersService_GetUsers_Call {
+//   - ctx context.Context
+//   - filter *domain.UserFilter
+func (_e *MockUsersService_Expecter) GetUsers(ctx any, filter any) *MockUsersService_GetUsers_Call {
 	return &MockUsersService_GetUsers_Call{Call: _e.mock.On("GetUsers", ctx, filter)}
 }
 
 func (_c *MockUsersService_GetUsers_Call) Run(run func(ctx context.Context, filter *domain.UserFilter)) *MockUsersService_GetUsers_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*domain.UserFilter))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *domain.UserFilter
+		if args[1] != nil {
+			arg1 = args[1].(*domain.UserFilter)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -434,16 +541,32 @@ type MockUsersService_UpdateUser_Call struct {
 }
 
 // UpdateUser is a helper method to define mock.On call
-//   - ctx
-//   - id
-//   - username
-func (_e *MockUsersService_Expecter) UpdateUser(ctx interface{}, id interface{}, username interface{}) *MockUsersService_UpdateUser_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - username string
+func (_e *MockUsersService_Expecter) UpdateUser(ctx any, id any, username any) *MockUsersService_UpdateUser_Call {
 	return &MockUsersService_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, id, username)}
 }
 
 func (_c *MockUsersService_UpdateUser_Call) Run(run func(ctx context.Context, id uuid.UUID, username string)) *MockUsersService_UpdateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }

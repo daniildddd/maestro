@@ -70,16 +70,32 @@ type MockAuthService_Login_Call struct {
 }
 
 // Login is a helper method to define mock.On call
-//   - ctx
-//   - username
-//   - password
-func (_e *MockAuthService_Expecter) Login(ctx interface{}, username interface{}, password interface{}) *MockAuthService_Login_Call {
+//   - ctx context.Context
+//   - username string
+//   - password string
+func (_e *MockAuthService_Expecter) Login(ctx any, username any, password any) *MockAuthService_Login_Call {
 	return &MockAuthService_Login_Call{Call: _e.mock.On("Login", ctx, username, password)}
 }
 
 func (_c *MockAuthService_Login_Call) Run(run func(ctx context.Context, username string, password string)) *MockAuthService_Login_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -117,15 +133,26 @@ type MockAuthService_Logout_Call struct {
 }
 
 // Logout is a helper method to define mock.On call
-//   - ctx
-//   - refreshToken
-func (_e *MockAuthService_Expecter) Logout(ctx interface{}, refreshToken interface{}) *MockAuthService_Logout_Call {
+//   - ctx context.Context
+//   - refreshToken string
+func (_e *MockAuthService_Expecter) Logout(ctx any, refreshToken any) *MockAuthService_Logout_Call {
 	return &MockAuthService_Logout_Call{Call: _e.mock.On("Logout", ctx, refreshToken)}
 }
 
 func (_c *MockAuthService_Logout_Call) Run(run func(ctx context.Context, refreshToken string)) *MockAuthService_Logout_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -172,15 +199,26 @@ type MockAuthService_Refresh_Call struct {
 }
 
 // Refresh is a helper method to define mock.On call
-//   - ctx
-//   - refreshToken
-func (_e *MockAuthService_Expecter) Refresh(ctx interface{}, refreshToken interface{}) *MockAuthService_Refresh_Call {
+//   - ctx context.Context
+//   - refreshToken string
+func (_e *MockAuthService_Expecter) Refresh(ctx any, refreshToken any) *MockAuthService_Refresh_Call {
 	return &MockAuthService_Refresh_Call{Call: _e.mock.On("Refresh", ctx, refreshToken)}
 }
 
 func (_c *MockAuthService_Refresh_Call) Run(run func(ctx context.Context, refreshToken string)) *MockAuthService_Refresh_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

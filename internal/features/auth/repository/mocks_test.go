@@ -73,14 +73,20 @@ type MockPool_Begin_Call struct {
 }
 
 // Begin is a helper method to define mock.On call
-//   - ctx
-func (_e *MockPool_Expecter) Begin(ctx interface{}) *MockPool_Begin_Call {
+//   - ctx context.Context
+func (_e *MockPool_Expecter) Begin(ctx any) *MockPool_Begin_Call {
 	return &MockPool_Begin_Call{Call: _e.mock.On("Begin", ctx)}
 }
 
 func (_c *MockPool_Begin_Call) Run(run func(ctx context.Context)) *MockPool_Begin_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -144,8 +150,8 @@ func (_mock *MockPool) Exec(ctx context.Context, sql string, args ...any) (postg
 
 	var r0 postgres.CommandTag
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []any) (postgres.CommandTag, error)); ok {
-		return returnFunc(ctx, sql, args)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) (postgres.CommandTag, error)); ok {
+		return returnFunc(ctx, sql, args...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) postgres.CommandTag); ok {
 		r0 = returnFunc(ctx, sql, args...)
@@ -168,23 +174,35 @@ type MockPool_Exec_Call struct {
 }
 
 // Exec is a helper method to define mock.On call
-//   - ctx
-//   - sql
-//   - args
-func (_e *MockPool_Expecter) Exec(ctx interface{}, sql interface{}, args ...interface{}) *MockPool_Exec_Call {
+//   - ctx context.Context
+//   - sql string
+//   - args ...any
+func (_e *MockPool_Expecter) Exec(ctx any, sql any, args ...any) *MockPool_Exec_Call {
 	return &MockPool_Exec_Call{Call: _e.mock.On("Exec",
-		append([]interface{}{ctx, sql}, args...)...)}
+		append([]any{ctx, sql}, args...)...)}
 }
 
 func (_c *MockPool_Exec_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockPool_Exec_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]any, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(any)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -259,8 +277,8 @@ func (_mock *MockPool) Query(ctx context.Context, sql string, args ...any) (post
 
 	var r0 postgres.Rows
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []any) (postgres.Rows, error)); ok {
-		return returnFunc(ctx, sql, args)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) (postgres.Rows, error)); ok {
+		return returnFunc(ctx, sql, args...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) postgres.Rows); ok {
 		r0 = returnFunc(ctx, sql, args...)
@@ -283,23 +301,35 @@ type MockPool_Query_Call struct {
 }
 
 // Query is a helper method to define mock.On call
-//   - ctx
-//   - sql
-//   - args
-func (_e *MockPool_Expecter) Query(ctx interface{}, sql interface{}, args ...interface{}) *MockPool_Query_Call {
+//   - ctx context.Context
+//   - sql string
+//   - args ...any
+func (_e *MockPool_Expecter) Query(ctx any, sql any, args ...any) *MockPool_Query_Call {
 	return &MockPool_Query_Call{Call: _e.mock.On("Query",
-		append([]interface{}{ctx, sql}, args...)...)}
+		append([]any{ctx, sql}, args...)...)}
 }
 
 func (_c *MockPool_Query_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockPool_Query_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]any, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(any)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -345,23 +375,35 @@ type MockPool_QueryRow_Call struct {
 }
 
 // QueryRow is a helper method to define mock.On call
-//   - ctx
-//   - sql
-//   - args
-func (_e *MockPool_Expecter) QueryRow(ctx interface{}, sql interface{}, args ...interface{}) *MockPool_QueryRow_Call {
+//   - ctx context.Context
+//   - sql string
+//   - args ...any
+func (_e *MockPool_Expecter) QueryRow(ctx any, sql any, args ...any) *MockPool_QueryRow_Call {
 	return &MockPool_QueryRow_Call{Call: _e.mock.On("QueryRow",
-		append([]interface{}{ctx, sql}, args...)...)}
+		append([]any{ctx, sql}, args...)...)}
 }
 
 func (_c *MockPool_QueryRow_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockPool_QueryRow_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]any, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(any)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -426,14 +468,20 @@ type MockTx_Commit_Call struct {
 }
 
 // Commit is a helper method to define mock.On call
-//   - ctx
-func (_e *MockTx_Expecter) Commit(ctx interface{}) *MockTx_Commit_Call {
+//   - ctx context.Context
+func (_e *MockTx_Expecter) Commit(ctx any) *MockTx_Commit_Call {
 	return &MockTx_Commit_Call{Call: _e.mock.On("Commit", ctx)}
 }
 
 func (_c *MockTx_Commit_Call) Run(run func(ctx context.Context)) *MockTx_Commit_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -464,8 +512,8 @@ func (_mock *MockTx) Exec(ctx context.Context, sql string, args ...any) (postgre
 
 	var r0 postgres.CommandTag
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []any) (postgres.CommandTag, error)); ok {
-		return returnFunc(ctx, sql, args)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) (postgres.CommandTag, error)); ok {
+		return returnFunc(ctx, sql, args...)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string, ...any) postgres.CommandTag); ok {
 		r0 = returnFunc(ctx, sql, args...)
@@ -488,23 +536,35 @@ type MockTx_Exec_Call struct {
 }
 
 // Exec is a helper method to define mock.On call
-//   - ctx
-//   - sql
-//   - args
-func (_e *MockTx_Expecter) Exec(ctx interface{}, sql interface{}, args ...interface{}) *MockTx_Exec_Call {
+//   - ctx context.Context
+//   - sql string
+//   - args ...any
+func (_e *MockTx_Expecter) Exec(ctx any, sql any, args ...any) *MockTx_Exec_Call {
 	return &MockTx_Exec_Call{Call: _e.mock.On("Exec",
-		append([]interface{}{ctx, sql}, args...)...)}
+		append([]any{ctx, sql}, args...)...)}
 }
 
 func (_c *MockTx_Exec_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockTx_Exec_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]any, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(any)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -550,23 +610,35 @@ type MockTx_QueryRow_Call struct {
 }
 
 // QueryRow is a helper method to define mock.On call
-//   - ctx
-//   - sql
-//   - args
-func (_e *MockTx_Expecter) QueryRow(ctx interface{}, sql interface{}, args ...interface{}) *MockTx_QueryRow_Call {
+//   - ctx context.Context
+//   - sql string
+//   - args ...any
+func (_e *MockTx_Expecter) QueryRow(ctx any, sql any, args ...any) *MockTx_QueryRow_Call {
 	return &MockTx_QueryRow_Call{Call: _e.mock.On("QueryRow",
-		append([]interface{}{ctx, sql}, args...)...)}
+		append([]any{ctx, sql}, args...)...)}
 }
 
 func (_c *MockTx_QueryRow_Call) Run(run func(ctx context.Context, sql string, args ...any)) *MockTx_QueryRow_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]any, len(args)-2)
-		for i, a := range args[2:] {
-			if a != nil {
-				variadicArgs[i] = a.(any)
-			}
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
 		}
-		run(args[0].(context.Context), args[1].(string), variadicArgs...)
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []any
+		var variadicArgs []any
+		if len(args) > 2 {
+			variadicArgs = args[2].([]any)
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
 	})
 	return _c
 }
@@ -604,14 +676,20 @@ type MockTx_Rollback_Call struct {
 }
 
 // Rollback is a helper method to define mock.On call
-//   - ctx
-func (_e *MockTx_Expecter) Rollback(ctx interface{}) *MockTx_Rollback_Call {
+//   - ctx context.Context
+func (_e *MockTx_Expecter) Rollback(ctx any) *MockTx_Rollback_Call {
 	return &MockTx_Rollback_Call{Call: _e.mock.On("Rollback", ctx)}
 }
 
 func (_c *MockTx_Rollback_Call) Run(run func(ctx context.Context)) *MockTx_Rollback_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -682,21 +760,23 @@ type MockRow_Scan_Call struct {
 }
 
 // Scan is a helper method to define mock.On call
-//   - dest
-func (_e *MockRow_Expecter) Scan(dest ...interface{}) *MockRow_Scan_Call {
+//   - dest ...any
+func (_e *MockRow_Expecter) Scan(dest ...any) *MockRow_Scan_Call {
 	return &MockRow_Scan_Call{Call: _e.mock.On("Scan",
-		append([]interface{}{}, dest...)...)}
+		append([]any{}, dest...)...)}
 }
 
 func (_c *MockRow_Scan_Call) Run(run func(dest ...any)) *MockRow_Scan_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]any, len(args)-0)
-		for i, a := range args[0:] {
-			if a != nil {
-				variadicArgs[i] = a.(any)
-			}
+		var arg0 []any
+		var variadicArgs []any
+		if len(args) > 0 {
+			variadicArgs = args[0].([]any)
 		}
-		run(variadicArgs...)
+		arg0 = variadicArgs
+		run(
+			arg0...,
+		)
 	})
 	return _c
 }

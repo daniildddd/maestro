@@ -41,46 +41,28 @@ func scanUserIntoRow(row *MockRow, u domain.User) {
 		Once()
 }
 
-func fillUserDest(dest []any, u domain.User) {
-	ptrs, ok := dest[0].([]any)
-	if !ok {
-		return
+func fillUserDest(ptrs []any, u domain.User) {
+	if idPtr, ok := ptrs[0].(*uuid.UUID); ok {
+		*idPtr = u.ID
 	}
 
-	idPtr, ok := ptrs[0].(*uuid.UUID)
-	if !ok {
-		return
+	if usernamePtr, ok := ptrs[1].(*string); ok {
+		*usernamePtr = u.Username
 	}
 
-	usernamePtr, ok := ptrs[1].(*string)
-	if !ok {
-		return
+	if passwordHashPtr, ok := ptrs[2].(*string); ok {
+		*passwordHashPtr = u.PasswordHash
 	}
 
-	passwordHashPtr, ok := ptrs[2].(*string)
-	if !ok {
-		return
+	if rolePtr, ok := ptrs[3].(*string); ok {
+		*rolePtr = u.Role
 	}
 
-	rolePtr, ok := ptrs[3].(*string)
-	if !ok {
-		return
+	if createdAtPtr, ok := ptrs[4].(*time.Time); ok {
+		*createdAtPtr = u.CreatedAt
 	}
 
-	createdAtPtr, ok := ptrs[4].(*time.Time)
-	if !ok {
-		return
+	if updatedAtPtr, ok := ptrs[5].(**time.Time); ok {
+		*updatedAtPtr = u.UpdatedAt
 	}
-
-	updatedAtPtr, ok := ptrs[5].(**time.Time)
-	if !ok {
-		return
-	}
-
-	*idPtr = u.ID
-	*usernamePtr = u.Username
-	*passwordHashPtr = u.PasswordHash
-	*rolePtr = u.Role
-	*createdAtPtr = u.CreatedAt
-	*updatedAtPtr = u.UpdatedAt
 }

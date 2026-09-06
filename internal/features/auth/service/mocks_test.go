@@ -63,15 +63,26 @@ type MockPasswordHasher_Verify_Call struct {
 }
 
 // Verify is a helper method to define mock.On call
-//   - hash
-//   - plain
-func (_e *MockPasswordHasher_Expecter) Verify(hash interface{}, plain interface{}) *MockPasswordHasher_Verify_Call {
+//   - hash string
+//   - plain string
+func (_e *MockPasswordHasher_Expecter) Verify(hash any, plain any) *MockPasswordHasher_Verify_Call {
 	return &MockPasswordHasher_Verify_Call{Call: _e.mock.On("Verify", hash, plain)}
 }
 
 func (_c *MockPasswordHasher_Verify_Call) Run(run func(hash string, plain string)) *MockPasswordHasher_Verify_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string), args[1].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -145,15 +156,26 @@ type MockAccessTokenGenerator_Generate_Call struct {
 }
 
 // Generate is a helper method to define mock.On call
-//   - userID
-//   - role
-func (_e *MockAccessTokenGenerator_Expecter) Generate(userID interface{}, role interface{}) *MockAccessTokenGenerator_Generate_Call {
+//   - userID uuid.UUID
+//   - role string
+func (_e *MockAccessTokenGenerator_Expecter) Generate(userID any, role any) *MockAccessTokenGenerator_Generate_Call {
 	return &MockAccessTokenGenerator_Generate_Call{Call: _e.mock.On("Generate", userID, role)}
 }
 
 func (_c *MockAccessTokenGenerator_Generate_Call) Run(run func(userID uuid.UUID, role string)) *MockAccessTokenGenerator_Generate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(uuid.UUID), args[1].(string))
+		var arg0 uuid.UUID
+		if args[0] != nil {
+			arg0 = args[0].(uuid.UUID)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -277,14 +299,20 @@ type MockRefreshTokenManager_Hash_Call struct {
 }
 
 // Hash is a helper method to define mock.On call
-//   - rawToken
-func (_e *MockRefreshTokenManager_Expecter) Hash(rawToken interface{}) *MockRefreshTokenManager_Hash_Call {
+//   - rawToken string
+func (_e *MockRefreshTokenManager_Expecter) Hash(rawToken any) *MockRefreshTokenManager_Hash_Call {
 	return &MockRefreshTokenManager_Hash_Call{Call: _e.mock.On("Hash", rawToken)}
 }
 
 func (_c *MockRefreshTokenManager_Hash_Call) Run(run func(rawToken string)) *MockRefreshTokenManager_Hash_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(string))
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -349,15 +377,26 @@ type MockAuthRepository_DeleteRefreshToken_Call struct {
 }
 
 // DeleteRefreshToken is a helper method to define mock.On call
-//   - ctx
-//   - token
-func (_e *MockAuthRepository_Expecter) DeleteRefreshToken(ctx interface{}, token interface{}) *MockAuthRepository_DeleteRefreshToken_Call {
+//   - ctx context.Context
+//   - token string
+func (_e *MockAuthRepository_Expecter) DeleteRefreshToken(ctx any, token any) *MockAuthRepository_DeleteRefreshToken_Call {
 	return &MockAuthRepository_DeleteRefreshToken_Call{Call: _e.mock.On("DeleteRefreshToken", ctx, token)}
 }
 
 func (_c *MockAuthRepository_DeleteRefreshToken_Call) Run(run func(ctx context.Context, token string)) *MockAuthRepository_DeleteRefreshToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -404,15 +443,26 @@ type MockAuthRepository_GetRefreshTokenByHash_Call struct {
 }
 
 // GetRefreshTokenByHash is a helper method to define mock.On call
-//   - ctx
-//   - token
-func (_e *MockAuthRepository_Expecter) GetRefreshTokenByHash(ctx interface{}, token interface{}) *MockAuthRepository_GetRefreshTokenByHash_Call {
+//   - ctx context.Context
+//   - token string
+func (_e *MockAuthRepository_Expecter) GetRefreshTokenByHash(ctx any, token any) *MockAuthRepository_GetRefreshTokenByHash_Call {
 	return &MockAuthRepository_GetRefreshTokenByHash_Call{Call: _e.mock.On("GetRefreshTokenByHash", ctx, token)}
 }
 
 func (_c *MockAuthRepository_GetRefreshTokenByHash_Call) Run(run func(ctx context.Context, token string)) *MockAuthRepository_GetRefreshTokenByHash_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -459,15 +509,26 @@ type MockAuthRepository_GetUserByID_Call struct {
 }
 
 // GetUserByID is a helper method to define mock.On call
-//   - ctx
-//   - id
-func (_e *MockAuthRepository_Expecter) GetUserByID(ctx interface{}, id interface{}) *MockAuthRepository_GetUserByID_Call {
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *MockAuthRepository_Expecter) GetUserByID(ctx any, id any) *MockAuthRepository_GetUserByID_Call {
 	return &MockAuthRepository_GetUserByID_Call{Call: _e.mock.On("GetUserByID", ctx, id)}
 }
 
 func (_c *MockAuthRepository_GetUserByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *MockAuthRepository_GetUserByID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -514,15 +575,26 @@ type MockAuthRepository_GetUserByName_Call struct {
 }
 
 // GetUserByName is a helper method to define mock.On call
-//   - ctx
-//   - username
-func (_e *MockAuthRepository_Expecter) GetUserByName(ctx interface{}, username interface{}) *MockAuthRepository_GetUserByName_Call {
+//   - ctx context.Context
+//   - username string
+func (_e *MockAuthRepository_Expecter) GetUserByName(ctx any, username any) *MockAuthRepository_GetUserByName_Call {
 	return &MockAuthRepository_GetUserByName_Call{Call: _e.mock.On("GetUserByName", ctx, username)}
 }
 
 func (_c *MockAuthRepository_GetUserByName_Call) Run(run func(ctx context.Context, username string)) *MockAuthRepository_GetUserByName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }
@@ -560,16 +632,32 @@ type MockAuthRepository_RotateRefreshToken_Call struct {
 }
 
 // RotateRefreshToken is a helper method to define mock.On call
-//   - ctx
-//   - oldHash
-//   - newToken
-func (_e *MockAuthRepository_Expecter) RotateRefreshToken(ctx interface{}, oldHash interface{}, newToken interface{}) *MockAuthRepository_RotateRefreshToken_Call {
+//   - ctx context.Context
+//   - oldHash string
+//   - newToken domain.RefreshToken
+func (_e *MockAuthRepository_Expecter) RotateRefreshToken(ctx any, oldHash any, newToken any) *MockAuthRepository_RotateRefreshToken_Call {
 	return &MockAuthRepository_RotateRefreshToken_Call{Call: _e.mock.On("RotateRefreshToken", ctx, oldHash, newToken)}
 }
 
 func (_c *MockAuthRepository_RotateRefreshToken_Call) Run(run func(ctx context.Context, oldHash string, newToken domain.RefreshToken)) *MockAuthRepository_RotateRefreshToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(domain.RefreshToken))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 domain.RefreshToken
+		if args[2] != nil {
+			arg2 = args[2].(domain.RefreshToken)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
 	})
 	return _c
 }
@@ -607,15 +695,26 @@ type MockAuthRepository_SaveRefreshToken_Call struct {
 }
 
 // SaveRefreshToken is a helper method to define mock.On call
-//   - ctx
-//   - token
-func (_e *MockAuthRepository_Expecter) SaveRefreshToken(ctx interface{}, token interface{}) *MockAuthRepository_SaveRefreshToken_Call {
+//   - ctx context.Context
+//   - token domain.RefreshToken
+func (_e *MockAuthRepository_Expecter) SaveRefreshToken(ctx any, token any) *MockAuthRepository_SaveRefreshToken_Call {
 	return &MockAuthRepository_SaveRefreshToken_Call{Call: _e.mock.On("SaveRefreshToken", ctx, token)}
 }
 
 func (_c *MockAuthRepository_SaveRefreshToken_Call) Run(run func(ctx context.Context, token domain.RefreshToken)) *MockAuthRepository_SaveRefreshToken_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(domain.RefreshToken))
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 domain.RefreshToken
+		if args[1] != nil {
+			arg1 = args[1].(domain.RefreshToken)
+		}
+		run(
+			arg0,
+			arg1,
+		)
 	})
 	return _c
 }

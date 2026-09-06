@@ -62,41 +62,25 @@ func TestGetRefreshTokenByHash(t *testing.T) {
 				row.EXPECT().
 					Scan(mock.Anything).
 					Run(func(dest ...any) {
-						ptrs, ok := dest[0].([]any)
-						if !ok {
-							return
+						if idPtr, ok := dest[0].(*uuid.UUID); ok {
+							*idPtr = id
 						}
 
-						idPtr, ok := ptrs[0].(*uuid.UUID)
-						if !ok {
-							return
+						if userIDPtr, ok := dest[1].(*uuid.UUID); ok {
+							*userIDPtr = userID
 						}
 
-						userIDPtr, ok := ptrs[1].(*uuid.UUID)
-						if !ok {
-							return
+						if hashPtr, ok := dest[2].(*string); ok {
+							*hashPtr = "hashed-token"
 						}
 
-						hashPtr, ok := ptrs[2].(*string)
-						if !ok {
-							return
+						if createdAtPtr, ok := dest[3].(*time.Time); ok {
+							*createdAtPtr = createdAt
 						}
 
-						createdAtPtr, ok := ptrs[3].(*time.Time)
-						if !ok {
-							return
+						if expiresAtPtr, ok := dest[4].(*time.Time); ok {
+							*expiresAtPtr = expiresAt
 						}
-
-						expiresAtPtr, ok := ptrs[4].(*time.Time)
-						if !ok {
-							return
-						}
-
-						*idPtr = id
-						*userIDPtr = userID
-						*hashPtr = "hashed-token"
-						*createdAtPtr = createdAt
-						*expiresAtPtr = expiresAt
 					}).
 					Return(nil).
 					Once()

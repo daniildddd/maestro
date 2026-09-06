@@ -9,11 +9,6 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-type RestartRequest struct {
-	IncludeTasks *bool `json:"include_tasks,omitempty"`
-	OnlyFailed   *bool `json:"only_failed,omitempty"`
-}
-
 func (h *ConnectorsHTTPHandler) RestartConnector(w http.ResponseWriter, r *http.Request) {
 	const op = "connectors.transport.RestartConnector"
 
@@ -28,18 +23,19 @@ func (h *ConnectorsHTTPHandler) RestartConnector(w http.ResponseWriter, r *http.
 		return
 	}
 
-	var req RestartRequest
+	includeTasks, err := request.GetBoolQueryParam(r, "include_tasks")
+	if err != nil {
+		responseHandler.ErrorResponse(fmt.Errorf("%s: get include_tasks: %w", op, err))
 
-	if r.ContentLength != 0 {
-		if err := request.DecodeAndValidate(w, r, &req); err != nil {
-			responseHandler.ErrorResponse(fmt.Errorf("%s: decode request: %w", op, err))
-
-			return
-		}
+		return
 	}
 
-	includeTasks := req.IncludeTasks != nil && *req.IncludeTasks
-	onlyFailed := req.OnlyFailed != nil && *req.OnlyFailed
+	onlyFailed, err := request.GetBoolQueryParam(r, "only_failed")
+	if err != nil {
+		responseHandler.ErrorResponse(fmt.Errorf("%s: get only_failed: %w", op, err))
+
+		return
+	}
 
 	connector, err := h.connectorsService.RestartConnector(ctx, connectorID, includeTasks, onlyFailed)
 	if err != nil {

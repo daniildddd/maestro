@@ -71,8 +71,8 @@ lint-dockerfile: ## Lint Dockerfile with hadolint
 lint-trivy: ## Scan filesystem for vulnerabilities with Trivy
 	@docker compose run --rm trivy fs --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
 
-mocks: ## Generate mocks with mockery
-	@mockery
+mocks: ## Generate mocks with mockery (version pinned in go.mod)
+	@go tool mockery
 
 test: ## Run unit tests with race detection and coverage
 	@go test -race -cover ./...

@@ -4,13 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
-	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	"github.com/daniildddd/maestro/internal/features/audit/repository"
 )
 
@@ -19,10 +16,6 @@ type stubCommandTag struct {
 }
 
 func (s stubCommandTag) RowsAffected() int64 { return s.affected }
-
-func nopLogger() *core_logger.Logger {
-	return &core_logger.Logger{Logger: zap.NewNop()}
-}
 
 func newAuditRepo(pool *MockPool) *repository.AuditRepository {
 	return repository.NewAuditRepository(pool)

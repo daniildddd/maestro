@@ -46,21 +46,6 @@ func newConnectorsRequest(t *testing.T, method, path, body string) *http.Request
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func newConnectorsRequestWithoutPathValues(t *testing.T, method, path, body string) *http.Request {
-	t.Helper()
-
-	var req *http.Request
-
-	if body == "" {
-		req = httptest.NewRequest(method, path, http.NoBody)
-	} else {
-		req = httptest.NewRequest(method, path, strings.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
-}
-
 func setConnectorsPathValues(req *http.Request, path string) *http.Request {
 	if path == "/connectors" || path == "/connectors/" {
 		return req

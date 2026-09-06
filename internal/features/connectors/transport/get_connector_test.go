@@ -73,7 +73,7 @@ func TestGetConnector(t *testing.T) {
 			},
 		},
 		{
-			name:       "missing id returns error",
+			name:       "missing connector id returns error",
 			path:       "/connectors/",
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,

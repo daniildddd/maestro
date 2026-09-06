@@ -50,7 +50,7 @@ func TestGetConnectorTask(t *testing.T) {
 			},
 		},
 		{
-			name:       "missing path id returns error",
+			name:       "missing connector id returns error",
 			path:       "/connectors/",
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,

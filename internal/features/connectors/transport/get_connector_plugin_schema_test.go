@@ -78,7 +78,7 @@ func TestGetConnectorPluginSchema(t *testing.T) {
 			},
 		},
 		{
-			name:       "missing path id returns error",
+			name:       "missing connector id returns error",
 			path:       "/connector-plugins//config?importance=all",
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,

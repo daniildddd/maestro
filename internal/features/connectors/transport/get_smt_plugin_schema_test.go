@@ -58,7 +58,7 @@ func TestGetSMTPluginSchema(t *testing.T) {
 			},
 		},
 		{
-			name:       "missing path id returns error",
+			name:       "missing connector id returns error",
 			path:       "/smt-plugins//config?importance=high",
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,

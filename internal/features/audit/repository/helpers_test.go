@@ -15,19 +15,19 @@ import (
 	"github.com/daniildddd/maestro/internal/features/audit/repository"
 )
 
-func nopLogger() *core_logger.Logger {
-	return &core_logger.Logger{Logger: zap.NewNop()}
-}
-
-func newAuditRepo(pool *MockPool) *repository.AuditRepository {
-	return repository.NewAuditRepository(pool, nopLogger())
-}
-
 type stubCommandTag struct {
 	affected int64
 }
 
 func (s stubCommandTag) RowsAffected() int64 { return s.affected }
+
+func nopLogger() *core_logger.Logger {
+	return &core_logger.Logger{Logger: zap.NewNop()}
+}
+
+func newAuditRepo(pool *MockPool) *repository.AuditRepository {
+	return repository.NewAuditRepository(pool)
+}
 
 func mustAuditEvent(t *testing.T, id uuid.UUID) domain.AuditEvent {
 	t.Helper()
@@ -63,15 +63,7 @@ func scanEventIntoRow(row *MockRow, event domain.AuditEvent) {
 	row.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			ptrs := dest
-
-			if len(dest) == 1 {
-				if inner, ok := dest[0].([]any); ok {
-					ptrs = inner
-				}
-			}
-
-			fillEventDest(ptrs, event)
+			fillEventDest(dest, event)
 		}).
 		Return(nil).
 		Once()
@@ -82,15 +74,7 @@ func scanEventIntoRows(rows *MockRows, event domain.AuditEvent) {
 	rows.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			ptrs := dest
-
-			if len(dest) == 1 {
-				if inner, ok := dest[0].([]any); ok {
-					ptrs = inner
-				}
-			}
-
-			fillEventDest(ptrs, event)
+			fillEventDest(dest, event)
 		}).
 		Return(nil).
 		Once()
@@ -216,17 +200,9 @@ func scanCorruptStateIntoRow(row *MockRow, event domain.AuditEvent) {
 	row.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			ptrs := dest
+			fillEventDest(dest, event)
 
-			if len(dest) == 1 {
-				if inner, ok := dest[0].([]any); ok {
-					ptrs = inner
-				}
-			}
-
-			fillEventDest(ptrs, event)
-
-			if stateBeforePtr, ok := ptrs[9].(*[]byte); ok {
+			if stateBeforePtr, ok := dest[9].(*[]byte); ok {
 				*stateBeforePtr = []byte(`{invalid json`)
 			}
 		}).
@@ -238,17 +214,9 @@ func scanCorruptStateAfterIntoRow(row *MockRow, event domain.AuditEvent) {
 	row.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			ptrs := dest
+			fillEventDest(dest, event)
 
-			if len(dest) == 1 {
-				if inner, ok := dest[0].([]any); ok {
-					ptrs = inner
-				}
-			}
-
-			fillEventDest(ptrs, event)
-
-			if stateAfterPtr, ok := ptrs[10].(*[]byte); ok {
+			if stateAfterPtr, ok := dest[10].(*[]byte); ok {
 				*stateAfterPtr = []byte(`{invalid json`)
 			}
 		}).

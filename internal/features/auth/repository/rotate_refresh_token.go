@@ -19,20 +19,22 @@ func (r *AuthRepository) RotateRefreshToken(
 ) error {
 	const op = "auth.repository.RotateRefreshToken"
 
-	var err error
-
-	for attempt := 1; attempt <= maxDeadlockRetries; attempt++ {
-		err = r.rotateOnce(ctx, oldHash, newToken)
+	for attempt := 1; ; attempt++ {
+		err := r.rotateOnce(ctx, oldHash, newToken)
 		if err == nil {
 			return nil
 		}
 
-		if !errors.Is(err, core_postgres_pool.ErrDeadlock) || attempt == maxDeadlockRetries {
+		if !errors.Is(err, core_postgres_pool.ErrDeadlock) {
 			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		if attempt == maxDeadlockRetries {
+			break
 		}
 	}
 
-	return fmt.Errorf("%s: retries exhausted: %w", op, err)
+	return fmt.Errorf("%s: retries exhausted: %w", op, core_postgres_pool.ErrDeadlock)
 }
 
 func (r *AuthRepository) rotateOnce(

@@ -19,13 +19,14 @@ func TestDeleteConnector(t *testing.T) {
 
 	tests := []struct {
 		name       string
+		path       string
 		setupMock  func(m *MockConnectorsService)
 		wantStatus int
 		wantCode   string
-		rawRequest bool
 	}{
 		{
 			name: "success returns no content",
+			path: "/connectors/pg-connector",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().
 					Delete(mock.Anything, "pg-connector").
@@ -36,13 +37,14 @@ func TestDeleteConnector(t *testing.T) {
 		},
 		{
 			name:       "missing path id returns error",
+			path:       "/connectors/",
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,
 			wantCode:   "INVALID_PATH_PARAM",
-			rawRequest: true,
 		},
 		{
 			name: "service error returns mapped error",
+			path: "/connectors/pg-connector",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().
 					Delete(mock.Anything, "pg-connector").
@@ -69,11 +71,7 @@ func TestDeleteConnector(t *testing.T) {
 			rec := httptest.NewRecorder()
 			rw := core_http_response.NewResponseWriter(rec)
 
-			req := newConnectorsRequest(t, http.MethodDelete, "/connectors/pg-connector", "")
-
-			if tt.rawRequest {
-				req = newConnectorsRequestWithoutPathValues(t, http.MethodDelete, "/connectors/pg-connector", "")
-			}
+			req := newConnectorsRequest(t, http.MethodDelete, tt.path, "")
 
 			handler.DeleteConnector(rw, req)
 

@@ -72,7 +72,7 @@ func TestDeleteUser(t *testing.T) {
 			wantCode:   "INVALID_PATH_PARAM",
 		},
 		{
-			name:   "user not found returns USER_NOT_FOUND",
+			name:   "service error is wrapped",
 			pathID: userID.String(),
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().

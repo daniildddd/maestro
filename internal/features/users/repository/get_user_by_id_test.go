@@ -59,7 +59,7 @@ func TestGetUserByID(t *testing.T) {
 					Return(row).
 					Once()
 
-				scanUserIntoRow(row, mustNewUser(t, id, "alice", "hash", "admin", createdAt, &updatedAt))
+				scanUserIntoRow(row, mustUserRow(id, "alice", "hash", "admin", createdAt, &updatedAt))
 			},
 			wantUser: mustNewUser(t,
 				id,
@@ -84,7 +84,7 @@ func TestGetUserByID(t *testing.T) {
 					Return(row).
 					Once()
 
-				scanUserIntoRow(row, mustNewUser(t, id, "bob", "hash", "user", createdAt, nil))
+				scanUserIntoRow(row, mustUserRow(id, "bob", "hash", "user", createdAt, nil))
 			},
 			wantUser: mustNewUser(t,
 				id,

@@ -56,7 +56,7 @@ func TestDeleteUser(t *testing.T) {
 					Return(row).
 					Once()
 
-				scanUserIntoRow(row, mustNewUser(t, userID, "deleteduser", "hash", "user", createdAt, &updatedAt))
+				scanUserIntoRow(row, mustUserRow(userID, "deleteduser", "hash", "user", createdAt, &updatedAt))
 			},
 			wantUser: mustNewUser(t, userID, "deleteduser", "hash", "user", createdAt, &updatedAt),
 		},

@@ -94,7 +94,7 @@ func TestGetMe(t *testing.T) {
 			},
 		},
 		{
-			name:   "user not found returns USER_NOT_FOUND",
+			name:   "service error is wrapped",
 			userID: userID,
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().

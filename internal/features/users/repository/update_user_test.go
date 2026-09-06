@@ -61,8 +61,8 @@ func TestUpdateUser(t *testing.T) {
 
 				scanUserPairIntoRow(
 					row,
-					mustNewUser(t, userID, "olduser", "hash", "user", createdAt, &updatedAt),
-					mustNewUser(t, userID, "updateduser", "hash", "user", createdAt, &updatedAt),
+					mustUserRow(userID, "olduser", "hash", "user", createdAt, &updatedAt),
+					mustUserRow(userID, "updateduser", "hash", "user", createdAt, &updatedAt),
 				)
 			},
 			wantBefore: mustNewUser(t, userID, "olduser", "hash", "user", createdAt, &updatedAt),

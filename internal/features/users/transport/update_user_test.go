@@ -163,7 +163,7 @@ func TestUpdateUser(t *testing.T) {
 			wantCode:    "INVALID_PATH_PARAM",
 		},
 		{
-			name:        "user not found returns USER_NOT_FOUND",
+			name:        "service error is wrapped",
 			pathID:      userID.String(),
 			contentType: "application/json",
 			body:        `{"username":"updateduser"}`,

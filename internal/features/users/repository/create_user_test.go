@@ -21,12 +21,14 @@ func TestCreateUser(t *testing.T) {
 
 	const opTimeout = 100 * time.Millisecond
 
+	createdAt := time.Now().Add(-time.Hour)
+
 	user := mustNewUser(t,
 		uuid.New(),
 		"alice",
 		"hash",
 		"admin",
-		time.Now().Add(-time.Hour),
+		createdAt,
 		nil,
 	)
 
@@ -68,7 +70,7 @@ func TestCreateUser(t *testing.T) {
 					Return(row).
 					Once()
 
-				scanUserIntoRow(row, user)
+				scanUserIntoRow(row, mustUserRow(user.ID, "alice", "hash", "admin", createdAt, nil))
 			},
 			wantUser: user,
 		},

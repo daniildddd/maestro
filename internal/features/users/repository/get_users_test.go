@@ -62,7 +62,7 @@ func TestGetUsers(t *testing.T) {
 					Return(true).
 					Once()
 
-				scanUserIntoRows(rows, mustNewUser(t, userID, "alice", "hash", "admin", createdAt, &updatedAt))
+				scanUserIntoRows(rows, mustUserRow(userID, "alice", "hash", "admin", createdAt, &updatedAt))
 
 				rows.EXPECT().
 					Next().

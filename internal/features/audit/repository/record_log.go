@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
+	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 )
 
 func (r *AuditRepository) Record(
@@ -17,6 +18,8 @@ func (r *AuditRepository) Record(
 	event domain.AuditEvent,
 ) {
 	const op = "audit.repository.Record"
+
+	log := core_logger.FromContext(ctx)
 
 	ctx, cancel := context.WithTimeout(ctx, r.pool.OpTimeout())
 	defer cancel()
@@ -34,7 +37,7 @@ func (r *AuditRepository) Record(
 
 	stateBefore, err := marshalState(event.StateBefore)
 	if err != nil {
-		r.logger.Error(
+		log.Error(
 			"record audit event",
 			zap.String("action", string(event.Action)),
 			zap.String("outcome", string(event.Outcome)),
@@ -46,7 +49,7 @@ func (r *AuditRepository) Record(
 
 	stateAfter, err := marshalState(event.StateAfter)
 	if err != nil {
-		r.logger.Error(
+		log.Error(
 			"record audit event",
 			zap.String("action", string(event.Action)),
 			zap.String("outcome", string(event.Outcome)),
@@ -76,7 +79,7 @@ func (r *AuditRepository) Record(
 		event.CreatedAt,
 	)
 	if err != nil {
-		r.logger.Error(
+		log.Error(
 			"record audit event",
 			zap.String("action", string(event.Action)),
 			zap.String("outcome", string(event.Outcome)),

@@ -74,7 +74,7 @@ func run() int {
 
 	authRepository := repository.NewAuthRepository(postgresPool)
 
-	auditRepository := auditrepository.NewAuditRepository(postgresPool, logger)
+	auditRepository := auditrepository.NewAuditRepository(postgresPool)
 
 	auditService := auditservice.NewAuditService(auditRepository)
 

@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -29,6 +28,8 @@ func newAuditRepo(pool *MockPool) *repository.AuditRepository {
 	return repository.NewAuditRepository(pool)
 }
 
+func strPtr(s string) *string { return &s }
+
 func mustAuditEvent(t *testing.T, id uuid.UUID) domain.AuditEvent {
 	t.Helper()
 
@@ -51,6 +52,8 @@ func mustAuditEvent(t *testing.T, id uuid.UUID) domain.AuditEvent {
 		SubjectType:   domain.AuditSubjectUser,
 		SubjectID:     subjectID,
 		SubjectName:   subjectName,
+		StateBefore:   map[string]any{"role": "user"},
+		StateAfter:    map[string]any{"role": "admin"},
 		RequestID:     requestID,
 		IP:            ip,
 		UserAgent:     userAgent,
@@ -58,168 +61,133 @@ func mustAuditEvent(t *testing.T, id uuid.UUID) domain.AuditEvent {
 	}
 }
 
+type auditRowFixture struct {
+	id            uuid.UUID
+	action        string
+	outcome       string
+	failureReason *string
+	actorID       *uuid.UUID
+	actorLogin    *string
+	subjectType   string
+	subjectID     *string
+	subjectName   *string
+	stateBefore   []byte
+	stateAfter    []byte
+	requestID     *string
+	ip            *string
+	userAgent     *string
+	createdAt     time.Time
+}
+
+func mustAuditRow(id uuid.UUID) auditRowFixture {
+	actorID := id
+
+	return auditRowFixture{
+		id:            id,
+		action:        "auth.login",
+		outcome:       "success",
+		failureReason: strPtr("invalid_credentials"),
+		actorID:       &actorID,
+		actorLogin:    strPtr("alice"),
+		subjectType:   "user",
+		subjectID:     strPtr(id.String()),
+		subjectName:   strPtr("alice"),
+		stateBefore:   []byte(`{"role":"user"}`),
+		stateAfter:    []byte(`{"role":"admin"}`),
+		requestID:     strPtr("req-" + id.String()),
+		ip:            strPtr("203.0.113.7"),
+		userAgent:     strPtr("test-agent"),
+		createdAt:     time.Now().UTC().Truncate(time.Second),
+	}
+}
+
 //nolint:unparam // test helper mirrors the audit_logs table row; any argument may vary per test
-func scanEventIntoRow(row *MockRow, event domain.AuditEvent) {
+func scanEventIntoRow(row *MockRow, fixture auditRowFixture) {
 	row.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			fillEventDest(dest, event)
+			fillEventDest(dest, fixture)
 		}).
 		Return(nil).
 		Once()
 }
 
 //nolint:unparam // test helper mirrors the audit_logs table rows; any argument may vary per test
-func scanEventIntoRows(rows *MockRows, event domain.AuditEvent) {
+func scanEventIntoRows(rows *MockRows, fixture auditRowFixture) {
 	rows.EXPECT().
 		Scan(mock.Anything).
 		Run(func(dest ...any) {
-			fillEventDest(dest, event)
+			fillEventDest(dest, fixture)
 		}).
 		Return(nil).
 		Once()
 }
 
-func fillEventDest(ptrs []any, event domain.AuditEvent) {
-	fillEventCoreDest(ptrs, event)
-	fillEventStateDest(ptrs, event)
+func fillEventDest(ptrs []any, row auditRowFixture) {
+	fillEventCoreDest(ptrs, row)
+	fillEventStateDest(ptrs, row)
 }
 
-func fillEventCoreDest(ptrs []any, event domain.AuditEvent) {
+func fillEventCoreDest(ptrs []any, row auditRowFixture) {
 	if idPtr, ok := ptrs[0].(*uuid.UUID); ok {
-		*idPtr = event.ID
+		*idPtr = row.id
 	}
 
 	if actionPtr, ok := ptrs[1].(*string); ok {
-		*actionPtr = string(event.Action)
+		*actionPtr = row.action
 	}
 
 	if outcomePtr, ok := ptrs[2].(*string); ok {
-		*outcomePtr = string(event.Outcome)
+		*outcomePtr = row.outcome
 	}
 
 	if failureReasonPP, ok := ptrs[3].(**string); ok {
-		if event.FailureReason != "" {
-			val := event.FailureReason
-			*failureReasonPP = &val
-		}
+		*failureReasonPP = row.failureReason
 	}
 
 	if actorIDPP, ok := ptrs[4].(**uuid.UUID); ok {
-		if event.ActorID != uuid.Nil {
-			val := event.ActorID
-			*actorIDPP = &val
-		}
+		*actorIDPP = row.actorID
 	}
 
 	if actorLoginPP, ok := ptrs[5].(**string); ok {
-		if event.ActorLogin != "" {
-			val := event.ActorLogin
-			*actorLoginPP = &val
-		}
+		*actorLoginPP = row.actorLogin
 	}
 
 	if subjectTypePtr, ok := ptrs[6].(*string); ok {
-		*subjectTypePtr = event.SubjectType
+		*subjectTypePtr = row.subjectType
 	}
 
 	if subjectIDPP, ok := ptrs[7].(**string); ok {
-		if event.SubjectID != "" {
-			val := event.SubjectID
-			*subjectIDPP = &val
-		}
+		*subjectIDPP = row.subjectID
 	}
 
 	if subjectNamePP, ok := ptrs[8].(**string); ok {
-		if event.SubjectName != "" {
-			val := event.SubjectName
-			*subjectNamePP = &val
-		}
+		*subjectNamePP = row.subjectName
 	}
 }
 
-func fillEventStateDest(ptrs []any, event domain.AuditEvent) {
+func fillEventStateDest(ptrs []any, row auditRowFixture) {
 	if stateBeforePtr, ok := ptrs[9].(*[]byte); ok {
-		if event.StateBefore != nil {
-			encoded, err := json.Marshal(event.StateBefore)
-			if err != nil {
-				panic("unserializable test state_before: " + err.Error())
-			}
-
-			*stateBeforePtr = encoded
-		}
+		*stateBeforePtr = row.stateBefore
 	}
 
 	if stateAfterPtr, ok := ptrs[10].(*[]byte); ok {
-		if event.StateAfter != nil {
-			encoded, err := json.Marshal(event.StateAfter)
-			if err != nil {
-				panic("unserializable test state_after: " + err.Error())
-			}
-
-			*stateAfterPtr = encoded
-		}
+		*stateAfterPtr = row.stateAfter
 	}
 
 	if requestIDPP, ok := ptrs[11].(**string); ok {
-		if event.RequestID != "" {
-			val := event.RequestID
-			*requestIDPP = &val
-		}
+		*requestIDPP = row.requestID
 	}
 
 	if ipPP, ok := ptrs[12].(**string); ok {
-		if event.IP != "" {
-			val := event.IP
-			*ipPP = &val
-		}
+		*ipPP = row.ip
 	}
 
 	if userAgentPP, ok := ptrs[13].(**string); ok {
-		if event.UserAgent != "" {
-			val := event.UserAgent
-			*userAgentPP = &val
-		}
+		*userAgentPP = row.userAgent
 	}
 
 	if createdAtPtr, ok := ptrs[14].(*time.Time); ok {
-		*createdAtPtr = event.CreatedAt
+		*createdAtPtr = row.createdAt
 	}
-}
-
-func corruptStateEvent(t *testing.T, id uuid.UUID) domain.AuditEvent {
-	t.Helper()
-
-	event := mustAuditEvent(t, id)
-	event.StateBefore = map[string]any{"state": "broken"}
-
-	return event
-}
-
-func scanCorruptStateIntoRow(row *MockRow, event domain.AuditEvent) {
-	row.EXPECT().
-		Scan(mock.Anything).
-		Run(func(dest ...any) {
-			fillEventDest(dest, event)
-
-			if stateBeforePtr, ok := dest[9].(*[]byte); ok {
-				*stateBeforePtr = []byte(`{invalid json`)
-			}
-		}).
-		Return(nil).
-		Once()
-}
-
-func scanCorruptStateAfterIntoRow(row *MockRow, event domain.AuditEvent) {
-	row.EXPECT().
-		Scan(mock.Anything).
-		Run(func(dest ...any) {
-			fillEventDest(dest, event)
-
-			if stateAfterPtr, ok := dest[10].(*[]byte); ok {
-				*stateAfterPtr = []byte(`{invalid json`)
-			}
-		}).
-		Return(nil).
-		Once()
 }

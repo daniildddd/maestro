@@ -79,28 +79,6 @@ func TestRecord(t *testing.T) {
 			},
 		},
 		{
-			name: "exec error is logged and does not propagate",
-			event: domain.AuditEvent{
-				ID:          uuid.New(),
-				Action:      domain.ActionConnectorCreated,
-				Outcome:     domain.OutcomeSuccess,
-				SubjectType: domain.AuditSubjectConnector,
-				CreatedAt:   time.Now().UTC(),
-			},
-			setup: func(pool *MockPool) {
-				pool.EXPECT().
-					OpTimeout().
-					Return(opTimeout).
-					Once()
-
-				pool.EXPECT().
-					Exec(mock.Anything, mock.Anything, mock.Anything).
-					Return(nil, assert.AnError).
-					Once()
-			},
-			wantLog: true,
-		},
-		{
 			name: "unserializable state before is logged",
 			event: domain.AuditEvent{
 				ID:          uuid.New(),
@@ -132,6 +110,28 @@ func TestRecord(t *testing.T) {
 				pool.EXPECT().
 					OpTimeout().
 					Return(opTimeout).
+					Once()
+			},
+			wantLog: true,
+		},
+		{
+			name: "exec error is logged and does not propagate",
+			event: domain.AuditEvent{
+				ID:          uuid.New(),
+				Action:      domain.ActionConnectorCreated,
+				Outcome:     domain.OutcomeSuccess,
+				SubjectType: domain.AuditSubjectConnector,
+				CreatedAt:   time.Now().UTC(),
+			},
+			setup: func(pool *MockPool) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					Exec(mock.Anything, mock.Anything, mock.Anything).
+					Return(nil, assert.AnError).
 					Once()
 			},
 			wantLog: true,

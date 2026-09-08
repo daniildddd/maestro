@@ -99,19 +99,6 @@ func TestChangeOwnPassword(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "wrong old password returns INVALID_CREDENTIALS",
-			body:        `{"old_password":"wrong-pass","new_password":"newSecret123"}`,
-			contentType: "application/json",
-			setupMock: func(m *MockUsersService) {
-				m.EXPECT().
-					ChangeOwnPassword(mock.Anything, userID, "wrong-pass", "newSecret123").
-					Return(errs.ErrInvalidCredentials).
-					Once()
-			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_CREDENTIALS",
-		},
-		{
 			name:        "malformed json returns INVALID_REQUEST_BODY",
 			body:        `{"old_password":`,
 			contentType: "application/json",
@@ -150,6 +137,19 @@ func TestChangeOwnPassword(t *testing.T) {
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name:        "wrong old password returns INVALID_CREDENTIALS",
+			body:        `{"old_password":"wrong-pass","new_password":"newSecret123"}`,
+			contentType: "application/json",
+			setupMock: func(m *MockUsersService) {
+				m.EXPECT().
+					ChangeOwnPassword(mock.Anything, userID, "wrong-pass", "newSecret123").
+					Return(errs.ErrInvalidCredentials).
+					Once()
+			},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_CREDENTIALS",
 		},
 		{
 			name:        "internal error is mapped to INTERNAL_ERROR",

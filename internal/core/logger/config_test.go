@@ -32,16 +32,6 @@ func TestNewConfig(t *testing.T) {
 			errMsg: "",
 		},
 		{
-			name: "missing required FOLDER returns error",
-			envSetup: func(t *testing.T) {
-				t.Helper()
-				t.Setenv("LOGGER_LEVEL", "DEBUG")
-				unsetEnvForTest(t, "LOGGER_FOLDER")
-			},
-			wantCfg: logger.Config{},
-			errMsg:  "FOLDER missing",
-		},
-		{
 			name: "default level applied when LOGGER_LEVEL unset",
 			envSetup: func(t *testing.T) {
 				t.Helper()
@@ -52,6 +42,16 @@ func TestNewConfig(t *testing.T) {
 				Level:  "DEBUG",
 				Folder: "/test",
 			},
+		},
+		{
+			name: "missing required FOLDER returns error",
+			envSetup: func(t *testing.T) {
+				t.Helper()
+				t.Setenv("LOGGER_LEVEL", "DEBUG")
+				unsetEnvForTest(t, "LOGGER_FOLDER")
+			},
+			wantCfg: logger.Config{},
+			errMsg:  "FOLDER missing",
 		},
 	}
 

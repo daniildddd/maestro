@@ -64,6 +64,25 @@ func TestLogout(t *testing.T) {
 			},
 		},
 		{
+			name:     "repository error is wrapped and unwrappable via errors.Is",
+			rawToken: "raw-token",
+			setupMocks: func(
+				repo *MockAuthRepository,
+				refreshGen *MockRefreshTokenManager,
+			) {
+				refreshGen.EXPECT().
+					Hash("raw-token").
+					Return("hashed-token").
+					Once()
+
+				repo.EXPECT().
+					GetRefreshTokenByHash(mock.Anything, "hashed-token").
+					Return(domain.RefreshToken{}, errs.ErrInternal).
+					Once()
+			},
+			wantErrIs: errs.ErrInternal,
+		},
+		{
 			name:     "delete error is wrapped and unwrappable via errors.Is",
 			rawToken: "raw-token",
 			setupMocks: func(
@@ -83,25 +102,6 @@ func TestLogout(t *testing.T) {
 				repo.EXPECT().
 					DeleteRefreshToken(mock.Anything, "hashed-token").
 					Return(errs.ErrInternal).
-					Once()
-			},
-			wantErrIs: errs.ErrInternal,
-		},
-		{
-			name:     "repository error is wrapped and unwrappable via errors.Is",
-			rawToken: "raw-token",
-			setupMocks: func(
-				repo *MockAuthRepository,
-				refreshGen *MockRefreshTokenManager,
-			) {
-				refreshGen.EXPECT().
-					Hash("raw-token").
-					Return("hashed-token").
-					Once()
-
-				repo.EXPECT().
-					GetRefreshTokenByHash(mock.Anything, "hashed-token").
-					Return(domain.RefreshToken{}, errs.ErrInternal).
 					Once()
 			},
 			wantErrIs: errs.ErrInternal,

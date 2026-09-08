@@ -40,13 +40,6 @@ func TestNewUser(t *testing.T) {
 			wantErr:      domain.ErrInvalidUsername,
 		},
 		{
-			name:         "unknown role rejected",
-			username:     "alice",
-			passwordHash: "hashed-password-123",
-			role:         "root",
-			wantErr:      domain.ErrInvalidRole,
-		},
-		{
 			name:         "username too long rejected",
 			username:     strings.Repeat("a", 33),
 			passwordHash: "hashed-password-123",
@@ -73,6 +66,13 @@ func TestNewUser(t *testing.T) {
 			passwordHash: "hashed-password-123",
 			role:         "admin",
 			wantErr:      domain.ErrInvalidUsername,
+		},
+		{
+			name:         "unknown role rejected",
+			username:     "alice",
+			passwordHash: "hashed-password-123",
+			role:         "root",
+			wantErr:      domain.ErrInvalidRole,
 		},
 		{
 			name:         "empty role rejected",

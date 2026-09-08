@@ -81,19 +81,6 @@ func TestCreateUser(t *testing.T) {
 			wantIs: errs.ErrValidationFailed,
 		},
 		{
-			name:     "invalid role returns validation error",
-			username: "alice",
-			password: "secret123",
-			role:     "root",
-			setupMock: func(_ *MockUsersRepository, hasher *MockPasswordHasher) {
-				hasher.EXPECT().
-					Hash("secret123").
-					Return("hashed-secret123", nil).
-					Once()
-			},
-			wantIs: errs.ErrValidationFailed,
-		},
-		{
 			name:     "hasher error is wrapped",
 			username: "alice",
 			password: "secret123",
@@ -105,6 +92,19 @@ func TestCreateUser(t *testing.T) {
 					Once()
 			},
 			wantIs: errs.ErrInternal,
+		},
+		{
+			name:     "invalid role returns validation error",
+			username: "alice",
+			password: "secret123",
+			role:     "root",
+			setupMock: func(_ *MockUsersRepository, hasher *MockPasswordHasher) {
+				hasher.EXPECT().
+					Hash("secret123").
+					Return("hashed-secret123", nil).
+					Once()
+			},
+			wantIs: errs.ErrValidationFailed,
 		},
 		{
 			name:     "duplicate username propagates conflict",

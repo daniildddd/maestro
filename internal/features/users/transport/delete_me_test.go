@@ -51,19 +51,6 @@ func TestDeleteMe(t *testing.T) {
 			wantStatus: http.StatusNoContent,
 		},
 		{
-			name:        "wrong password returns INVALID_CREDENTIALS",
-			body:        `{"password":"wrong-pass"}`,
-			contentType: "application/json",
-			setupMock: func(m *MockUsersService) {
-				m.EXPECT().
-					DeleteMe(mock.Anything, userID, "wrong-pass").
-					Return(errs.ErrInvalidCredentials).
-					Once()
-			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_CREDENTIALS",
-		},
-		{
 			name:        "missing password returns VALIDATION_FAILED",
 			body:        `{}`,
 			contentType: "application/json",
@@ -126,6 +113,19 @@ func TestDeleteMe(t *testing.T) {
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name:        "wrong password returns INVALID_CREDENTIALS",
+			body:        `{"password":"wrong-pass"}`,
+			contentType: "application/json",
+			setupMock: func(m *MockUsersService) {
+				m.EXPECT().
+					DeleteMe(mock.Anything, userID, "wrong-pass").
+					Return(errs.ErrInvalidCredentials).
+					Once()
+			},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_CREDENTIALS",
 		},
 	}
 

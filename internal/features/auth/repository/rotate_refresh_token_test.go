@@ -81,6 +81,21 @@ func TestRotateRefreshToken(t *testing.T) {
 			},
 		},
 		{
+			name: "begin error is wrapped",
+			setup: func(pool *MockPool, _ *MockTx) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					Begin(mock.Anything).
+					Return(nil, errs.ErrInternal).
+					Once()
+			},
+			wantIs: errs.ErrInternal,
+		},
+		{
 			name: "delete old token error is wrapped without retry",
 			setup: func(pool *MockPool, tx *MockTx) {
 				pool.EXPECT().
@@ -168,21 +183,6 @@ func TestRotateRefreshToken(t *testing.T) {
 					Return(nil).
 					Times(2)
 			},
-		},
-		{
-			name: "begin error is wrapped",
-			setup: func(pool *MockPool, _ *MockTx) {
-				pool.EXPECT().
-					OpTimeout().
-					Return(opTimeout).
-					Once()
-
-				pool.EXPECT().
-					Begin(mock.Anything).
-					Return(nil, errs.ErrInternal).
-					Once()
-			},
-			wantIs: errs.ErrInternal,
 		},
 		{
 			name: "insert error rolls back and is wrapped",

@@ -126,32 +126,6 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "unknown role passes transport and is rejected by service",
-			body:        `{"username":"alice","password":"secret123","role":"root"}`,
-			contentType: "application/json",
-			setupMock: func(m *MockUsersService) {
-				m.EXPECT().
-					CreateUser(mock.Anything, "alice", "secret123", "root").
-					Return(domain.User{}, errs.ErrValidationFailed).
-					Once()
-			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "VALIDATION_FAILED",
-		},
-		{
-			name:        "invalid username charset passes transport and is rejected by service",
-			body:        `{"username":"alice!","password":"secret123","role":"admin"}`,
-			contentType: "application/json",
-			setupMock: func(m *MockUsersService) {
-				m.EXPECT().
-					CreateUser(mock.Anything, "alice!", "secret123", "admin").
-					Return(domain.User{}, errs.ErrValidationFailed).
-					Once()
-			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "VALIDATION_FAILED",
-		},
-		{
 			name:        "malformed json rejected",
 			body:        `{"username":`,
 			contentType: "application/json",
@@ -182,6 +156,32 @@ func TestCreateUser(t *testing.T) {
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name:        "unknown role passes transport and is rejected by service",
+			body:        `{"username":"alice","password":"secret123","role":"root"}`,
+			contentType: "application/json",
+			setupMock: func(m *MockUsersService) {
+				m.EXPECT().
+					CreateUser(mock.Anything, "alice", "secret123", "root").
+					Return(domain.User{}, errs.ErrValidationFailed).
+					Once()
+			},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "VALIDATION_FAILED",
+		},
+		{
+			name:        "invalid username charset passes transport and is rejected by service",
+			body:        `{"username":"alice!","password":"secret123","role":"admin"}`,
+			contentType: "application/json",
+			setupMock: func(m *MockUsersService) {
+				m.EXPECT().
+					CreateUser(mock.Anything, "alice!", "secret123", "admin").
+					Return(domain.User{}, errs.ErrValidationFailed).
+					Once()
+			},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "VALIDATION_FAILED",
 		},
 		{
 			name:        "username conflict returns 409",

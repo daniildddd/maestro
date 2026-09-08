@@ -60,6 +60,16 @@ func TestDeleteMe(t *testing.T) {
 			},
 		},
 		{
+			name: "user not found is passed through",
+			setupMocks: func(repo *MockUsersRepository, _ *MockPasswordHasher) {
+				repo.EXPECT().
+					GetUserByID(mock.Anything, userID).
+					Return(domain.User{}, errs.ErrUserNotFound).
+					Once()
+			},
+			wantIs: errs.ErrUserNotFound,
+		},
+		{
 			name: "wrong password returns ErrInvalidCredentials",
 			setupMocks: func(repo *MockUsersRepository, hasher *MockPasswordHasher) {
 				repo.EXPECT().
@@ -80,16 +90,6 @@ func TestDeleteMe(t *testing.T) {
 					Once()
 			},
 			wantIs: errs.ErrInvalidCredentials,
-		},
-		{
-			name: "user not found is passed through",
-			setupMocks: func(repo *MockUsersRepository, _ *MockPasswordHasher) {
-				repo.EXPECT().
-					GetUserByID(mock.Anything, userID).
-					Return(domain.User{}, errs.ErrUserNotFound).
-					Once()
-			},
-			wantIs: errs.ErrUserNotFound,
 		},
 		{
 			name: "delete error is wrapped",

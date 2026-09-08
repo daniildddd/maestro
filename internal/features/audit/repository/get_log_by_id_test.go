@@ -68,6 +68,27 @@ func TestGetLogByID(t *testing.T) {
 			wantIs:  errs.ErrAuditLogNotFound,
 		},
 		{
+			name: "scan error is wrapped",
+			setup: func(pool *MockPool, row *MockRow) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					QueryRow(mock.Anything, mock.Anything, []any{id}).
+					Return(row).
+					Once()
+
+				row.EXPECT().
+					Scan(mock.Anything).
+					Return(errs.ErrInternal).
+					Once()
+			},
+			wantErr: true,
+			wantIs:  errs.ErrInternal,
+		},
+		{
 			name: "corrupt state json in state before is wrapped",
 			setup: func(pool *MockPool, row *MockRow) {
 				pool.EXPECT().
@@ -106,27 +127,6 @@ func TestGetLogByID(t *testing.T) {
 				scanEventIntoRow(row, fixture)
 			},
 			wantErr: true,
-		},
-		{
-			name: "scan error is wrapped",
-			setup: func(pool *MockPool, row *MockRow) {
-				pool.EXPECT().
-					OpTimeout().
-					Return(opTimeout).
-					Once()
-
-				pool.EXPECT().
-					QueryRow(mock.Anything, mock.Anything, []any{id}).
-					Return(row).
-					Once()
-
-				row.EXPECT().
-					Scan(mock.Anything).
-					Return(errs.ErrInternal).
-					Once()
-			},
-			wantErr: true,
-			wantIs:  errs.ErrInternal,
 		},
 	}
 

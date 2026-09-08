@@ -81,3 +81,67 @@ func TestGetIntQueryParam(t *testing.T) {
 		})
 	}
 }
+
+func TestGetBoolQueryParam(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		query   string
+		key     string
+		wantVal bool
+		wantIs  error
+	}{
+		{
+			name:    "true value returns true",
+			query:   "include_tasks=true",
+			key:     "include_tasks",
+			wantVal: true,
+		},
+		{
+			name:    "false value returns false",
+			query:   "only_failed=false",
+			key:     "only_failed",
+			wantVal: false,
+		},
+		{
+			name:  "unknown key returns false without error",
+			query: "include_tasks=true",
+			key:   "only_failed",
+		},
+		{
+			name:    "empty param value returns false without error",
+			query:   "include_tasks=",
+			key:     "include_tasks",
+			wantVal: false,
+		},
+		{
+			name:   "non-boolean returns ErrInvalidQueryParam",
+			query:  "include_tasks=yes",
+			key:    "include_tasks",
+			wantIs: errs.ErrInvalidQueryParam,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			is := assert.New(t)
+			must := require.New(t)
+
+			req := httptest.NewRequest(http.MethodGet, "/?"+tt.query, http.NoBody)
+
+			got, err := request.GetBoolQueryParam(req, tt.key)
+
+			if tt.wantIs != nil {
+				must.Error(err)
+				is.ErrorIs(err, tt.wantIs)
+
+				return
+			}
+
+			must.NoError(err)
+			is.Equal(tt.wantVal, got)
+		})
+	}
+}

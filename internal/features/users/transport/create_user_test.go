@@ -52,8 +52,12 @@ func TestCreateUser(t *testing.T) {
 		wantBody    transport.CreateUserResponse
 	}{
 		{
-			name:        "success creates user",
-			body:        `{"username":"alice","password":"secret123","role":"admin"}`,
+			name: "success creates user",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "admin"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
@@ -86,16 +90,24 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name:        "invalid username rejected",
-			body:        `{"username":"ab","password":"secret123","role":"admin"}`,
+			name: "invalid username rejected",
+			body: `{
+				"username": "ab",
+				"password": "secret123",
+				"role": "admin"
+			}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "password too short rejected",
-			body:        `{"username":"alice","password":"1234567","role":"admin"}`,
+			name: "password too short rejected",
+			body: `{
+				"username": "alice",
+				"password": "1234567",
+				"role": "admin"
+			}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
@@ -118,8 +130,11 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "missing role rejected",
-			body:        `{"username":"alice","password":"secret123"}`,
+			name: "missing role rejected",
+			body: `{
+				"username": "alice",
+				"password": "secret123"
+			}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
@@ -142,24 +157,37 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
-			name:        "unknown field rejected",
-			body:        `{"username":"alice","password":"secret123","role":"admin","extra":1}`,
+			name: "unknown field rejected",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "admin",
+				"extra": 1
+			}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
-			name:        "missing content type rejected",
-			body:        `{"username":"alice","password":"secret123","role":"admin"}`,
+			name: "missing content type rejected",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "admin"
+			}`,
 			contentType: "",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
 		},
 		{
-			name:        "unknown role passes transport and is rejected by service",
-			body:        `{"username":"alice","password":"secret123","role":"root"}`,
+			name: "unknown role passes transport and is rejected by service",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "root"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
@@ -171,8 +199,12 @@ func TestCreateUser(t *testing.T) {
 			wantCode:   "VALIDATION_FAILED",
 		},
 		{
-			name:        "invalid username charset passes transport and is rejected by service",
-			body:        `{"username":"alice!","password":"secret123","role":"admin"}`,
+			name: "invalid username charset passes transport and is rejected by service",
+			body: `{
+				"username": "alice!",
+				"password": "secret123",
+				"role": "admin"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
@@ -184,8 +216,12 @@ func TestCreateUser(t *testing.T) {
 			wantCode:   "VALIDATION_FAILED",
 		},
 		{
-			name:        "username conflict returns 409",
-			body:        `{"username":"alice","password":"secret123","role":"admin"}`,
+			name: "username conflict returns 409",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "admin"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
@@ -197,8 +233,12 @@ func TestCreateUser(t *testing.T) {
 			wantCode:   "USERNAME_CONFLICT",
 		},
 		{
-			name:        "service error returns 500",
-			body:        `{"username":"alice","password":"secret123","role":"admin"}`,
+			name: "service error returns 500",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "admin"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().

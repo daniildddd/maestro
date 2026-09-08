@@ -39,8 +39,11 @@ func TestChangeOwnPassword(t *testing.T) {
 		wantCode    string
 	}{
 		{
-			name:        "success changes own password",
-			body:        `{"old_password":"oldSecret123","new_password":"newSecret123"}`,
+			name: "success changes own password",
+			body: `{
+				"old_password": "oldSecret123",
+				"new_password": "newSecret123"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
@@ -67,16 +70,22 @@ func TestChangeOwnPassword(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "new password too short returns VALIDATION_FAILED",
-			body:        `{"old_password":"oldSecret123","new_password":"short"}`,
+			name: "new password too short returns VALIDATION_FAILED",
+			body: `{
+				"old_password": "oldSecret123",
+				"new_password": "short"
+			}`,
 			contentType: "application/json",
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "old password too short returns VALIDATION_FAILED",
-			body:        `{"old_password":"short","new_password":"newSecret123"}`,
+			name: "old password too short returns VALIDATION_FAILED",
+			body: `{
+				"old_password": "short",
+				"new_password": "newSecret123"
+			}`,
 			contentType: "application/json",
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
@@ -107,8 +116,12 @@ func TestChangeOwnPassword(t *testing.T) {
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
-			name:        "unknown field returns INVALID_REQUEST_BODY",
-			body:        `{"old_password":"oldSecret123","new_password":"newSecret123","extra":1}`,
+			name: "unknown field returns INVALID_REQUEST_BODY",
+			body: `{
+				"old_password": "oldSecret123",
+				"new_password": "newSecret123",
+				"extra": 1
+			}`,
 			contentType: "application/json",
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
@@ -123,24 +136,33 @@ func TestChangeOwnPassword(t *testing.T) {
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
-			name:        "invalid content type returns INVALID_CONTENT_TYPE",
-			body:        `{"old_password":"oldSecret123","new_password":"newSecret123"}`,
+			name: "invalid content type returns INVALID_CONTENT_TYPE",
+			body: `{
+				"old_password": "oldSecret123",
+				"new_password": "newSecret123"
+			}`,
 			contentType: "text/plain",
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
 		},
 		{
-			name:        "missing content type returns INVALID_CONTENT_TYPE",
-			body:        `{"old_password":"oldSecret123","new_password":"newSecret123"}`,
+			name: "missing content type returns INVALID_CONTENT_TYPE",
+			body: `{
+				"old_password": "oldSecret123",
+				"new_password": "newSecret123"
+			}`,
 			contentType: "",
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
 		},
 		{
-			name:        "wrong old password returns INVALID_CREDENTIALS",
-			body:        `{"old_password":"wrong-pass","new_password":"newSecret123"}`,
+			name: "wrong old password returns INVALID_CREDENTIALS",
+			body: `{
+				"old_password": "wrong-pass",
+				"new_password": "newSecret123"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().
@@ -152,8 +174,11 @@ func TestChangeOwnPassword(t *testing.T) {
 			wantCode:   "INVALID_CREDENTIALS",
 		},
 		{
-			name:        "internal error is mapped to INTERNAL_ERROR",
-			body:        `{"old_password":"oldSecret123","new_password":"newSecret123"}`,
+			name: "internal error is mapped to INTERNAL_ERROR",
+			body: `{
+				"old_password": "oldSecret123",
+				"new_password": "newSecret123"
+			}`,
 			contentType: "application/json",
 			setupMock: func(m *MockUsersService) {
 				m.EXPECT().

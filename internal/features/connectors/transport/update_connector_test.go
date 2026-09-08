@@ -19,7 +19,12 @@ import (
 func TestUpdateConnector(t *testing.T) {
 	t.Parallel()
 
-	validBody := `{"config":{"connector.class":"io.debezium.connector.postgresql.PostgresConnector","database.hostname":"pg-2"}}`
+	validBody := `{
+		"config": {
+			"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+			"database.hostname": "pg-2"
+		}
+	}`
 
 	tests := []struct {
 		name       string

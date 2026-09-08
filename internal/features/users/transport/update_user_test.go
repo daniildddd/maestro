@@ -130,10 +130,13 @@ func TestUpdateUser(t *testing.T) {
 			name:        "unknown field returns INVALID_REQUEST_BODY",
 			pathID:      userID.String(),
 			contentType: "application/json",
-			body:        `{"username":"updateduser","extra":1}`,
-			setupMock:   func(*MockUsersService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_REQUEST_BODY",
+			body: `{
+				"username": "updateduser",
+				"extra": 1
+			}`,
+			setupMock:  func(*MockUsersService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_REQUEST_BODY",
 		},
 		{
 			name:        "body too large returns INVALID_REQUEST_BODY",

@@ -49,7 +49,10 @@ func TestLogin(t *testing.T) {
 		{
 			name:        "valid credentials return tokens and set cookie",
 			contentType: "application/json",
-			body:        `{"username":"alice","password":"secret123"}`,
+			body: `{
+				"username": "alice",
+				"password": "secret123"
+			}`,
 			cfg: transport.Config{
 				CookieSecure: true,
 				CookieDomain: "example.com",
@@ -81,10 +84,14 @@ func TestLogin(t *testing.T) {
 		{
 			name:        "unknown field returns INVALID_REQUEST_BODY",
 			contentType: "application/json",
-			body:        `{"username":"alice","password":"secret123","extra":1}`,
-			setupMock:   func(_ *MockAuthService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_REQUEST_BODY",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"extra": 1
+			}`,
+			setupMock:  func(_ *MockAuthService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_REQUEST_BODY",
 		},
 		{
 			name:        "body too large returns INVALID_REQUEST_BODY",
@@ -97,10 +104,13 @@ func TestLogin(t *testing.T) {
 		{
 			name:        "validation failure returns VALIDATION_FAILED",
 			contentType: "application/json",
-			body:        `{"username":"ab","password":"short"}`,
-			setupMock:   func(_ *MockAuthService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "VALIDATION_FAILED",
+			body: `{
+				"username": "ab",
+				"password": "short"
+			}`,
+			setupMock:  func(_ *MockAuthService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "VALIDATION_FAILED",
 		},
 		{
 			name:        "username too long returns VALIDATION_FAILED",
@@ -121,23 +131,32 @@ func TestLogin(t *testing.T) {
 		{
 			name:        "invalid content type returns INVALID_CONTENT_TYPE",
 			contentType: "text/plain",
-			body:        `{"username":"alice","password":"secret123"}`,
-			setupMock:   func(_ *MockAuthService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_CONTENT_TYPE",
+			body: `{
+				"username": "alice",
+				"password": "secret123"
+			}`,
+			setupMock:  func(_ *MockAuthService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_CONTENT_TYPE",
 		},
 		{
 			name:        "missing content type returns INVALID_CONTENT_TYPE",
 			contentType: "",
-			body:        `{"username":"alice","password":"secret123"}`,
-			setupMock:   func(_ *MockAuthService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_CONTENT_TYPE",
+			body: `{
+				"username": "alice",
+				"password": "secret123"
+			}`,
+			setupMock:  func(_ *MockAuthService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_CONTENT_TYPE",
 		},
 		{
 			name:        "service error returns INVALID_CREDENTIALS without cookie",
 			contentType: "application/json",
-			body:        `{"username":"alice","password":"wrong-password"}`,
+			body: `{
+				"username": "alice",
+				"password": "wrong-password"
+			}`,
 			setupMock: func(m *MockAuthService) {
 				m.EXPECT().
 					Login(mock.Anything, "alice", "wrong-password").

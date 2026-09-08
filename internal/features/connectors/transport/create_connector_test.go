@@ -19,7 +19,13 @@ import (
 func TestCreateConnector(t *testing.T) {
 	t.Parallel()
 
-	validBody := `{"name":"pg-connector","config":{"connector.class":"io.debezium.connector.postgresql.PostgresConnector","database.hostname":"pg-1"}}`
+	validBody := `{
+		"name": "pg-connector",
+		"config": {
+			"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+			"database.hostname": "pg-1"
+		}
+	}`
 
 	tests := []struct {
 		name       string
@@ -68,15 +74,21 @@ func TestCreateConnector(t *testing.T) {
 			},
 		},
 		{
-			name:       "empty name returns validation error",
-			body:       `{"name":"","config":{"a":"b"}}`,
+			name: "empty name returns validation error",
+			body: `{
+				"name": "",
+				"config": {"a": "b"}
+			}`,
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,
 			wantCode:   "VALIDATION_FAILED",
 		},
 		{
-			name:       "empty config returns validation error",
-			body:       `{"name":"pg-connector","config":{}}`,
+			name: "empty config returns validation error",
+			body: `{
+				"name": "pg-connector",
+				"config": {}
+			}`,
 			setupMock:  func(_ *MockConnectorsService) {},
 			wantStatus: http.StatusBadRequest,
 			wantCode:   "VALIDATION_FAILED",

@@ -38,7 +38,10 @@ func TestDecodeAndValidate(t *testing.T) {
 		must := require.New(t)
 
 		dest := &userReq{}
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"username":"alice","password":"secret123"}`))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{
+				"username": "alice",
+				"password": "secret123"
+			}`))
 		req.Header.Set("Content-Type", "application/json")
 
 		rec := httptest.NewRecorder()
@@ -78,16 +81,22 @@ func TestDecodeAndValidate(t *testing.T) {
 		{
 			name:        "missing Content-Type returns ErrInvalidContentType",
 			contentType: "",
-			body:        `{"username":"alice","password":"secret123"}`,
-			dest:        &userReq{},
-			wantErr:     errs.ErrInvalidContentType,
+			body: `{
+				"username": "alice",
+				"password": "secret123"
+			}`,
+			dest:    &userReq{},
+			wantErr: errs.ErrInvalidContentType,
 		},
 		{
 			name:        "invalid Content-Type returns ErrInvalidContentType",
 			contentType: "text/plain",
-			body:        `{"username":"alice","password":"secret123"}`,
-			dest:        &userReq{},
-			wantErr:     errs.ErrInvalidContentType,
+			body: `{
+				"username": "alice",
+				"password": "secret123"
+			}`,
+			dest:    &userReq{},
+			wantErr: errs.ErrInvalidContentType,
 		},
 		{
 			name:        "invalid JSON syntax returns ErrInvalidRequestBody",
@@ -99,9 +108,13 @@ func TestDecodeAndValidate(t *testing.T) {
 		{
 			name:        "unknown field returns ErrInvalidRequestBody",
 			contentType: "application/json",
-			body:        `{"username":"alice","password":"secret123","extra":1}`,
-			dest:        &userReq{},
-			wantErr:     errs.ErrInvalidRequestBody,
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"extra": 1
+			}`,
+			dest:    &userReq{},
+			wantErr: errs.ErrInvalidRequestBody,
 		},
 		{
 			name:        "trailing garbage after JSON returns ErrInvalidRequestBody",
@@ -129,16 +142,22 @@ func TestDecodeAndValidate(t *testing.T) {
 		{
 			name:        "required field empty returns ErrValidationFailed",
 			contentType: "application/json",
-			body:        `{"username":"","password":""}`,
-			dest:        &userReq{},
-			wantErr:     errs.ErrValidationFailed,
+			body: `{
+				"username": "",
+				"password": ""
+			}`,
+			dest:    &userReq{},
+			wantErr: errs.ErrValidationFailed,
 		},
 		{
 			name:        "short field returns ErrValidationFailed",
 			contentType: "application/json",
-			body:        `{"username":"ab","password":"short"}`,
-			dest:        &userReq{},
-			wantErr:     errs.ErrValidationFailed,
+			body: `{
+				"username": "ab",
+				"password": "short"
+			}`,
+			dest:    &userReq{},
+			wantErr: errs.ErrValidationFailed,
 		},
 		{
 			name:        "custom Validate fails returns ErrValidationFailed",

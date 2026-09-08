@@ -30,3 +30,26 @@ func GetIntQueryParam(r *http.Request, key string) (int, error) {
 
 	return val, nil
 }
+
+func GetBoolQueryParam(r *http.Request, key string) (bool, error) {
+	const op = "transport.request.GetBoolQueryParam"
+
+	param := r.URL.Query().Get(key)
+	if param == "" {
+		return false, nil
+	}
+
+	val, err := strconv.ParseBool(param)
+	if err != nil {
+		return false, fmt.Errorf(
+			"%s: param=%s by key=%s not a valid boolean %w: %v",
+			op,
+			param,
+			key,
+			errs.ErrInvalidQueryParam,
+			err,
+		)
+	}
+
+	return val, nil
+}

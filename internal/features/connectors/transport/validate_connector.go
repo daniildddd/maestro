@@ -18,7 +18,7 @@ type ConnectorValidateRequest struct {
 	Config     map[string]string `json:"config"      validate:"required,min=1"`
 }
 
-type validateCheckResponse struct {
+type ValidateCheckResponse struct {
 	ID       string `json:"id"`
 	Severity string `json:"severity"`
 	Message  string `json:"message"`
@@ -27,25 +27,25 @@ type validateCheckResponse struct {
 	Table    string `json:"table,omitempty"`
 }
 
-type validateStepResponse struct {
+type ValidateStepResponse struct {
 	ID     string                  `json:"id"`
 	Status string                  `json:"status"`
-	Checks []validateCheckResponse `json:"checks"`
+	Checks []ValidateCheckResponse `json:"checks"`
 }
 
-type validateResponse struct {
+type ValidateResponse struct {
 	Valid bool                   `json:"valid"`
-	Steps []validateStepResponse `json:"steps"`
+	Steps []ValidateStepResponse `json:"steps"`
 }
 
-func validateResponseFromDomain(report domain.ValidationReport) validateResponse {
-	steps := make([]validateStepResponse, 0, len(report.Steps))
+func validateResponseFromDomain(report domain.ValidationReport) ValidateResponse {
+	steps := make([]ValidateStepResponse, 0, len(report.Steps))
 
 	for _, step := range report.Steps {
-		checks := make([]validateCheckResponse, 0, len(step.Checks))
+		checks := make([]ValidateCheckResponse, 0, len(step.Checks))
 
 		for _, check := range step.Checks {
-			checks = append(checks, validateCheckResponse{
+			checks = append(checks, ValidateCheckResponse{
 				ID:       check.ID,
 				Severity: string(check.Severity),
 				Message:  check.Message,
@@ -55,14 +55,14 @@ func validateResponseFromDomain(report domain.ValidationReport) validateResponse
 			})
 		}
 
-		steps = append(steps, validateStepResponse{
+		steps = append(steps, ValidateStepResponse{
 			ID:     string(step.ID),
 			Status: string(step.Status),
 			Checks: checks,
 		})
 	}
 
-	return validateResponse{
+	return ValidateResponse{
 		Valid: report.Valid,
 		Steps: steps,
 	}

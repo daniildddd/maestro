@@ -77,7 +77,7 @@ mocks: ## Generate mocks with mockery (version pinned in go.mod)
 test: ## Run unit tests with race detection and coverage
 	@go test -race -cover ./...
 
-test-integration: ## Run integration tests against a live Postgres (docker compose up -d)
+test-integration: ## Run integration tests (testcontainers, needs Docker daemon)
 	@go test -tags integration -race ./...
 
 validate-swagger: ## Validate OpenAPI spec

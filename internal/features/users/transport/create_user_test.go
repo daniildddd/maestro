@@ -182,6 +182,18 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "INVALID_CONTENT_TYPE",
 		},
 		{
+			name: "wrong content type rejected",
+			body: `{
+				"username": "alice",
+				"password": "secret123",
+				"role": "admin"
+			}`,
+			contentType: "text/plain",
+			setupMock:   func(_ *MockUsersService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
 			name: "unknown role passes transport and is rejected by service",
 			body: `{
 				"username": "alice",

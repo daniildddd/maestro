@@ -28,12 +28,13 @@ func TestCreateConnector(t *testing.T) {
 	}`
 
 	tests := []struct {
-		name       string
-		body       string
-		setupMock  func(m *MockConnectorsService)
-		wantStatus int
-		wantCode   string
-		wantBody   transport.ConnectorCreateResponse
+		name        string
+		body        string
+		contentType *string
+		setupMock   func(m *MockConnectorsService)
+		wantStatus  int
+		wantCode    string
+		wantBody    transport.ConnectorCreateResponse
 	}{
 		{
 			name: "success returns created connector",
@@ -101,6 +102,39 @@ func TestCreateConnector(t *testing.T) {
 			wantCode:   "INVALID_REQUEST_BODY",
 		},
 		{
+			name: "unknown field returns INVALID_REQUEST_BODY",
+			body: `{
+				"name": "pg-connector",
+				"config": {"a": "b"},
+				"extra": 1
+			}`,
+			setupMock:  func(_ *MockConnectorsService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_REQUEST_BODY",
+		},
+		{
+			name: "missing content type returns INVALID_CONTENT_TYPE",
+			body: `{
+				"name": "pg-connector",
+				"config": {"a": "b"}
+			}`,
+			contentType: strPtr(""),
+			setupMock:   func(_ *MockConnectorsService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name: "wrong content type returns INVALID_CONTENT_TYPE",
+			body: `{
+				"name": "pg-connector",
+				"config": {"a": "b"}
+			}`,
+			contentType: strPtr("text/plain"),
+			setupMock:   func(_ *MockConnectorsService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
 			name: "service error returns mapped error",
 			body: validBody,
 			setupMock: func(m *MockConnectorsService) {
@@ -129,7 +163,16 @@ func TestCreateConnector(t *testing.T) {
 			rec := httptest.NewRecorder()
 			rw := core_http_response.NewResponseWriter(rec)
 
-			handler.CreateConnector(rw, newConnectorsRequest(t, http.MethodPost, "/connectors", tt.body))
+			req := newConnectorsRequest(t, http.MethodPost, "/connectors", tt.body)
+			if tt.contentType != nil {
+				if *tt.contentType == "" {
+					req.Header.Del("Content-Type")
+				} else {
+					req.Header.Set("Content-Type", *tt.contentType)
+				}
+			}
+
+			handler.CreateConnector(rw, req)
 
 			must.Equal(tt.wantStatus, rec.Code)
 

@@ -27,13 +27,14 @@ func TestUpdateConnector(t *testing.T) {
 	}`
 
 	tests := []struct {
-		name       string
-		path       string
-		body       string
-		setupMock  func(m *MockConnectorsService)
-		wantStatus int
-		wantCode   string
-		wantBody   transport.ConnectorDetailResponse
+		name        string
+		path        string
+		body        string
+		contentType *string
+		setupMock   func(m *MockConnectorsService)
+		wantStatus  int
+		wantCode    string
+		wantBody    transport.ConnectorDetailResponse
 	}{
 		{
 			name: "success returns updated connector",
@@ -114,6 +115,39 @@ func TestUpdateConnector(t *testing.T) {
 			wantCode:   "INVALID_REQUEST_BODY",
 		},
 		{
+			name: "unknown field returns INVALID_REQUEST_BODY",
+			path: "/connectors/pg-connector",
+			body: `{
+				"config": {"a": "b"},
+				"extra": 1
+			}`,
+			setupMock:  func(_ *MockConnectorsService) {},
+			wantStatus: http.StatusBadRequest,
+			wantCode:   "INVALID_REQUEST_BODY",
+		},
+		{
+			name: "missing content type returns INVALID_CONTENT_TYPE",
+			path: "/connectors/pg-connector",
+			body: `{
+				"config": {"a": "b"}
+			}`,
+			contentType: strPtr(""),
+			setupMock:   func(_ *MockConnectorsService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
+			name: "wrong content type returns INVALID_CONTENT_TYPE",
+			path: "/connectors/pg-connector",
+			body: `{
+				"config": {"a": "b"}
+			}`,
+			contentType: strPtr("text/plain"),
+			setupMock:   func(_ *MockConnectorsService) {},
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "INVALID_CONTENT_TYPE",
+		},
+		{
 			name: "service error returns mapped error",
 			path: "/connectors/pg-connector",
 			body: validBody,
@@ -144,6 +178,13 @@ func TestUpdateConnector(t *testing.T) {
 			rw := core_http_response.NewResponseWriter(rec)
 
 			req := newConnectorsRequest(t, http.MethodPatch, tt.path, tt.body)
+			if tt.contentType != nil {
+				if *tt.contentType == "" {
+					req.Header.Del("Content-Type")
+				} else {
+					req.Header.Set("Content-Type", *tt.contentType)
+				}
+			}
 
 			handler.UpdateConnector(rw, req)
 

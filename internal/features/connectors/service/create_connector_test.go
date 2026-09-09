@@ -64,7 +64,7 @@ func TestCreateConnector(t *testing.T) {
 			wantIs: errs.ErrConnectorAlreadyExists,
 		},
 		{
-			name: "rebalance maps to app error",
+			name: "rebalance maps to ErrRebalanceInProgress",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					CreateConnector(mock.Anything, "pg-connector", config).
@@ -84,7 +84,7 @@ func TestCreateConnector(t *testing.T) {
 			wantIs: errs.ErrValidationFailed,
 		},
 		{
-			name: "connect unavailable maps to app error",
+			name: "connect unavailable maps to ErrKafkaConnectUnavailable",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					CreateConnector(mock.Anything, "pg-connector", config).

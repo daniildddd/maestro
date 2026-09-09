@@ -48,7 +48,7 @@ func TestGetSMTPlugins(t *testing.T) {
 			},
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns KAFKA_CONNECT_UNAVAILABLE",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().
 					GetSMTPlugins(mock.Anything).

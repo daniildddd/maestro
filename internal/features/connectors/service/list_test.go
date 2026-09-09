@@ -99,7 +99,7 @@ func TestConnectorsServiceGetConnectors(t *testing.T) {
 			want: []domain.Connector{},
 		},
 		{
-			name:   "kafka connect unavailable maps to app error",
+			name:   "kafka connect unavailable maps to ErrKafkaConnectUnavailable",
 			filter: mustFilter(t, 1, 20, "", ""),
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().

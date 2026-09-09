@@ -39,7 +39,7 @@ func TestGetConnectorByID(t *testing.T) {
 			},
 		},
 		{
-			name: "missing connector maps to app error",
+			name: "missing connector maps to ErrConnectorNotFound",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					GetConnectorByID(mock.Anything, "pg-connector").
@@ -49,7 +49,7 @@ func TestGetConnectorByID(t *testing.T) {
 			wantIs: errs.ErrConnectorNotFound,
 		},
 		{
-			name: "connect unavailable maps to app error",
+			name: "connect unavailable maps to ErrKafkaConnectUnavailable",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					GetConnectorByID(mock.Anything, "pg-connector").

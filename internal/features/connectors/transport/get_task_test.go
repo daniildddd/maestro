@@ -64,7 +64,7 @@ func TestGetConnectorTask(t *testing.T) {
 			wantCode:   "INVALID_PATH_PARAM",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns NOT_FOUND",
 			path: "/connectors/pg-connector/tasks/7",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

@@ -80,7 +80,7 @@ func TestResumeConnector(t *testing.T) {
 			wantCode:   "INVALID_PATH_PARAM",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns CONNECTOR_NOT_FOUND",
 			path: "/connectors/pg-connector/resume",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

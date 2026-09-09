@@ -80,7 +80,7 @@ func TestPauseConnector(t *testing.T) {
 			wantCode:   "INVALID_PATH_PARAM",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns REBALANCE_IN_PROGRESS",
 			path: "/connectors/pg-connector/pause",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

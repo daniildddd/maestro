@@ -135,7 +135,7 @@ func TestCreateConnector(t *testing.T) {
 			wantCode:    "INVALID_CONTENT_TYPE",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns CONNECTOR_ALREADY_EXISTS",
 			body: validBody,
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

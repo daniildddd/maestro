@@ -53,7 +53,7 @@ func TestRestartConnectorTask(t *testing.T) {
 			noTaskID:   true,
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns NOT_FOUND",
 			path: "/connectors/pg-connector/tasks/0/restart",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

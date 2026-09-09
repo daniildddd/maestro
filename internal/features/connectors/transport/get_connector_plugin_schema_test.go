@@ -93,7 +93,7 @@ func TestGetConnectorPluginSchema(t *testing.T) {
 			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns NOT_FOUND",
 			path: "/connector-plugins/{id}/config?importance=all",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

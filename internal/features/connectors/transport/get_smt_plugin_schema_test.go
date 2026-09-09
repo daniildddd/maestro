@@ -73,7 +73,7 @@ func TestGetSMTPluginSchema(t *testing.T) {
 			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns NOT_FOUND",
 			path: "/smt-plugins/{id}/config?importance=high",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

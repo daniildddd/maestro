@@ -148,7 +148,7 @@ func TestUpdateConnector(t *testing.T) {
 			wantCode:    "INVALID_CONTENT_TYPE",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns VALIDATION_FAILED",
 			path: "/connectors/pg-connector",
 			body: validBody,
 			setupMock: func(m *MockConnectorsService) {

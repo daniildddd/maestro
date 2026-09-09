@@ -82,7 +82,7 @@ func TestGetConnectors(t *testing.T) {
 			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
-			name:  "service error returns mapped error",
+			name:  "service error returns KAFKA_CONNECT_UNAVAILABLE",
 			query: "page=1&limit=10",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

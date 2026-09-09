@@ -139,7 +139,7 @@ func TestRestartConnector(t *testing.T) {
 			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
-			name: "service error returns mapped error",
+			name: "service error returns CONNECTOR_NOT_FOUND",
 			path: "/connectors/pg-connector/restart?include_tasks=true",
 			setupMock: func(m *MockConnectorsService) {
 				m.EXPECT().

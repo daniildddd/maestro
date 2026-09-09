@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
-	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/logger"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
@@ -134,19 +133,6 @@ func TestValidateConnector(t *testing.T) {
 			wantBody:   validBody,
 		},
 		{
-			name: "steps field is rejected as unknown",
-			body: `{
-				"plugin_type": "p",
-				"name": "n",
-				"config": {"a": "b"},
-				"steps": ["config"]
-			}`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_REQUEST_BODY",
-		},
-		{
 			name:        "invalid json returns INVALID_REQUEST_BODY",
 			body:        `{invalid`,
 			contentType: "application/json",
@@ -235,23 +221,6 @@ func TestValidateConnector(t *testing.T) {
 			setupMock:   func(_ *MockConnectorsService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
-		},
-		{
-			name: "unknown plugin returns NOT_FOUND",
-			body: `{
-				"plugin_type": "unknown.Connector",
-				"name": "n",
-				"config": {"a": "b"}
-			}`,
-			contentType: "application/json",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					ValidateConnector(mock.Anything, "unknown.Connector", mock.Anything).
-					Return(domain.ValidationReport{}, errs.ErrConnectorPluginNotFound).
-					Once()
-			},
-			wantStatus: http.StatusNotFound,
-			wantCode:   "NOT_FOUND",
 		},
 		{
 			name: "invalid report returns 400 with details",

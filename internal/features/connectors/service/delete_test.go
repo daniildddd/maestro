@@ -24,7 +24,11 @@ func TestConnectorsServiceDelete(t *testing.T) {
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					GetConnectorByID(mock.Anything, "pg-connector").
-					Return(domain.Connector{Name: "pg-connector", PluginType: "postgres", Status: "running"}, nil).
+					Return(domain.Connector{
+						Name:       "pg-connector",
+						PluginType: "postgres",
+						Status:     "running",
+					}, nil).
 					Once()
 
 				kc.EXPECT().
@@ -44,6 +48,16 @@ func TestConnectorsServiceDelete(t *testing.T) {
 			wantIs: errs.ErrConnectorNotFound,
 		},
 		{
+			name: "rebalance maps to app error",
+			setupMock: func(kc *MockKafkaConnect) {
+				kc.EXPECT().
+					GetConnectorByID(mock.Anything, "pg-connector").
+					Return(domain.Connector{}, domain.ErrRebalanceInProgress).
+					Once()
+			},
+			wantIs: errs.ErrRebalanceInProgress,
+		},
+		{
 			name: "connect unavailable maps to app error",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
@@ -54,14 +68,74 @@ func TestConnectorsServiceDelete(t *testing.T) {
 			wantIs: errs.ErrKafkaConnectUnavailable,
 		},
 		{
-			name: "rebalance maps to app error",
+			name: "unexpected error passes through wrapped",
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
 					GetConnectorByID(mock.Anything, "pg-connector").
-					Return(domain.Connector{}, domain.ErrRebalanceInProgress).
+					Return(domain.Connector{}, errSourceDown).
+					Once()
+			},
+			wantIs: errSourceDown,
+		},
+		{
+			name: "delete missing connector maps to app error",
+			setupMock: func(kc *MockKafkaConnect) {
+				kc.EXPECT().
+					GetConnectorByID(mock.Anything, "pg-connector").
+					Return(domain.Connector{Name: "pg-connector"}, nil).
+					Once()
+
+				kc.EXPECT().
+					Delete(mock.Anything, "pg-connector").
+					Return(domain.ErrConnectorNotFound).
+					Once()
+			},
+			wantIs: errs.ErrConnectorNotFound,
+		},
+		{
+			name: "delete error maps to app error",
+			setupMock: func(kc *MockKafkaConnect) {
+				kc.EXPECT().
+					GetConnectorByID(mock.Anything, "pg-connector").
+					Return(domain.Connector{Name: "pg-connector"}, nil).
+					Once()
+
+				kc.EXPECT().
+					Delete(mock.Anything, "pg-connector").
+					Return(domain.ErrRebalanceInProgress).
 					Once()
 			},
 			wantIs: errs.ErrRebalanceInProgress,
+		},
+		{
+			name: "delete unavailable maps to app error",
+			setupMock: func(kc *MockKafkaConnect) {
+				kc.EXPECT().
+					GetConnectorByID(mock.Anything, "pg-connector").
+					Return(domain.Connector{Name: "pg-connector"}, nil).
+					Once()
+
+				kc.EXPECT().
+					Delete(mock.Anything, "pg-connector").
+					Return(domain.ErrKafkaConnectUnavailable).
+					Once()
+			},
+			wantIs: errs.ErrKafkaConnectUnavailable,
+		},
+		{
+			name: "delete unexpected error passes through wrapped",
+			setupMock: func(kc *MockKafkaConnect) {
+				kc.EXPECT().
+					GetConnectorByID(mock.Anything, "pg-connector").
+					Return(domain.Connector{Name: "pg-connector"}, nil).
+					Once()
+
+				kc.EXPECT().
+					Delete(mock.Anything, "pg-connector").
+					Return(errSourceDown).
+					Once()
+			},
+			wantIs: errSourceDown,
 		},
 	}
 

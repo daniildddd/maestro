@@ -109,44 +109,36 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required USER panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllPgxadapterEnv(t)
 		t.Setenv("POSTGRES_PASSWORD", "pass")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			pgxadapter.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		panicErr, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(panicErr)
+		mustPanic(t, func() { pgxadapter.NewConfigMust() })
 	})
 
 	t.Run("missing required PASSWORD panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllPgxadapterEnv(t)
 		t.Setenv("POSTGRES_USER", "postgres")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			pgxadapter.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		panicErr, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(panicErr)
+		mustPanic(t, func() { pgxadapter.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllPgxadapterEnv(t *testing.T) {

@@ -104,27 +104,29 @@ func TestNewConfigMust(t *testing.T) {
 		is.Equal("/test", config.Folder)
 	})
 	t.Run("missing required FOLDER panics", func(t *testing.T) {
-		must := require.New(t)
-
 		t.Setenv("LOGGER_LEVEL", "DEBUG")
 		unsetEnvForTest(t, "LOGGER_FOLDER")
 
-		var panicVal any
-
-		func() {
-			defer func() {
-				panicVal = recover()
-			}()
-
-			logger.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { logger.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetEnvForTest(t *testing.T, key string) {

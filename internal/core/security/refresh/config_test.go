@@ -37,24 +37,29 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid TTL panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllRefreshEnv(t)
 		t.Setenv("REFRESH_TTL", "not-a-duration")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			refresh.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { refresh.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllRefreshEnv(t *testing.T) {

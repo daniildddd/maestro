@@ -106,27 +106,29 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid env panics with config error", func(t *testing.T) {
-		must := require.New(t)
-
 		t.Setenv("AUTH_COOKIE_SECURE", "notabool")
 		unsetEnvForTest(t, "AUTH_COOKIE_DOMAIN")
 
-		var panicVal any
-
-		func() {
-			defer func() {
-				panicVal = recover()
-			}()
-
-			transport.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-
-		panicErr, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(panicErr)
+		mustPanic(t, func() { transport.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetEnvForTest(t *testing.T, key string) {

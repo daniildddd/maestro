@@ -56,24 +56,29 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid duration panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllServerEnv(t)
 		t.Setenv("SERVER_READ_TIMEOUT", "not-a-duration")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			server.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { server.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllServerEnv(t *testing.T) {

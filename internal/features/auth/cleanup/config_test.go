@@ -61,27 +61,29 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid env panics with config error", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllCleanupEnv(t)
 		t.Setenv("AUTH_CLEANUP_INTERVAL", "notaduration")
 
-		var panicVal any
-
-		func() {
-			defer func() {
-				panicVal = recover()
-			}()
-
-			cleanup.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-
-		panicErr, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(panicErr)
+		mustPanic(t, func() { cleanup.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllCleanupEnv(t *testing.T) {

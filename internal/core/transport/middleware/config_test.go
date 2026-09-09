@@ -37,23 +37,28 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required ALLOWED_ORIGINS panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllMiddlewareEnv(t)
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			middleware.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { middleware.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllMiddlewareEnv(t *testing.T) {

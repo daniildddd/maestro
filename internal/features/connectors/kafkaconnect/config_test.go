@@ -44,44 +44,36 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required BASE_URL panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllKafkaConnectEnv(t)
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			kafkaconnect.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
 	})
 
 	t.Run("invalid TIMEOUT panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllKafkaConnectEnv(t)
 		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
 		t.Setenv("KAFKA_CONNECT_TIMEOUT", "not-a-duration")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			kafkaconnect.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllKafkaConnectEnv(t *testing.T) {

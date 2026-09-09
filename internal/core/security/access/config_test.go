@@ -43,23 +43,28 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required SECRET panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllAccessEnv(t)
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			access.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { access.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllAccessEnv(t *testing.T) {

@@ -38,44 +38,36 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid duration panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllDbcheckEnv(t)
 		t.Setenv("VALIDATE_DB_STEP_TIMEOUT", "not-a-duration")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			dbcheck.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { dbcheck.NewConfigMust() })
 	})
 
 	t.Run("invalid int panics", func(t *testing.T) {
-		must := require.New(t)
-
 		unsetAllDbcheckEnv(t)
 		t.Setenv("VALIDATE_DB_MAX_TABLE_CHECKS", "not-a-number")
 
-		var panicVal any
-
-		func() {
-			defer func() { panicVal = recover() }()
-
-			dbcheck.NewConfigMust()
-		}()
-
-		must.NotNil(panicVal)
-		err, ok := panicVal.(error)
-		must.True(ok)
-		must.Error(err)
+		mustPanic(t, func() { dbcheck.NewConfigMust() })
 	})
+}
+
+func mustPanic(t *testing.T, fn func()) {
+	t.Helper()
+
+	var panicVal any
+
+	func() {
+		defer func() { panicVal = recover() }()
+
+		fn()
+	}()
+
+	must := require.New(t)
+	must.NotNil(panicVal)
+	err, ok := panicVal.(error)
+	must.True(ok)
+	must.Error(err)
 }
 
 func unsetAllDbcheckEnv(t *testing.T) {

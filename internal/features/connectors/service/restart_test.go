@@ -103,4 +103,50 @@ func TestRestartConnector(t *testing.T) {
 			must.Equal(tt.want, connector)
 		})
 	}
+
+	t.Run("records connector state in audit", func(t *testing.T) {
+		t.Parallel()
+
+		must := require.New(t)
+
+		dbName := "shop"
+		pluginName := "pgoutput"
+
+		kc := NewMockKafkaConnect(t)
+		kc.EXPECT().
+			RestartConnector(mock.Anything, "pg-connector", true, false).
+			Return(domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				Config: domain.SourceConfig{
+					Hostname:   "pg-1",
+					Port:       "5432",
+					User:       "debezium",
+					DBName:     &dbName,
+					PluginName: &pluginName,
+				},
+			}, nil).
+			Once()
+
+		auditor := &capturingAuditor{}
+		svc := service.NewConnectorsService(kc, auditor)
+
+		_, err := svc.RestartConnector(testCtx(), "pg-connector", true, false)
+		must.NoError(err)
+		must.Len(auditor.recorded, 1)
+
+		state := auditor.recorded[0].StateAfter
+
+		must.Equal(map[string]any{
+			"name":              "pg-connector",
+			"plugin_type":       "io.debezium.connector.postgresql.PostgresConnector",
+			"status":            domain.ConnectorStatusRunning,
+			"database.hostname": "pg-1",
+			"database.port":     "5432",
+			"database.user":     "debezium",
+			"database.dbname":   "shop",
+			"plugin.name":       "pgoutput",
+		}, state)
+	})
 }

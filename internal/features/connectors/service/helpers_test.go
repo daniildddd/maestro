@@ -14,6 +14,14 @@ type noopAuditor struct{}
 func (noopAuditor) Record(context.Context, domain.AuditEvent) {
 }
 
+type capturingAuditor struct {
+	recorded []domain.AuditEvent
+}
+
+func (a *capturingAuditor) Record(_ context.Context, event domain.AuditEvent) {
+	a.recorded = append(a.recorded, event)
+}
+
 var userID = uuid.New()
 
 func testCtx() context.Context {

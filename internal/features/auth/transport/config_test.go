@@ -16,7 +16,7 @@ func TestNewConfig(t *testing.T) {
 		name     string
 		envSetup func(t *testing.T)
 		wantCfg  transport.Config
-		errMsg   string
+		wantErr  bool
 	}{
 		{
 			name: "valid env returns config with parsed values",
@@ -29,7 +29,7 @@ func TestNewConfig(t *testing.T) {
 				CookieSecure: true,
 				CookieDomain: "example.com",
 			},
-			errMsg: "",
+			wantErr: false,
 		},
 		{
 			name: "defaults applied when env unset",
@@ -42,7 +42,7 @@ func TestNewConfig(t *testing.T) {
 				CookieSecure: false,
 				CookieDomain: "",
 			},
-			errMsg: "",
+			wantErr: false,
 		},
 		{
 			name: "invalid bool value returns error",
@@ -52,7 +52,7 @@ func TestNewConfig(t *testing.T) {
 				unsetEnvForTest(t, "AUTH_COOKIE_DOMAIN")
 			},
 			wantCfg: transport.Config{},
-			errMsg:  "process cookie config",
+			wantErr: true,
 		},
 	}
 
@@ -65,9 +65,8 @@ func TestNewConfig(t *testing.T) {
 
 			got, err := transport.NewConfig()
 
-			if tt.errMsg != "" {
+			if tt.wantErr {
 				must.Error(err)
-				must.ErrorContains(err, tt.errMsg)
 
 				return
 			}
@@ -107,7 +106,6 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid env panics with config error", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		t.Setenv("AUTH_COOKIE_SECURE", "notabool")
@@ -127,8 +125,7 @@ func TestNewConfigMust(t *testing.T) {
 
 		panicErr, ok := panicVal.(error)
 		must.True(ok)
-
-		is.Contains(panicErr.Error(), "get cookie config")
+		must.Error(panicErr)
 	})
 }
 

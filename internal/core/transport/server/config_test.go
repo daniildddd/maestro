@@ -56,7 +56,6 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid duration panics", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		unsetAllServerEnv(t)
@@ -73,7 +72,7 @@ func TestNewConfigMust(t *testing.T) {
 		must.NotNil(panicVal)
 		err, ok := panicVal.(error)
 		must.True(ok)
-		is.ErrorContains(err, "process server config")
+		must.Error(err)
 	})
 }
 

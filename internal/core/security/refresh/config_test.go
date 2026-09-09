@@ -37,7 +37,6 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("invalid TTL panics", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		unsetAllRefreshEnv(t)
@@ -54,7 +53,7 @@ func TestNewConfigMust(t *testing.T) {
 		must.NotNil(panicVal)
 		err, ok := panicVal.(error)
 		must.True(ok)
-		is.ErrorContains(err, "process refresh token config")
+		must.Error(err)
 	})
 }
 

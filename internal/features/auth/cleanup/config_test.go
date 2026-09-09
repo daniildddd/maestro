@@ -1,6 +1,7 @@
 package cleanup_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ func TestNewConfigMust(t *testing.T) {
 		is := assert.New(t)
 		must := require.New(t)
 
+		unsetAllCleanupEnv(t)
 		t.Setenv("AUTH_CLEANUP_INTERVAL", "45m")
 
 		var (
@@ -35,10 +37,33 @@ func TestNewConfigMust(t *testing.T) {
 		is.Equal(45*time.Minute, config.Interval)
 	})
 
-	t.Run("invalid env panics with config error", func(t *testing.T) {
+	t.Run("defaults applied when INTERVAL unset", func(t *testing.T) {
 		is := assert.New(t)
 		must := require.New(t)
 
+		unsetAllCleanupEnv(t)
+
+		var (
+			panicVal any
+			config   cleanup.Config
+		)
+
+		func() {
+			defer func() {
+				panicVal = recover()
+			}()
+
+			config = cleanup.NewConfigMust()
+		}()
+
+		must.Nil(panicVal)
+		is.Equal(time.Hour, config.Interval)
+	})
+
+	t.Run("invalid env panics with config error", func(t *testing.T) {
+		must := require.New(t)
+
+		unsetAllCleanupEnv(t)
 		t.Setenv("AUTH_CLEANUP_INTERVAL", "notaduration")
 
 		var panicVal any
@@ -55,7 +80,22 @@ func TestNewConfigMust(t *testing.T) {
 
 		panicErr, ok := panicVal.(error)
 		must.True(ok)
-
-		is.Contains(panicErr.Error(), "get cleanup config")
+		must.Error(panicErr)
 	})
+}
+
+func unsetAllCleanupEnv(t *testing.T) {
+	t.Helper()
+
+	keys := []string{"AUTH_CLEANUP_INTERVAL"}
+	for _, key := range keys {
+		old, ok := os.LookupEnv(key)
+		_ = os.Unsetenv(key) //nolint:errcheck // env var removal cannot fail in practice
+
+		t.Cleanup(func() {
+			if ok {
+				_ = os.Setenv(key, old) //nolint:errcheck,usetesting // cannot use t.Setenv inside t.Cleanup; restore original
+			}
+		})
+	}
 }

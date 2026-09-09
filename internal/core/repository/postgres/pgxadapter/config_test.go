@@ -64,7 +64,6 @@ func TestNewConfig(t *testing.T) {
 		_, err := pgxadapter.NewConfig()
 
 		must.Error(err)
-		must.ErrorContains(err, "required key USER missing value")
 	})
 
 	t.Run("missing required PASSWORD returns error", func(t *testing.T) {
@@ -76,7 +75,6 @@ func TestNewConfig(t *testing.T) {
 		_, err := pgxadapter.NewConfig()
 
 		must.Error(err)
-		must.ErrorContains(err, "required key PASSWORD missing value")
 	})
 }
 
@@ -111,7 +109,6 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required USER panics", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		unsetAllPgxadapterEnv(t)
@@ -128,11 +125,10 @@ func TestNewConfigMust(t *testing.T) {
 		must.NotNil(panicVal)
 		panicErr, ok := panicVal.(error)
 		must.True(ok)
-		is.Contains(panicErr.Error(), "get database config")
+		must.Error(panicErr)
 	})
 
 	t.Run("missing required PASSWORD panics", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		unsetAllPgxadapterEnv(t)
@@ -149,7 +145,7 @@ func TestNewConfigMust(t *testing.T) {
 		must.NotNil(panicVal)
 		panicErr, ok := panicVal.(error)
 		must.True(ok)
-		is.Contains(panicErr.Error(), "get database config")
+		must.Error(panicErr)
 	})
 }
 

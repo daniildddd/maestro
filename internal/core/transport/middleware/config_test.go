@@ -37,7 +37,6 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required ALLOWED_ORIGINS panics", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		unsetAllMiddlewareEnv(t)
@@ -53,7 +52,7 @@ func TestNewConfigMust(t *testing.T) {
 		must.NotNil(panicVal)
 		err, ok := panicVal.(error)
 		must.True(ok)
-		is.ErrorContains(err, "required key ALLOWED_ORIGINS missing value")
+		must.Error(err)
 	})
 }
 

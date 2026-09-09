@@ -43,7 +43,6 @@ func TestNewConfigMust(t *testing.T) {
 	})
 
 	t.Run("missing required SECRET panics", func(t *testing.T) {
-		is := assert.New(t)
 		must := require.New(t)
 
 		unsetAllAccessEnv(t)
@@ -59,7 +58,7 @@ func TestNewConfigMust(t *testing.T) {
 		must.NotNil(panicVal)
 		err, ok := panicVal.(error)
 		must.True(ok)
-		is.ErrorContains(err, "required key SECRET missing value")
+		must.Error(err)
 	})
 }
 

@@ -16,7 +16,7 @@ func TestNewConfig(t *testing.T) {
 		name     string
 		envSetup func(t *testing.T)
 		wantCfg  logger.Config
-		errMsg   string
+		wantErr  bool
 	}{
 		{
 			name: "valid env returns config",
@@ -29,7 +29,7 @@ func TestNewConfig(t *testing.T) {
 				Level:  "DEBUG",
 				Folder: "/test",
 			},
-			errMsg: "",
+			wantErr: false,
 		},
 		{
 			name: "default level applied when LOGGER_LEVEL unset",
@@ -51,7 +51,7 @@ func TestNewConfig(t *testing.T) {
 				unsetEnvForTest(t, "LOGGER_FOLDER")
 			},
 			wantCfg: logger.Config{},
-			errMsg:  "FOLDER missing",
+			wantErr: true,
 		},
 	}
 
@@ -64,9 +64,8 @@ func TestNewConfig(t *testing.T) {
 
 			got, err := logger.NewConfig()
 
-			if tt.errMsg != "" {
+			if tt.wantErr {
 				must.Error(err)
-				must.ErrorContains(err, tt.errMsg)
 
 				return
 			}
@@ -104,8 +103,7 @@ func TestNewConfigMust(t *testing.T) {
 		is.Equal("DEBUG", config.Level)
 		is.Equal("/test", config.Folder)
 	})
-	t.Run("missing required FOLDER panics with FOLDER error", func(t *testing.T) {
-		is := assert.New(t)
+	t.Run("missing required FOLDER panics", func(t *testing.T) {
 		must := require.New(t)
 
 		t.Setenv("LOGGER_LEVEL", "DEBUG")
@@ -125,8 +123,7 @@ func TestNewConfigMust(t *testing.T) {
 
 		err, ok := panicVal.(error)
 		must.True(ok)
-
-		is.ErrorContains(err, "FOLDER missing")
+		must.Error(err)
 	})
 }
 

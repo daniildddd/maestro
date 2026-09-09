@@ -4,9 +4,14 @@ package pgxadapter_test
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"testing"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
+
+	"github.com/moby/moby/api/types/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -27,8 +32,12 @@ func newTestDSN(t *testing.T) string {
 		postgres.WithUsername("test"),
 		postgres.WithPassword("test"),
 		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2),
+			wait.ForSQL("5432/tcp", "pgx", func(host string, port network.Port) string {
+				return fmt.Sprintf(
+					"postgres://test:test@%s/test?sslmode=disable",
+					net.JoinHostPort(host, port.Port()),
+				)
+			}).WithStartupTimeout(60*time.Second),
 		),
 	)
 	must.NoError(err)

@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
@@ -13,23 +14,41 @@ func (MongoDBAdapter) Match(class string) bool {
 }
 
 func (a MongoDBAdapter) Canonicalize(config map[string]string) domain.SourceConfig {
-	host, port := a.hostPort(config)
+	hosts := a.connectionHosts(config)
 
-	return domain.SourceConfig{
-		Hostname: host,
-		Port:     port,
-		User:     a.user(config),
+	cfg := domain.SourceConfig{User: a.user(config)}
+
+	if len(hosts) > 1 {
+		cfg.Hostname = strings.Join(hosts, ", ")
+	} else if len(hosts) == 1 {
+		cfg.Hostname, cfg.Port = splitHostPort(hosts[0])
 	}
+
+	return cfg
 }
 
-func (MongoDBAdapter) hostPort(config map[string]string) (host, port string) {
-	if conn := config["mongodb.connection.string"]; conn != "" {
-		if parsed, err := url.Parse(conn); err == nil && parsed.Host != "" {
-			return splitHostPort(firstEntry(parsed.Host))
-		}
+func (MongoDBAdapter) connectionHosts(config map[string]string) []string {
+	conn := config["mongodb.connection.string"]
+	if conn == "" {
+		return nil
 	}
 
-	return "", ""
+	parsed, err := url.Parse(conn)
+	if err != nil || parsed.Host == "" {
+		return nil
+	}
+
+	return strings.Split(parsed.Host, ",")
+}
+
+func splitHostPort(hostport string) (host, port string) {
+	host, port = hostport, ""
+
+	if index := strings.LastIndexByte(hostport, ':'); index >= 0 {
+		host, port = hostport[:index], hostport[index+1:]
+	}
+
+	return host, port
 }
 
 func (MongoDBAdapter) user(config map[string]string) string {

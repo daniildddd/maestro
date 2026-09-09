@@ -131,4 +131,55 @@ func TestConnectorsServiceDelete(t *testing.T) {
 			must.NoError(err)
 		})
 	}
+
+	t.Run("records connector state in audit", func(t *testing.T) {
+		t.Parallel()
+
+		must := require.New(t)
+
+		dbName := "shop"
+		pluginName := "pgoutput"
+
+		kc := NewMockKafkaConnect(t)
+		kc.EXPECT().
+			GetConnectorByID(mock.Anything, "pg-connector").
+			Return(domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "postgres",
+				Status:     "running",
+				Config: domain.SourceConfig{
+					Hostname:   "pg-1",
+					Port:       "5432",
+					User:       "debezium",
+					DBName:     &dbName,
+					PluginName: &pluginName,
+				},
+			}, nil).
+			Once()
+
+		kc.EXPECT().
+			Delete(mock.Anything, "pg-connector").
+			Return(nil).
+			Once()
+
+		auditor := &capturingAuditor{}
+		svc := service.NewConnectorsService(kc, auditor)
+
+		err := svc.Delete(testCtx(), "pg-connector")
+		must.NoError(err)
+		must.Len(auditor.recorded, 1)
+
+		state := auditor.recorded[0].StateBefore
+
+		must.Equal(map[string]any{
+			"name":              "pg-connector",
+			"plugin_type":       "postgres",
+			"status":            "running",
+			"database.hostname": "pg-1",
+			"database.port":     "5432",
+			"database.user":     "debezium",
+			"database.dbname":   "shop",
+			"plugin.name":       "pgoutput",
+		}, state)
+	})
 }

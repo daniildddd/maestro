@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 )
 
-func TestSaveRefreshToken(t *testing.T) {
+func TestAuthRepository_SaveRefreshToken(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

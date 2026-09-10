@@ -36,7 +36,7 @@ func newRefreshRequest(t *testing.T, cookieValue string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestRefresh(t *testing.T) {
+func TestAuthHTTPHandler_Refresh(t *testing.T) {
 	t.Parallel()
 
 	expiresAt := time.Now().Add(time.Hour).Truncate(time.Second)

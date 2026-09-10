@@ -14,7 +14,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/users/service"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestUsersService_CreateUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

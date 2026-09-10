@@ -14,7 +14,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestGetUserByID(t *testing.T) {
+func TestUsersService_GetUserByID(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

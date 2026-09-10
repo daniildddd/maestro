@@ -15,7 +15,7 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func TestRestartConnectorTask(t *testing.T) {
+func TestConnectorsHTTPHandler_RestartConnectorTask(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

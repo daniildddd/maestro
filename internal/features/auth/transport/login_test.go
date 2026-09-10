@@ -31,7 +31,7 @@ func newLoginRequest(t *testing.T, body, contentType string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestLogin(t *testing.T) {
+func TestAuthHTTPHandler_Login(t *testing.T) {
 	t.Parallel()
 
 	expiresAt := time.Now().Add(time.Hour).Truncate(time.Second)

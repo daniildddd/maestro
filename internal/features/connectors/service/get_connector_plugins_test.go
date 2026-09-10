@@ -12,7 +12,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsServiceGetConnectorPlugins(t *testing.T) {
+func TestConnectorsService_GetConnectorPlugins(t *testing.T) {
 	t.Parallel()
 
 	plugins := []domain.ConnectorPlugin{

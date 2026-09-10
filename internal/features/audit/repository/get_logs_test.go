@@ -14,7 +14,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestGetLogs(t *testing.T) {
+func TestAuditRepository_GetLogs(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

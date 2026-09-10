@@ -11,7 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestRestartTask(t *testing.T) {
+func TestConnectorsService_RestartTask(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

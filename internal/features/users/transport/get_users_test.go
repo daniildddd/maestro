@@ -27,7 +27,7 @@ func newGetUsersRequest(t *testing.T, query string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestGetUsers(t *testing.T) {
+func TestUsersHTTPHandler_GetUsers(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)

@@ -11,7 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestCreateConnector(t *testing.T) {
+func TestConnectorsService_CreateConnector(t *testing.T) {
 	t.Parallel()
 
 	config := map[string]string{

@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestCreateConnector(t *testing.T) {
+func TestConnectorsHTTPHandler_CreateConnector(t *testing.T) {
 	t.Parallel()
 
 	validBody := `{

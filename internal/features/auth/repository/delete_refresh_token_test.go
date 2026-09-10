@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 )
 
-func TestDeleteRefreshToken(t *testing.T) {
+func TestAuthRepository_DeleteRefreshToken(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

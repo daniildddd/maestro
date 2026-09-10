@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/users/repository"
 )
 
-func TestDeleteUser(t *testing.T) {
+func TestUsersRepository_DeleteUser(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

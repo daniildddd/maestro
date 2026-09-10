@@ -11,7 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestGetTaskByID(t *testing.T) {
+func TestConnectorsService_GetTaskByID(t *testing.T) {
 	t.Parallel()
 
 	task := domain.Task{

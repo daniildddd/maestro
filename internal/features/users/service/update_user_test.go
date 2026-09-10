@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestUpdateUser(t *testing.T) {
+func TestUsersService_UpdateUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

@@ -28,7 +28,7 @@ func newGetMeRequest(t *testing.T, userID uuid.UUID) *http.Request {
 	return req
 }
 
-func TestGetMe(t *testing.T) {
+func TestUsersHTTPHandler_GetMe(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)

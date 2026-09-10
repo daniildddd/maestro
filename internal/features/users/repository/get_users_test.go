@@ -16,7 +16,7 @@ import (
 )
 
 //nolint:maintidx // table-driven test: complexity comes from mock setup Run blocks
-func TestGetUsers(t *testing.T) {
+func TestUsersRepository_GetUsers(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

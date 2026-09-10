@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestDeleteLogByID(t *testing.T) {
+func TestAuditRepository_DeleteLogByID(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

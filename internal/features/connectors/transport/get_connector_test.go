@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestGetConnector(t *testing.T) {
+func TestConnectorsHTTPHandler_GetConnector(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

@@ -29,7 +29,7 @@ func newValidateRequest(t *testing.T, body, contentType string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestValidateConnector(t *testing.T) {
+func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) {
 	t.Parallel()
 
 	validReport := domain.ValidationReport{

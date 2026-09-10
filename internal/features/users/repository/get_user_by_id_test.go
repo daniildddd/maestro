@@ -17,7 +17,7 @@ import (
 )
 
 //nolint:gocognit,cyclop,revive,maintidx // table-driven mock-heavy test
-func TestGetUserByID(t *testing.T) {
+func TestUsersRepository_GetUserByID(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

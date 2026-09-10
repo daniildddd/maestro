@@ -29,7 +29,7 @@ func newChangeOwnPasswordRequest(
 	return req.WithContext(reqctx.WithUserID(req.Context(), userID))
 }
 
-func TestChangeOwnPassword(t *testing.T) {
+func TestUsersHTTPHandler_ChangeOwnPassword(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

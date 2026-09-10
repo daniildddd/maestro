@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestPauseConnector(t *testing.T) {
+func TestConnectorsHTTPHandler_PauseConnector(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

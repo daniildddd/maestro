@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/users/repository"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestUsersRepository_CreateUser(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

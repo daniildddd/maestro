@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/audit/service"
 )
 
-func TestGetLogByID(t *testing.T) {
+func TestAuditService_GetLogByID(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New()

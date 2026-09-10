@@ -27,7 +27,7 @@ func newGetUserByIDRequest(t *testing.T, pathID string) *http.Request {
 	return req
 }
 
-func TestGetUserByID(t *testing.T) {
+func TestUsersHTTPHandler_GetUserByID(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)

@@ -15,7 +15,7 @@ import (
 
 const opTimeoutToDomain = 100 * time.Millisecond
 
-func TestCreateUserToDomainError(t *testing.T) {
+func TestUsersRepository_CreateUserToDomainError(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -48,7 +48,7 @@ func TestCreateUserToDomainError(t *testing.T) {
 	must.ErrorIs(err, domain.ErrInvalidRole)
 }
 
-func TestDeleteUserToDomainError(t *testing.T) {
+func TestUsersRepository_DeleteUserToDomainError(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -76,7 +76,7 @@ func TestDeleteUserToDomainError(t *testing.T) {
 	must.ErrorIs(err, domain.ErrInvalidRole)
 }
 
-func TestGetUserByIDToDomainError(t *testing.T) {
+func TestUsersRepository_GetUserByIDToDomainError(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -104,7 +104,7 @@ func TestGetUserByIDToDomainError(t *testing.T) {
 	must.ErrorIs(err, domain.ErrInvalidRole)
 }
 
-func TestUpdateUserToDomainError(t *testing.T) {
+func TestUsersRepository_UpdateUserToDomainError(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -139,7 +139,7 @@ func TestUpdateUserToDomainError(t *testing.T) {
 	must.ErrorIs(err, domain.ErrInvalidRole)
 }
 
-func TestUpdateUserAfterToDomainError(t *testing.T) {
+func TestUsersRepository_UpdateUserAfterToDomainError(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -176,7 +176,7 @@ func TestUpdateUserAfterToDomainError(t *testing.T) {
 	must.ErrorIs(err, domain.ErrInvalidRole)
 }
 
-func TestGetUsersToDomainError(t *testing.T) {
+func TestUsersRepository_GetUsersToDomainError(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)

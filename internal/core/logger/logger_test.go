@@ -175,7 +175,7 @@ func TestLogger_ToContext(t *testing.T) {
 }
 
 //nolint:paralleltest // NewLogger writes to process-wide os.Stdout (hardcoded)
-func TestLogger_FromContext(t *testing.T) {
+func TestLoggerFromContext(t *testing.T) {
 	t.Run("returns logger when present in context", func(t *testing.T) {
 		is := assert.New(t)
 		must := require.New(t)

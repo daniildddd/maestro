@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestGetConnectors(t *testing.T) {
+func TestConnectorsHTTPHandler_GetConnectors(t *testing.T) {
 	t.Parallel()
 
 	pgConnector := domain.Connector{

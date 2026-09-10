@@ -20,7 +20,7 @@ type stubCommandTag struct {
 
 func (s stubCommandTag) RowsAffected() int64 { return s.affected }
 
-func TestChangePassword(t *testing.T) {
+func TestUsersRepository_ChangePassword(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

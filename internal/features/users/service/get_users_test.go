@@ -28,7 +28,7 @@ func newTestService(
 	)
 }
 
-func TestGetUsers(t *testing.T) {
+func TestUsersService_GetUsers(t *testing.T) {
 	t.Parallel()
 
 	filter := &domain.UserFilter{Page: 1, Limit: 20}

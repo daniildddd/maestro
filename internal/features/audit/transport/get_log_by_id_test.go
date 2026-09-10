@@ -16,7 +16,7 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func TestGetLogByID(t *testing.T) {
+func TestAuditHTTPHandler_GetLogByID(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New()

@@ -21,7 +21,7 @@ func newTestServiceWithHasher(
 	return service.NewUsersService(usersRepository, passwordHasher, noopAuditor{})
 }
 
-func TestDeleteMe(t *testing.T) {
+func TestUsersService_DeleteMe(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

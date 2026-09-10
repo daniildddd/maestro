@@ -11,7 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestGetConnectorByID(t *testing.T) {
+func TestConnectorsService_GetConnectorByID(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

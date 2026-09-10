@@ -14,7 +14,7 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func TestDeleteConnector(t *testing.T) {
+func TestConnectorsHTTPHandler_DeleteConnector(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

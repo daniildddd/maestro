@@ -18,7 +18,7 @@ import (
 )
 
 //nolint:maintidx // table-driven test: complexity comes from per-case mock setups
-func TestGetLogs(t *testing.T) {
+func TestAuditHTTPHandler_GetLogs(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New()
@@ -196,7 +196,7 @@ func TestGetLogs(t *testing.T) {
 	}
 }
 
-func TestGetLogsResponseDTO(t *testing.T) {
+func TestAuditHTTPHandler_GetLogsResponseDTO(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New()

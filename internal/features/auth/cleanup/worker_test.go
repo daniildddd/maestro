@@ -75,7 +75,7 @@ func waitForDelete(t *testing.T, results chan deleteResult) {
 	}
 }
 
-func TestServiceRunCleansUpOnEveryTick(t *testing.T) {
+func TestWorker_RunCleansUpOnEveryTick(t *testing.T) {
 	t.Parallel()
 
 	rr := runService(t, 10*time.Millisecond)
@@ -97,7 +97,7 @@ func TestServiceRunCleansUpOnEveryTick(t *testing.T) {
 	}
 }
 
-func TestServiceRunContinuesAfterError(t *testing.T) {
+func TestWorker_RunContinuesAfterError(t *testing.T) {
 	t.Parallel()
 
 	rr := runService(t, 10*time.Millisecond)
@@ -119,7 +119,7 @@ func TestServiceRunContinuesAfterError(t *testing.T) {
 	}
 }
 
-func TestServiceRunStopsOnContextCancel(t *testing.T) {
+func TestWorker_RunStopsOnContextCancel(t *testing.T) {
 	t.Parallel()
 
 	rr := runService(t, time.Hour)
@@ -133,7 +133,7 @@ func TestServiceRunStopsOnContextCancel(t *testing.T) {
 	}
 }
 
-func TestServiceRunDoesNotTickBeforeInterval(t *testing.T) {
+func TestWorker_RunDoesNotTickBeforeInterval(t *testing.T) {
 	t.Parallel()
 
 	rr := runService(t, time.Hour)

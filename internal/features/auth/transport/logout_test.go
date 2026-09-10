@@ -34,7 +34,7 @@ func newLogoutRequest(t *testing.T, cookieValue string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestLogout(t *testing.T) {
+func TestAuthHTTPHandler_Logout(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

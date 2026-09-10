@@ -11,7 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsServiceDelete(t *testing.T) {
+func TestConnectorsService_Delete(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

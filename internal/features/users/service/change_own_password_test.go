@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestChangeOwnPassword(t *testing.T) {
+func TestUsersService_ChangeOwnPassword(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

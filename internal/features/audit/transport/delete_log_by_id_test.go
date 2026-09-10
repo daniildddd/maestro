@@ -15,7 +15,7 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func TestDeleteLogByID(t *testing.T) {
+func TestAuditHTTPHandler_DeleteLogByID(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New()

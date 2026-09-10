@@ -25,7 +25,7 @@ func newDeleteUserRequest(t *testing.T, pathID string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestDeleteUser(t *testing.T) {
+func TestUsersHTTPHandler_DeleteUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

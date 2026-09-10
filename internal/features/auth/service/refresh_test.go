@@ -15,7 +15,7 @@ import (
 )
 
 //nolint:maintidx // table-driven test: complexity comes from per-case mock setups
-func TestRefresh(t *testing.T) {
+func TestAuthService_Refresh(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

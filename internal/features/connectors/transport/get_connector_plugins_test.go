@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestGetConnectorPlugins(t *testing.T) {
+func TestConnectorsHTTPHandler_GetConnectorPlugins(t *testing.T) {
 	t.Parallel()
 
 	plugins := []domain.ConnectorPlugin{

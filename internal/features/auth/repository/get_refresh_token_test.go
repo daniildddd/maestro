@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 )
 
-func TestGetRefreshTokenByHash(t *testing.T) {
+func TestAuthRepository_GetRefreshTokenByHash(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

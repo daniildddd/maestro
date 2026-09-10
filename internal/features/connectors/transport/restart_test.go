@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestRestartConnector(t *testing.T) {
+func TestConnectorsHTTPHandler_RestartConnector(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

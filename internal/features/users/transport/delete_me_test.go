@@ -25,7 +25,7 @@ func newDeleteMeRequest(t *testing.T, userID uuid.UUID, body, contentType string
 	return req.WithContext(reqctx.WithUserID(req.Context(), userID))
 }
 
-func TestDeleteMe(t *testing.T) {
+func TestUsersHTTPHandler_DeleteMe(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

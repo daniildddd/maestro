@@ -10,7 +10,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestLogout(t *testing.T) {
+func TestAuthService_Logout(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

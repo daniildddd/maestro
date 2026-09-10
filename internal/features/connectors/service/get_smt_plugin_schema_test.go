@@ -11,7 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestGetSMTPluginSchema(t *testing.T) {
+func TestConnectorsService_GetSMTPluginSchema(t *testing.T) {
 	t.Parallel()
 
 	allFields := []domain.ConnectorPluginField{

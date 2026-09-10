@@ -25,7 +25,7 @@ func newChangePasswordRequest(t *testing.T, pathID, body, contentType string) *h
 	return req
 }
 
-func TestChangePassword(t *testing.T) {
+func TestUsersHTTPHandler_ChangePassword(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

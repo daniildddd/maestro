@@ -28,7 +28,7 @@ func newUpdateUserRequest(t *testing.T, pathID, body, contentType string) *http.
 	return req
 }
 
-func TestUpdateUser(t *testing.T) {
+func TestUsersHTTPHandler_UpdateUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

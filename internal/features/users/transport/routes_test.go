@@ -16,7 +16,7 @@ type routeSpec struct {
 	roles []string
 }
 
-func TestUsersHTTPHandlerPrivateRoutes(t *testing.T) {
+func TestUsersHTTPHandler_PrivateRoutes(t *testing.T) {
 	t.Parallel()
 
 	is := assert.New(t)

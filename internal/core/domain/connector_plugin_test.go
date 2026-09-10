@@ -67,7 +67,7 @@ func TestNewConnectorPluginSchemaFilter(t *testing.T) {
 	}
 }
 
-func TestConnectorPluginSchemaFilterApply(t *testing.T) {
+func TestConnectorPluginSchemaFilter_Apply(t *testing.T) {
 	t.Parallel()
 
 	fields := []domain.ConnectorPluginField{

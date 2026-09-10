@@ -15,7 +15,7 @@ import (
 
 var errSourceDown = errors.New("source down")
 
-func TestConnectorsServiceGetConnectors(t *testing.T) {
+func TestConnectorsService_GetConnectors(t *testing.T) {
 	t.Parallel()
 
 	pgConnector := domain.Connector{

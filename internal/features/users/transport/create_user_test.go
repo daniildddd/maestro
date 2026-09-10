@@ -36,7 +36,7 @@ func newCreateUserRequest(
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestCreateUser(t *testing.T) {
+func TestUsersHTTPHandler_CreateUser(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Now().UTC().Add(-time.Hour).Truncate(time.Second)

@@ -9,7 +9,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
 
-func TestMongoDBAdapterMatch(t *testing.T) {
+func TestMongoDBAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -21,7 +21,7 @@ func TestMongoDBAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestMongoDBAdapterCanonicalize(t *testing.T) {
+func TestMongoDBAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

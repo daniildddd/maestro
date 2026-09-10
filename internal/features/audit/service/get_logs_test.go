@@ -28,7 +28,7 @@ func mustNewAuditEvent(id uuid.UUID) domain.AuditEvent {
 	}
 }
 
-func TestGetLogs(t *testing.T) {
+func TestAuditService_GetLogs(t *testing.T) {
 	t.Parallel()
 
 	events := []domain.AuditEvent{

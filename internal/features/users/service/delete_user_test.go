@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func TestDeleteUser(t *testing.T) {
+func TestUsersService_DeleteUser(t *testing.T) {
 	t.Parallel()
 
 	userID := uuid.New()

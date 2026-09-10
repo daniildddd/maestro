@@ -23,7 +23,7 @@ type stubCommandTag struct {
 func (s stubCommandTag) RowsAffected() int64 { return s.affected }
 
 //nolint:maintidx // table-driven test: complexity comes from per-case mock setups
-func TestRotateRefreshToken(t *testing.T) {
+func TestAuthRepository_RotateRefreshToken(t *testing.T) {
 	t.Parallel()
 
 	const opTimeout = 100 * time.Millisecond

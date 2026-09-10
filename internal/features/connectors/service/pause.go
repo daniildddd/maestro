@@ -13,7 +13,10 @@ import (
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
-func (s *ConnectorsService) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
+func (s *ConnectorsService) PauseConnector(
+	ctx context.Context,
+	name string,
+) (domain.Connector, error) {
 	const op = "connectors.service.PauseConnector"
 
 	connector, err := s.connectors.PauseConnector(ctx, name)

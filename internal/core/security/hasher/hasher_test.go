@@ -158,5 +158,9 @@ func TestBcryptHasher_Hash(t *testing.T) {
 	hash2, err := h.Hash("my-password")
 
 	must.NoError(err)
-	must.NotEqual(hash1, hash2, "bcrypt must produce different hashes for same password due to random salt")
+	must.NotEqual(
+		hash1,
+		hash2,
+		"bcrypt must produce different hashes for same password due to random salt",
+	)
 }

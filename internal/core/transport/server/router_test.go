@@ -17,7 +17,8 @@ import (
 func makeTracingMiddleware(id string) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(id + "->")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			_, _ = w.Write([]byte(id + "->"))
 			next.ServeHTTP(w, r)
 		})
 	}

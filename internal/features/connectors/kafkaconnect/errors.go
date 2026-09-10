@@ -51,9 +51,6 @@ func isAlreadyExists(err error) bool {
 }
 
 func isRebalance(err error) bool {
-	// Kafka Connect reports rebalance-in-progress as 409 with various messages
-	// ("rebalance expected", "leader not known", ...); only 409 "already exists"
-	// (duplicate create) is permanent, everything else on 409 is worth a retry.
 	status, ok := statusOf(err)
 
 	return ok && status == http.StatusConflict && !isAlreadyExists(err)

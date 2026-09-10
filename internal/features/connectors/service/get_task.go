@@ -9,7 +9,11 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func (s *ConnectorsService) GetTaskByID(ctx context.Context, name string, taskID int) (domain.Task, error) {
+func (s *ConnectorsService) GetTaskByID(
+	ctx context.Context,
+	name string,
+	taskID int,
+) (domain.Task, error) {
 	const op = "connectors.service.GetTaskByID"
 
 	task, err := s.connectors.GetTaskByID(ctx, name, taskID)

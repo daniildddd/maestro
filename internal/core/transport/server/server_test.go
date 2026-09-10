@@ -27,7 +27,10 @@ func nopLogger() *core_logger.Logger {
 	return &core_logger.Logger{Logger: zap.NewNop()}
 }
 
-func newObservableLogger(t *testing.T, lvl zapcore.Level) (*core_logger.Logger, *observer.ObservedLogs) {
+func newObservableLogger(
+	t *testing.T,
+	lvl zapcore.Level,
+) (*core_logger.Logger, *observer.ObservedLogs) {
 	t.Helper()
 
 	core, recorder := observer.New(lvl)

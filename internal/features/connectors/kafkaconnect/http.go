@@ -45,7 +45,8 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 		return fmt.Errorf("%s: %w: %v", op, domain.ErrKafkaConnectUnavailable, err)
 	}
 
-	defer func() { _ = resp.Body.Close() }() //nolint:errcheck // body fully read below; close error not actionable
+	//nolint:errcheck // body fully read below; close error not actionable
+	defer func() { _ = resp.Body.Close() }()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -62,7 +63,13 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 
 		return nil
 	case resp.StatusCode >= 500:
-		return fmt.Errorf("%s: %w: unexpected status %d: %s", op, domain.ErrKafkaConnectUnavailable, resp.StatusCode, string(data))
+		return fmt.Errorf(
+			"%s: %w: unexpected status %d: %s",
+			op,
+			domain.ErrKafkaConnectUnavailable,
+			resp.StatusCode,
+			string(data),
+		)
 	default:
 		return fmt.Errorf("%s: %w", op, &HTTPError{StatusCode: resp.StatusCode, Body: string(data)})
 	}
@@ -76,7 +83,8 @@ func (c *HTTPClient) retryWait(attempt int) time.Duration {
 		return base
 	}
 
-	jitter := rand.Int63n(int64(2*span)+1) - int64(span) //nolint:gosec // jitter is not security-sensitive
+	//nolint:gosec // jitter is not security-sensitive
+	jitter := rand.Int63n(int64(2*span)+1) - int64(span)
 
 	return base + time.Duration(jitter)
 }

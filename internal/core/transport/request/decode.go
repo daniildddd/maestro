@@ -13,7 +13,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-const maxBodyBytes = 1 << 20 // 1 MB
+const maxBodyBytes = 1 << 20
 
 var requestValidator = validator.New()
 

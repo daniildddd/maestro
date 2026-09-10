@@ -105,7 +105,8 @@ func TestRWriter_Write(t *testing.T) {
 		rec := httptest.NewRecorder()
 		rw := response.NewResponseWriter(rec)
 
-		_, err := rw.Write([]byte("hello")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		_, err := rw.Write([]byte("hello"))
 		must.NoError(err)
 		is.Equal(http.StatusOK, rec.Code)
 		is.Equal(http.StatusOK, rw.GetStatusCode())
@@ -122,7 +123,8 @@ func TestRWriter_Write(t *testing.T) {
 
 		rw.WriteHeader(http.StatusInternalServerError)
 
-		_, err := rw.Write([]byte("boom")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		_, err := rw.Write([]byte("boom"))
 		must.NoError(err)
 		is.Equal(http.StatusInternalServerError, rec.Code)
 		is.Equal(http.StatusInternalServerError, rw.GetStatusCode())
@@ -136,7 +138,8 @@ func TestRWriter_Write(t *testing.T) {
 		rec := httptest.NewRecorder()
 		rw := response.NewResponseWriter(rec)
 
-		_, err := rw.Write([]byte("hello")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+		_, err := rw.Write([]byte("hello"))
 		must.NoError(err)
 
 		rw.WriteHeader(http.StatusInternalServerError)

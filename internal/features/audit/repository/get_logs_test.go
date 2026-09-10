@@ -21,7 +21,10 @@ func TestGetLogs(t *testing.T) {
 
 	id := uuid.New()
 
-	const queryNoFilters = "\n\tSELECT id, action, outcome, failure_reason, actor_id, actor_login,\n\t       subject_type, subject_id, subject_name, state_before, state_after,\n\t       request_id, ip, user_agent, created_at\n\tFROM audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+	const queryNoFilters = "\n\tSELECT id, action, outcome, failure_reason, actor_id, actor_login,\n" +
+		"\t       subject_type, subject_id, subject_name, state_before, state_after,\n" +
+		"\t       request_id, ip, user_agent, created_at\n" +
+		"\tFROM audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2"
 
 	tests := []struct {
 		name       string
@@ -75,8 +78,13 @@ func TestGetLogs(t *testing.T) {
 			},
 		},
 		{
-			name:   "action and actor filters produce where clause",
-			filter: &domain.AuditLogFilter{Page: 2, Limit: 10, Action: domain.ActionAuthLogin, Actor: "alice"},
+			name: "action and actor filters produce where clause",
+			filter: &domain.AuditLogFilter{
+				Page:   2,
+				Limit:  10,
+				Action: domain.ActionAuthLogin,
+				Actor:  "alice",
+			},
 			setup: func(pool *MockPool, rows *MockRows) {
 				pool.EXPECT().
 					OpTimeout().
@@ -86,7 +94,11 @@ func TestGetLogs(t *testing.T) {
 				pool.EXPECT().
 					Query(
 						mock.Anything,
-						"\n\tSELECT id, action, outcome, failure_reason, actor_id, actor_login,\n\t       subject_type, subject_id, subject_name, state_before, state_after,\n\t       request_id, ip, user_agent, created_at\n\tFROM audit_logs WHERE action=$1 AND actor_login=$2 ORDER BY created_at DESC LIMIT $3 OFFSET $4",
+						"\n\tSELECT id, action, outcome, failure_reason, actor_id, actor_login,\n"+
+							"\t       subject_type, subject_id, subject_name, state_before, state_after,\n"+
+							"\t       request_id, ip, user_agent, created_at\n"+
+							"\tFROM audit_logs WHERE action=$1 AND actor_login=$2 "+
+							"ORDER BY created_at DESC LIMIT $3 OFFSET $4",
 						[]any{"auth.login", "alice", 11, 10},
 					).
 					Return(rows, nil).

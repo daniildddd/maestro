@@ -13,7 +13,10 @@ import (
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
-func (s *ConnectorsService) ResumeConnector(ctx context.Context, name string) (domain.Connector, error) {
+func (s *ConnectorsService) ResumeConnector(
+	ctx context.Context,
+	name string,
+) (domain.Connector, error) {
 	const op = "connectors.service.ResumeConnector"
 
 	connector, err := s.connectors.ResumeConnector(ctx, name)

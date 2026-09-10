@@ -32,7 +32,8 @@ func TestMongoDBAdapterCanonicalize(t *testing.T) {
 		{
 			name: "replica set shows full seed list, not first host",
 			config: map[string]string{
-				"mongodb.connection.string": "mongodb://debezium:secret@mongo1:27017,mongo2:27017/?replicaSet=rs0",
+				"mongodb.connection.string": "mongodb://debezium:secret@mongo1:27017," +
+					"mongo2:27017/?replicaSet=rs0",
 			},
 			want: domain.SourceConfig{
 				Hostname: "mongo1:27017, mongo2:27017",

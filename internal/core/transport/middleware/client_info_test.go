@@ -84,10 +84,12 @@ func TestClientInfo(t *testing.T) {
 				gotUA string
 			)
 
-			handler := middleware.ClientInfo()(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
-				gotIP = reqctx.ClientIP(r.Context())
-				gotUA = reqctx.UserAgent(r.Context())
-			}))
+			handler := middleware.ClientInfo()(http.HandlerFunc(
+				func(_ http.ResponseWriter, r *http.Request) {
+					gotIP = reqctx.ClientIP(r.Context())
+					gotUA = reqctx.UserAgent(r.Context())
+				},
+			))
 
 			req := httptest.NewRequest(http.MethodGet, "/", http.NoBody)
 			req.RemoteAddr = tt.remoteAddr

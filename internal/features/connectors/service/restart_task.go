@@ -13,7 +13,11 @@ import (
 	"github.com/daniildddd/maestro/internal/core/transport/reqctx"
 )
 
-func (s *ConnectorsService) RestartTask(ctx context.Context, connectorName string, taskID int) error {
+func (s *ConnectorsService) RestartTask(
+	ctx context.Context,
+	connectorName string,
+	taskID int,
+) error {
 	const op = "connectors.service.RestartTask"
 
 	if err := s.connectors.RestartTask(ctx, connectorName, taskID); err != nil {

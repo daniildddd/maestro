@@ -122,8 +122,10 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "VALIDATION_FAILED",
 		},
 		{
-			name:        "username too long rejected",
-			body:        `{"username":"` + strings.Repeat("a", 33) + `","password":"secret123","role":"admin"}`,
+			name: "username too long rejected",
+			body: `{"username":"` +
+				strings.Repeat("a", 33) +
+				`","password":"secret123","role":"admin"}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,
@@ -149,8 +151,10 @@ func TestCreateUser(t *testing.T) {
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
-			name:        "body too large rejected",
-			body:        `{"username":"alice","password":"` + strings.Repeat("a", 1<<20) + `","role":"admin"}`,
+			name: "body too large rejected",
+			body: `{"username":"alice","password":"` +
+				strings.Repeat("a", 1<<20) +
+				`","role":"admin"}`,
 			contentType: "application/json",
 			setupMock:   func(_ *MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,

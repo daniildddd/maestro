@@ -18,7 +18,8 @@ import (
 func makeTracingMiddleware(id string) middleware.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(id + "->")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			_, _ = w.Write([]byte(id + "->"))
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -36,7 +37,8 @@ func TestRoute_WithMiddleware(t *testing.T) {
 		must := require.New(t)
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			_, _ = w.Write([]byte("done")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			_, _ = w.Write([]byte("done"))
 		})
 
 		route := &Route{
@@ -59,7 +61,8 @@ func TestRoute_WithMiddleware(t *testing.T) {
 		must := require.New(t)
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			_, _ = w.Write([]byte("done")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			_, _ = w.Write([]byte("done"))
 		})
 
 		route := &Route{
@@ -83,7 +86,8 @@ func TestRoute_WithMiddleware(t *testing.T) {
 		must := require.New(t)
 
 		handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			_, _ = w.Write([]byte("done")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			_, _ = w.Write([]byte("done"))
 		})
 
 		route := &Route{

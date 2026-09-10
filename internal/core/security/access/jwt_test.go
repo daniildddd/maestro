@@ -75,7 +75,8 @@ func wrongAlgToken(t *testing.T, userID uuid.UUID, role string) string {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodNone, claims)
-	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType) //nolint:gosec // test-only: verify must reject non-HMAC
+	//nolint:gosec // test-only: verify must reject non-HMAC
+	signed, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
 	must.NoError(err)
 
 	return signed

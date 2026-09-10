@@ -64,7 +64,10 @@ type pluginConfigKey struct {
 	DisplayName   *string `json:"display_name"`
 }
 
-func (c *HTTPClient) GetConnectorPluginSchema(ctx context.Context, pluginID string) (domain.ConnectorPluginSchema, error) {
+func (c *HTTPClient) GetConnectorPluginSchema(
+	ctx context.Context,
+	pluginID string,
+) (domain.ConnectorPluginSchema, error) {
 	const op = "connectors.kafkaconnect.GetConnectorPluginSchema"
 
 	path := "/connector-plugins/" + url.PathEscape(pluginID) + "/config"
@@ -73,7 +76,11 @@ func (c *HTTPClient) GetConnectorPluginSchema(ctx context.Context, pluginID stri
 
 	if err := c.do(ctx, http.MethodGet, path, nil, &resp); err != nil {
 		if isNotFound(err) {
-			return domain.ConnectorPluginSchema{}, fmt.Errorf("%s: %w", op, domain.ErrConnectorPluginNotFound)
+			return domain.ConnectorPluginSchema{}, fmt.Errorf(
+				"%s: %w",
+				op,
+				domain.ErrConnectorPluginNotFound,
+			)
 		}
 
 		return domain.ConnectorPluginSchema{}, fmt.Errorf("%s: %w", op, err)
@@ -96,7 +103,10 @@ func (c *HTTPClient) GetConnectorPluginSchema(ctx context.Context, pluginID stri
 	return domain.ConnectorPluginSchema{Fields: fields}, nil
 }
 
-func (c *HTTPClient) GetConnectorPluginSchemaWithValues(ctx context.Context, pluginID string) (domain.ConnectorPluginSchema, error) {
+func (c *HTTPClient) GetConnectorPluginSchemaWithValues(
+	ctx context.Context,
+	pluginID string,
+) (domain.ConnectorPluginSchema, error) {
 	const op = "connectors.kafkaconnect.GetConnectorPluginSchemaWithValues"
 
 	schema, err := c.GetConnectorPluginSchema(ctx, pluginID)
@@ -196,7 +206,10 @@ func (c *HTTPClient) getPlugins(ctx context.Context, connectorsOnly bool) ([]plu
 	return resp, nil
 }
 
-func (c *HTTPClient) pluginRecommendedValues(ctx context.Context, pluginID string) (map[string][]string, error) {
+func (c *HTTPClient) pluginRecommendedValues(
+	ctx context.Context,
+	pluginID string,
+) (map[string][]string, error) {
 	const op = "connectors.kafkaconnect.pluginRecommendedValues"
 
 	var infos struct {

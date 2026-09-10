@@ -17,7 +17,11 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func newChangeOwnPasswordRequest(t *testing.T, userID uuid.UUID, body, contentType string) *http.Request {
+func newChangeOwnPasswordRequest(
+	t *testing.T,
+	userID uuid.UUID,
+	body, contentType string,
+) *http.Request {
 	t.Helper()
 
 	req := newTestJSONRequest(t, http.MethodPatch, "/users/me/password", body, contentType)
@@ -128,8 +132,10 @@ func TestChangeOwnPassword(t *testing.T) {
 			wantCode:    "INVALID_REQUEST_BODY",
 		},
 		{
-			name:        "body too large returns INVALID_REQUEST_BODY",
-			body:        `{"old_password":"oldSecret123","new_password":"` + strings.Repeat("a", 1<<20) + `"}`,
+			name: "body too large returns INVALID_REQUEST_BODY",
+			body: `{"old_password":"oldSecret123","new_password":"` +
+				strings.Repeat("a", 1<<20) +
+				`"}`,
 			contentType: "application/json",
 			setupMock:   func(*MockUsersService) {},
 			wantStatus:  http.StatusBadRequest,

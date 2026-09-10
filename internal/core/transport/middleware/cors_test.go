@@ -125,7 +125,10 @@ func TestCORS(t *testing.T) {
 			}
 
 			if tt.wantPreflight {
-				must.Equal("GET, POST, PATCH, DELETE, OPTIONS", rec.Header().Get("Access-Control-Allow-Methods"))
+				must.Equal(
+					"GET, POST, PATCH, DELETE, OPTIONS",
+					rec.Header().Get("Access-Control-Allow-Methods"),
+				)
 				must.Equal("Content-Type, Authorization", rec.Header().Get("Access-Control-Allow-Headers"))
 				must.Equal("600", rec.Header().Get("Access-Control-Max-Age"))
 			} else {

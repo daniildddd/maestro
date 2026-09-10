@@ -9,7 +9,9 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 )
 
-func (s *ConnectorsService) GetConnectorPlugins(ctx context.Context) ([]domain.ConnectorPlugin, error) {
+func (s *ConnectorsService) GetConnectorPlugins(
+	ctx context.Context,
+) ([]domain.ConnectorPlugin, error) {
 	const op = "connectors.service.GetConnectorPlugins"
 
 	plugins, err := s.connectors.GetConnectorPlugins(ctx)

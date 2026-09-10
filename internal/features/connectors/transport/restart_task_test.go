@@ -84,7 +84,11 @@ func TestRestartConnectorTask(t *testing.T) {
 			req := newConnectorsRequest(t, http.MethodPost, tt.path, "")
 
 			if tt.noTaskID {
-				req = httptest.NewRequest(http.MethodPost, "/connectors/pg-connector/tasks/0/restart", http.NoBody)
+				req = httptest.NewRequest(
+					http.MethodPost,
+					"/connectors/pg-connector/tasks/0/restart",
+					http.NoBody,
+				)
 				req.SetPathValue("id", "pg-connector")
 				req = req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 			}

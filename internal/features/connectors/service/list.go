@@ -29,7 +29,10 @@ func (s *ConnectorsService) GetConnectors(
 	return paginateConnectors(matched, filter), nil
 }
 
-func paginateConnectors(connectors []domain.Connector, filter *domain.ConnectorFilter) []domain.Connector {
+func paginateConnectors(
+	connectors []domain.Connector,
+	filter *domain.ConnectorFilter,
+) []domain.Connector {
 	offset := (filter.Page - 1) * filter.Limit
 
 	if offset >= len(connectors) {

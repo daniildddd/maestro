@@ -64,7 +64,13 @@ func TestRotateRefreshToken(t *testing.T) {
 					Exec(
 						mock.Anything,
 						mock.Anything,
-						[]any{newToken.ID, newToken.UserID, newToken.TokenHash, newToken.CreatedAt, newToken.ExpiresAt},
+						[]any{
+							newToken.ID,
+							newToken.UserID,
+							newToken.TokenHash,
+							newToken.CreatedAt,
+							newToken.ExpiresAt,
+						},
 					).
 					Return(stubCommandTag{affected: 1}, nil).
 					Once()

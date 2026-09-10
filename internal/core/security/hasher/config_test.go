@@ -71,7 +71,8 @@ func unsetAllHasherEnv(t *testing.T) {
 
 		t.Cleanup(func() {
 			if ok {
-				_ = os.Setenv(key, old) //nolint:errcheck,usetesting // cannot use t.Setenv inside t.Cleanup; restore original
+				//nolint:errcheck,usetesting // cannot use t.Setenv inside t.Cleanup; restore original
+				_ = os.Setenv(key, old)
 			}
 		})
 	}

@@ -18,7 +18,8 @@ func TestRecovery(t *testing.T) {
 		t.Parallel()
 		must := require.New(t)
 		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			_, _ = w.Write([]byte("done")) //nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			//nolint:errcheck // test-only: httptest ResponseWriter.Write never fails
+			_, _ = w.Write([]byte("done"))
 		})
 
 		chained := middleware.Recovery()(nextHandler)

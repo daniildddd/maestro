@@ -139,7 +139,9 @@ func unsetEnvForTest(t *testing.T, key string) {
 
 	t.Cleanup(func() {
 		if ok {
-			_ = os.Setenv(key, old) //nolint:errcheck,usetesting // cannot use t.Setenv inside t.Cleanup (test already finished); restore original
+			//nolint:errcheck,usetesting // cannot use t.Setenv inside t.Cleanup
+			// (test already finished); restore original
+			_ = os.Setenv(key, old)
 		}
 	})
 }

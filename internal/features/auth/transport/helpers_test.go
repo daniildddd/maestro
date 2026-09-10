@@ -11,7 +11,10 @@ func nopLogger() *logger.Logger {
 	return &logger.Logger{Logger: zap.NewNop()}
 }
 
-func newTestHandler(authService transport.AuthService, cfg transport.Config) *transport.AuthHTTPHandler {
+func newTestHandler(
+	authService transport.AuthService,
+	cfg transport.Config,
+) *transport.AuthHTTPHandler {
 	return transport.NewAuthHTTPHandler(authService, cfg)
 }
 

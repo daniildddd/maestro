@@ -13,7 +13,12 @@ type configProblem struct {
 	severity domain.CheckSeverity
 }
 
-func check(id string, severity domain.CheckSeverity, format string, args ...any) domain.ValidationCheck {
+func check(
+	id string,
+	severity domain.CheckSeverity,
+	format string,
+	args ...any,
+) domain.ValidationCheck {
 	return domain.ValidationCheck{
 		ID:       id,
 		Severity: severity,
@@ -21,14 +26,24 @@ func check(id string, severity domain.CheckSeverity, format string, args ...any)
 	}
 }
 
-func fieldCheck(id string, severity domain.CheckSeverity, field, format string, args ...any) domain.ValidationCheck {
+func fieldCheck(
+	id string,
+	severity domain.CheckSeverity,
+	field, format string,
+	args ...any,
+) domain.ValidationCheck {
 	result := check(id, severity, format, args...)
 	result.Field = field
 
 	return result
 }
 
-func tableCheck(id string, severity domain.CheckSeverity, table, format string, args ...any) domain.ValidationCheck {
+func tableCheck(
+	id string,
+	severity domain.CheckSeverity,
+	table, format string,
+	args ...any,
+) domain.ValidationCheck {
 	result := check(id, severity, format, args...)
 	result.Table = table
 

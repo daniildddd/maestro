@@ -49,7 +49,10 @@ func TestConnectorsServiceGetConnectorPluginSchema(t *testing.T) {
 			filter:   mustSchemaFilter(t, "high"),
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
-					GetConnectorPluginSchemaWithValues(mock.Anything, "io.debezium.connector.postgresql.PostgresConnector").
+					GetConnectorPluginSchemaWithValues(
+						mock.Anything,
+						"io.debezium.connector.postgresql.PostgresConnector",
+					).
 					Return(domain.ConnectorPluginSchema{Fields: allFields}, nil).
 					Once()
 			},
@@ -61,7 +64,10 @@ func TestConnectorsServiceGetConnectorPluginSchema(t *testing.T) {
 			filter:   mustSchemaFilter(t, "medium"),
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
-					GetConnectorPluginSchemaWithValues(mock.Anything, "io.debezium.connector.postgresql.PostgresConnector").
+					GetConnectorPluginSchemaWithValues(
+						mock.Anything,
+						"io.debezium.connector.postgresql.PostgresConnector",
+					).
 					Return(domain.ConnectorPluginSchema{Fields: allFields}, nil).
 					Once()
 			},
@@ -73,7 +79,10 @@ func TestConnectorsServiceGetConnectorPluginSchema(t *testing.T) {
 			filter:   mustSchemaFilter(t, "all"),
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
-					GetConnectorPluginSchemaWithValues(mock.Anything, "io.debezium.connector.postgresql.PostgresConnector").
+					GetConnectorPluginSchemaWithValues(
+						mock.Anything,
+						"io.debezium.connector.postgresql.PostgresConnector",
+					).
 					Return(domain.ConnectorPluginSchema{Fields: allFields}, nil).
 					Once()
 			},
@@ -97,7 +106,10 @@ func TestConnectorsServiceGetConnectorPluginSchema(t *testing.T) {
 			filter:   mustSchemaFilter(t, "high"),
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
-					GetConnectorPluginSchemaWithValues(mock.Anything, "io.debezium.connector.postgresql.PostgresConnector").
+					GetConnectorPluginSchemaWithValues(
+						mock.Anything,
+						"io.debezium.connector.postgresql.PostgresConnector",
+					).
 					Return(domain.ConnectorPluginSchema{}, domain.ErrKafkaConnectUnavailable).
 					Once()
 			},
@@ -109,7 +121,10 @@ func TestConnectorsServiceGetConnectorPluginSchema(t *testing.T) {
 			filter:   mustSchemaFilter(t, "high"),
 			setupMock: func(kc *MockKafkaConnect) {
 				kc.EXPECT().
-					GetConnectorPluginSchemaWithValues(mock.Anything, "io.debezium.connector.postgresql.PostgresConnector").
+					GetConnectorPluginSchemaWithValues(
+						mock.Anything,
+						"io.debezium.connector.postgresql.PostgresConnector",
+					).
 					Return(domain.ConnectorPluginSchema{}, errSourceDown).
 					Once()
 			},

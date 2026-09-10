@@ -16,7 +16,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 )
 
-//nolint:gocognit,cyclop,revive,maintidx // table-driven test: complexity comes from mock setup Run blocks
+//nolint:gocognit,cyclop,revive,maintidx // table-driven mock-heavy test
 func TestGetUserByName(t *testing.T) {
 	t.Parallel()
 

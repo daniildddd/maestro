@@ -49,7 +49,13 @@ func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, err
 
 	var resp listResponse
 
-	if err := c.do(ctx, http.MethodGet, "/connectors?expand=status&expand=info", nil, &resp); err != nil {
+	if err := c.do(
+		ctx,
+		http.MethodGet,
+		"/connectors?expand=status&expand=info",
+		nil,
+		&resp,
+	); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -63,7 +69,11 @@ func (c *HTTPClient) GetConnectors(ctx context.Context) ([]domain.Connector, err
 		tasks := make([]domain.Task, 0, len(v.Status.Tasks))
 
 		for _, t := range v.Status.Tasks {
-			tasks = append(tasks, domain.Task{ID: t.ID, State: strings.ToLower(t.State), WorkerID: t.WorkerID})
+			tasks = append(tasks, domain.Task{
+				ID:       t.ID,
+				State:    strings.ToLower(t.State),
+				WorkerID: t.WorkerID,
+			})
 		}
 
 		connector, err := domain.NewConnector(
@@ -106,7 +116,11 @@ func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.
 
 	tasks := make([]domain.Task, 0, len(status.Tasks))
 	for _, t := range status.Tasks {
-		tasks = append(tasks, domain.Task{ID: t.ID, State: strings.ToLower(t.State), WorkerID: t.WorkerID})
+		tasks = append(tasks, domain.Task{
+			ID:       t.ID,
+			State:    strings.ToLower(t.State),
+			WorkerID: t.WorkerID,
+		})
 	}
 
 	connector, err := domain.NewConnector(
@@ -126,7 +140,11 @@ func (c *HTTPClient) GetConnectorByID(ctx context.Context, name string) (domain.
 	return connector, nil
 }
 
-func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config map[string]string) (domain.Connector, error) {
+func (c *HTTPClient) CreateConnector(
+	ctx context.Context,
+	name string,
+	config map[string]string,
+) (domain.Connector, error) {
 	const op = "connectors.kafkaconnect.CreateConnector"
 
 	body := struct {
@@ -178,7 +196,11 @@ func (c *HTTPClient) CreateConnector(ctx context.Context, name string, config ma
 	return connector, nil
 }
 
-func (c *HTTPClient) UpdateConnector(ctx context.Context, name string, config map[string]string) (domain.Connector, error) {
+func (c *HTTPClient) UpdateConnector(
+	ctx context.Context,
+	name string,
+	config map[string]string,
+) (domain.Connector, error) {
 	const op = "connectors.kafkaconnect.UpdateConnector"
 
 	var probe connectorInfo
@@ -317,7 +339,10 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 	return fmt.Errorf("%s: %w", op, connectorError(err))
 }
 
-func (c *HTTPClient) putConnectorAction(ctx context.Context, name, action string) (domain.Connector, error) {
+func (c *HTTPClient) putConnectorAction(
+	ctx context.Context,
+	name, action string,
+) (domain.Connector, error) {
 	const op = "connectors.kafkaconnect.putConnectorAction"
 
 	path := "/connectors/" + url.PathEscape(name) + "/" + action

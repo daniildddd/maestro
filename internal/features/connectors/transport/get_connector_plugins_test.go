@@ -81,7 +81,10 @@ func TestGetConnectorPlugins(t *testing.T) {
 			rec := httptest.NewRecorder()
 			rw := core_http_response.NewResponseWriter(rec)
 
-			handler.GetConnectorPlugins(rw, newConnectorsRequest(t, http.MethodGet, "/connector-plugins", ""))
+			handler.GetConnectorPlugins(
+				rw,
+				newConnectorsRequest(t, http.MethodGet, "/connector-plugins", ""),
+			)
 
 			must.Equal(tt.wantStatus, rec.Code)
 

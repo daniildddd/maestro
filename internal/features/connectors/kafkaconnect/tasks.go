@@ -11,7 +11,11 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func (c *HTTPClient) GetTaskByID(ctx context.Context, name string, taskID int) (domain.Task, error) {
+func (c *HTTPClient) GetTaskByID(
+	ctx context.Context,
+	name string,
+	taskID int,
+) (domain.Task, error) {
 	const op = "connectors.kafkaconnect.GetTaskByID"
 
 	path := fmt.Sprintf("/connectors/%s/tasks/%d/status", url.PathEscape(name), taskID)

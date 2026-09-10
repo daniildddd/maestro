@@ -69,7 +69,7 @@ func TestDecodeAndValidate(t *testing.T) {
 		must.Equal("ok", dest.Value)
 	})
 
-	const testMaxBodyBytes = 1 << 20 // must match maxBodyBytes in decode.go
+	const testMaxBodyBytes = 1 << 20
 
 	tests := []struct {
 		name        string

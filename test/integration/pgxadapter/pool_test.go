@@ -63,7 +63,8 @@ func newTestPool(t *testing.T) *pgxadapter.Pool {
 func TestNewPool(t *testing.T) {
 	t.Parallel()
 
-	unreachableDSN := "postgres://invalid:invalid@localhost:1/postgres?sslmode=disable" //nolint:gosec // placeholder credentials in test fixture DSN
+	//nolint:gosec // placeholder credentials in test fixture DSN
+	unreachableDSN := "postgres://invalid:invalid@localhost:1/postgres?sslmode=disable"
 
 	tests := []struct {
 		name    string

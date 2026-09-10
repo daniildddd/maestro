@@ -110,7 +110,13 @@ func (c Connector) Validate() error {
 	}
 
 	if c.TasksCount != len(c.Tasks) {
-		return fmt.Errorf("%s: %w: tasks_count %d != len(tasks) %d", op, ErrInvalidConnector, c.TasksCount, len(c.Tasks))
+		return fmt.Errorf(
+			"%s: %w: tasks_count %d != len(tasks) %d",
+			op,
+			ErrInvalidConnector,
+			c.TasksCount,
+			len(c.Tasks),
+		)
 	}
 
 	return nil
@@ -182,7 +188,10 @@ func (f *ConnectorFilter) Apply(connectors []Connector) []Connector {
 			continue
 		}
 
-		if f.Search != "" && !strings.Contains(strings.ToLower(connector.Name), strings.ToLower(f.Search)) {
+		if f.Search != "" && !strings.Contains(
+			strings.ToLower(connector.Name),
+			strings.ToLower(f.Search),
+		) {
 			continue
 		}
 

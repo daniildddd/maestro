@@ -95,7 +95,11 @@ func (m *Manager) Verify(
 
 	userID, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return AuthUser{}, fmt.Errorf("%s: invalid subject(uuid parse): %w", op, errs.ErrAccessTokenInvalid)
+		return AuthUser{}, fmt.Errorf(
+			"%s: invalid subject(uuid parse): %w",
+			op,
+			errs.ErrAccessTokenInvalid,
+		)
 	}
 
 	if userID == uuid.Nil {

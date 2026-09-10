@@ -96,7 +96,7 @@ func unsetAllKafkaConnectEnv(t *testing.T) {
 	}
 }
 
-func TestConfigValidate(t *testing.T) {
+func TestConfig_Validate(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

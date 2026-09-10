@@ -942,13 +942,8 @@ paths:
       x-required-roles: [user]
       parameters:
         - $ref: '#/components/parameters/ConnectorIdPathParam'
-      requestBody:
-        description: Restart options. Defaults to restarting the connector only.
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RestartRequest'
+        - $ref: '#/components/parameters/IncludeTasksQueryParam'
+        - $ref: '#/components/parameters/OnlyFailedQueryParam'
       responses:
         '200':
           description: Successful response
@@ -1264,6 +1259,20 @@ components:
       description: The refresh token cookie.
       schema:
         type: string
+    IncludeTasksQueryParam:
+      name: include_tasks
+      in: query
+      description: Restart connector and all tasks. Defaults to restarting the connector only.
+      schema:
+        type: boolean
+        default: false
+    OnlyFailedQueryParam:
+      name: only_failed
+      in: query
+      description: Restart only failed connectors and tasks.
+      schema:
+        type: boolean
+        default: false
     ImportanceQueryParam:
       name: importance
       in: query
@@ -1941,18 +1950,6 @@ components:
             database.hostname: maestro-postgres
             database.password: '********'
             plugin.name: pgoutput
-    RestartRequest:
-      description: Restart options for a connector.
-      type: object
-      properties:
-        include_tasks:
-          type: boolean
-          description: Restart connector and all tasks.
-          example: true
-        only_failed:
-          type: boolean
-          description: Restart only failed connectors and tasks.
-          example: false
     TaskDetail:
       description: Detailed task information including the last error trace.
       type: object

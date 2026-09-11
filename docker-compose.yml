@@ -85,6 +85,36 @@ services:
 
     restart: "no"
 
+  maestro:
+    build:
+      context: .
+      dockerfile: cmd/maestro/Dockerfile
+    container_name: maestro-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      - LOGGER_LEVEL=${LOGGER_LEVEL}
+      - LOGGER_FOLDER=${LOGGER_FOLDER}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN}
+      - JWT_SECRET=${JWT_SECRET}
+      - MIDDLEWARE_ALLOWED_ORIGINS=${MIDDLEWARE_ALLOWED_ORIGINS}
+      - KAFKA_CONNECT_BASE_URL=http://connect:${KAFKA_CONNECT_PORT:-8083}
+      - KAFKA_CONNECT_TIMEOUT=${KAFKA_CONNECT_TIMEOUT}
+      - KAFKA_CONNECT_RETRY_MAX_ATTEMPTS=${KAFKA_CONNECT_RETRY_MAX_ATTEMPTS}
+      - KAFKA_CONNECT_RETRY_INITIAL_DELAY=${KAFKA_CONNECT_RETRY_INITIAL_DELAY}
+      - SERVER_ADDR=${SERVER_ADDR:-:8080}
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    restart: unless-stopped
+
   hadolint:
     image: hadolint/hadolint:v2.15.1
     volumes:

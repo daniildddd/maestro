@@ -14,6 +14,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/security/access"
 	"github.com/daniildddd/maestro/internal/core/security/hasher"
 	"github.com/daniildddd/maestro/internal/core/security/refresh"
+	"github.com/daniildddd/maestro/internal/core/transport/health"
 	"github.com/daniildddd/maestro/internal/core/transport/middleware"
 	"github.com/daniildddd/maestro/internal/core/transport/server"
 	auditrepository "github.com/daniildddd/maestro/internal/features/audit/repository"
@@ -202,6 +203,9 @@ func run() int {
 
 	srv.RegisterAPIRouters(publicV1, privateV1)
 	srv.RegisterNotFound(logger)
+
+	healthHandler := health.NewHealthHandler(postgresPool, kafkaConnectClient, health.NewConfigMust())
+	srv.RegisterRoute(healthHandler.Routes()...)
 
 	if err = srv.Run(ctx); err != nil {
 		logger.Error("HTTP server stopped", zap.Error(err))

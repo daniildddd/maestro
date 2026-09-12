@@ -75,6 +75,16 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 	}
 }
 
+func (c *HTTPClient) Ping(ctx context.Context) error {
+	const op = "connectors.kafkaconnect.Ping"
+
+	if err := c.do(ctx, http.MethodGet, "/", nil, nil); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (c *HTTPClient) retryWait(attempt int) time.Duration {
 	base := c.retryInitialDelay << (attempt - 1)
 

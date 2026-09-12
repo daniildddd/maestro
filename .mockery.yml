@@ -66,6 +66,8 @@ packages:
             pkgname: repository_test
           - dir: internal/features/audit/repository
             pkgname: repository_test
+          - dir: internal/core/transport/health
+            pkgname: health_test
       Tx:
         configs:
           - dir: internal/features/auth/repository
@@ -78,6 +80,8 @@ packages:
             pkgname: repository_test
           - dir: internal/features/audit/repository
             pkgname: repository_test
+          - dir: internal/core/transport/health
+            pkgname: health_test
       Rows:
         configs:
           - dir: internal/features/users/repository
@@ -109,3 +113,11 @@ packages:
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       ConnectorsService:
+  github.com/daniildddd/maestro/internal/core/transport/health:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "health_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      connectChecker:

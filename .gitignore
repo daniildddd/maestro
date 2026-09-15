@@ -21,5 +21,6 @@
 
 .env
 
+deploy/alertmanager/slack_api_url
 
 deploy/jmx-exporter/*.jar

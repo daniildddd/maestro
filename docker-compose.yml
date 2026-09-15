@@ -72,8 +72,23 @@ services:
     volumes:
       - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+      - ./deploy/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
     ports:
       - "127.0.0.1:9090:9090"
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    container_name: maestro-alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./deploy/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./deploy/alertmanager/slack_api_url:/etc/alertmanager/slack_api_url:ro
+      - alertmanager_data:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    restart: unless-stopped
 
   migrate:
     image: migrate/migrate:v4.19.1
@@ -139,5 +154,7 @@ volumes:
     name: maestro_postgres_data
   prometheus_data:
     name: maestro_prometheus_data
+  alertmanager_data:
+    name: maestro_alertmanager_data
   trivy_cache:
     name: maestro_trivy_cache

@@ -1,9 +1,11 @@
+_ALERTMANAGER_SLACK_API_URL_ENV := $(ALERTMANAGER_SLACK_API_URL)
 -include .env
 export
+ALERTMANAGER_SLACK_API_URL := $(or $(_ALERTMANAGER_SLACK_API_URL_ENV),$(ALERTMANAGER_SLACK_API_URL))
 
 .DEFAULT_GOAL := help
 
-.PHONY: build run migrate-action migrate-create jmx-exporter docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration validate-swagger
+.PHONY: build run migrate-action migrate-create jmx-exporter docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration validate-swagger alertmanager-config
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -86,3 +88,12 @@ validate-swagger: ## Validate OpenAPI spec
 help: ## Show available commands
 	@echo "Available commands:"
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z%_-]+:.*## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
+alertmanager-config: ## Generate Alertmanager Slack secret file from env (needs ALERTMANAGER_SLACK_API_URL)
+	@if [ -z "$(ALERTMANAGER_SLACK_API_URL)" ]; then \
+		echo "Missing ALERTMANAGER_SLACK_API_URL. Set it in .env, then run make alertmanager-config"; \
+		exit 1; \
+	fi; \
+	mkdir -p deploy/alertmanager; \
+	printf '%s' "$(ALERTMANAGER_SLACK_API_URL)" > deploy/alertmanager/slack_api_url; \
+	echo "Generated deploy/alertmanager/slack_api_url"

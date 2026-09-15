@@ -1,0 +1,28 @@
+groups:
+  - name: debezium
+    interval: 15s
+    rules:
+      - alert: DebeziumLagHigh
+        expr: debezium_milliseconds_behind_source > 5000
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Debezium connector {{ $labels.server }} lags {{ $value }}ms'
+          description: 'MillisecondsBehindSource={{ $value }}ms on server={{ $labels.server }} (threshold 5000ms for 1m). Check Connect task + PG replication slot.'
+      - alert: DebeziumDisconnected
+        expr: debezium_connected == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Debezium connector {{ $labels.server }} disconnected from PG'
+          description: 'debezium_connected==0 on server={{ $labels.server }} for 1m. Check DB credentials/network/slot.'
+      - alert: ConnectTargetDown
+        expr: up{job="kafka-connect"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Kafka Connect scrape target down'
+          description: 'up{job="kafka-connect"}==0 for 1m. connect:8084 unreachable; all debezium_* stale. Check maestro-connect container + JMX agent.'

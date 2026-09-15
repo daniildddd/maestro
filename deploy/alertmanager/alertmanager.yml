@@ -1,0 +1,25 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: slack
+  group_by: ['alertname', 'server']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+
+receivers:
+  - name: slack
+    slack_configs:
+      - api_url_file: '/etc/alertmanager/slack_api_url'
+        send_resolved: true
+        title: >-
+          {{ with .CommonAnnotations.summary }}{{ . }}{{ else }}{{ .GroupLabels.alertname }}{{ end }}
+        text: >-
+          {{ with .CommonAnnotations.description }}{{ . }}{{ else }}{{ .GroupLabels.SortedPairs.Values | join " " }}{{ end }}
+
+inhibit_rules:
+  - source_matchers:
+      - 'alertname = "ConnectTargetDown"'
+    target_matchers:
+      - 'alertname =~ "Debezium.*"'

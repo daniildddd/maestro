@@ -219,11 +219,11 @@ func TestUsersHTTPHandler_GetUsers(t *testing.T) {
 			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
-			name:       "invalid role returns VALIDATION_FAILED",
+			name:       "invalid role returns INVALID_QUERY_PARAM",
 			query:      "role=superadmin",
 			setupMock:  func(_ *MockUsersService) {},
 			wantStatus: http.StatusBadRequest,
-			wantCode:   "VALIDATION_FAILED",
+			wantCode:   "INVALID_QUERY_PARAM",
 		},
 		{
 			name:       "invalid username returns VALIDATION_FAILED",

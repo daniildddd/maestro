@@ -14,7 +14,7 @@ import (
 
 const (
 	defaultTestTimeout = time.Second
-	timeMillisecond    = time.Millisecond
+	retryDelayUnit     = time.Millisecond
 )
 
 func newTestClient(t *testing.T, handler http.HandlerFunc) *kafkaconnect.HTTPClient {
@@ -48,7 +48,7 @@ func newTestClientOnServer(t *testing.T, srv *httptest.Server) *kafkaconnect.HTT
 			BaseURL:           srv.URL,
 			Timeout:           defaultTestTimeout,
 			RetryMaxAttempts:  3,
-			RetryInitialDelay: 5 * timeMillisecond,
+			RetryInitialDelay: 5 * retryDelayUnit,
 		},
 		plugins.NewRegistry(
 			plugins.PostgresAdapter{},
@@ -105,13 +105,14 @@ func newExpansion(class, state string, config map[string]string) expansion {
 	return e
 }
 
-func runRestartTask(t *testing.T, ctx context.Context, handler http.HandlerFunc) (int, error) {
+func runRestartTask(ctx context.Context, t *testing.T, handler http.HandlerFunc) (int, error) {
 	t.Helper()
 
 	attempts := 0
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
+
 		handler(w, r)
 	}))
 	t.Cleanup(srv.Close)

@@ -102,7 +102,7 @@ func TestHTTPClient_RestartTask(t *testing.T) {
 
 		must := require.New(t)
 
-		attempts, err := runRestartTask(t, context.Background(), func(w http.ResponseWriter, _ *http.Request) {
+		attempts, err := runRestartTask(context.Background(), t, func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		})
 
@@ -115,7 +115,7 @@ func TestHTTPClient_RestartTask(t *testing.T) {
 
 		must := require.New(t)
 
-		attempts, err := runRestartTask(t, context.Background(), func(w http.ResponseWriter, _ *http.Request) {
+		attempts, err := runRestartTask(context.Background(), t, func(w http.ResponseWriter, _ *http.Request) {
 			http.NotFound(w, nil)
 		})
 
@@ -128,7 +128,7 @@ func TestHTTPClient_RestartTask(t *testing.T) {
 
 		must := require.New(t)
 
-		attempts, err := runRestartTask(t, context.Background(), func(w http.ResponseWriter, _ *http.Request) {
+		attempts, err := runRestartTask(context.Background(), t, func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		})
 
@@ -143,7 +143,7 @@ func TestHTTPClient_RestartTask(t *testing.T) {
 
 		calls := 0
 
-		attempts, err := runRestartTask(t, context.Background(), func(w http.ResponseWriter, r *http.Request) {
+		attempts, err := runRestartTask(context.Background(), t, func(w http.ResponseWriter, r *http.Request) {
 			calls++
 
 			if calls < 2 {
@@ -166,7 +166,7 @@ func TestHTTPClient_RestartTask(t *testing.T) {
 
 		calls := 0
 
-		attempts, err := runRestartTask(t, context.Background(), func(w http.ResponseWriter, r *http.Request) {
+		attempts, err := runRestartTask(context.Background(), t, func(w http.ResponseWriter, r *http.Request) {
 			calls++
 
 			if calls < 2 {
@@ -187,7 +187,7 @@ func TestHTTPClient_RestartTask(t *testing.T) {
 
 		must := require.New(t)
 
-		attempts, err := runRestartTask(t, context.Background(), func(w http.ResponseWriter, _ *http.Request) {
+		attempts, err := runRestartTask(context.Background(), t, func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			writeJSON(t, w, map[string]string{
 				"error_code": "400",

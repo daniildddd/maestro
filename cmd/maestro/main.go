@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
+	core_metrics "github.com/daniildddd/maestro/internal/core/metrics"
 	"github.com/daniildddd/maestro/internal/core/repository/postgres/pgxadapter"
 	"github.com/daniildddd/maestro/internal/core/security/access"
 	"github.com/daniildddd/maestro/internal/core/security/hasher"
@@ -157,7 +160,11 @@ func run() int {
 
 	cfgMiddleware := middleware.NewConfigMust()
 
+	metricsCfg := core_metrics.NewConfigMust()
+	appMetrics := core_metrics.New(metricsCfg)
+
 	baseMW := []middleware.Middleware{
+		middleware.Metrics(appMetrics),
 		middleware.CORS(cfgMiddleware.AllowedOrigins),
 		middleware.RequestID(),
 		middleware.ClientInfo(),
@@ -207,13 +214,46 @@ func run() int {
 	healthHandler := health.NewHealthHandler(postgresPool, kafkaConnectClient, health.NewConfigMust())
 	srv.RegisterRoute(healthHandler.Routes()...)
 
-	if err = srv.Run(ctx); err != nil {
-		logger.Error("HTTP server stopped", zap.Error(err))
+	metricsSrv := core_metrics.NewServer(appMetrics, metricsCfg, logger)
+
+	collector := connectorsservice.NewCollector(
+		kafkaConnectClient,
+		appMetrics,
+		logger,
+		connectorsservice.NewCollectorConfigMust(),
+	)
+
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		if err := srv.Run(ctx); err != nil {
+			return fmt.Errorf("http server: %w", err)
+		}
+
+		return nil
+	})
+
+	g.Go(func() error {
+		if err := metricsSrv.Run(ctx); err != nil {
+			return fmt.Errorf("metrics server: %w", err)
+		}
+
+		return nil
+	})
+
+	g.Go(func() error {
+		collector.Run(ctx)
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		logger.Error("application stopped", zap.Error(err))
 
 		return 1
 	}
 
-	logger.Info("HTTP server shut down gracefully")
+	logger.Info("application shut down gracefully")
 
 	return 0
 }

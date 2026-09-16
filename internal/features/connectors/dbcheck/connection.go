@@ -84,17 +84,17 @@ func (c *PostgresChecker) connectionOK(
 func (c *PostgresChecker) buildConnConfig(
 	raw map[string]string,
 ) (*pgx.ConnConfig, []configProblem) {
-	host := raw["database.hostname"]
-	port := raw["database.port"]
-	user := raw["database.user"]
-	password := raw["database.password"]
-	dbname := raw["database.dbname"]
+	host := raw[fieldDatabaseHostname]
+	port := raw[fieldDatabasePort]
+	user := raw[fieldDatabaseUser]
+	password := raw[fieldDatabasePassword]
+	dbname := raw[fieldDatabaseDBName]
 
 	problems := make([]configProblem, 0, maxConfigProblems)
 
 	if host == "" {
 		problems = append(problems, configProblem{
-			field:    "database.hostname",
+			field:    fieldDatabaseHostname,
 			message:  "database.hostname is required",
 			severity: domain.CheckSeverityError,
 		})
@@ -102,7 +102,7 @@ func (c *PostgresChecker) buildConnConfig(
 
 	if user == "" {
 		problems = append(problems, configProblem{
-			field:    "database.user",
+			field:    fieldDatabaseUser,
 			message:  "database.user is required",
 			severity: domain.CheckSeverityError,
 		})
@@ -110,7 +110,7 @@ func (c *PostgresChecker) buildConnConfig(
 
 	if password == "" {
 		problems = append(problems, configProblem{
-			field:    "database.password",
+			field:    fieldDatabasePassword,
 			message:  "database.password is required",
 			severity: domain.CheckSeverityError,
 		})
@@ -120,7 +120,7 @@ func (c *PostgresChecker) buildConnConfig(
 		port = "5432"
 
 		problems = append(problems, configProblem{
-			field:    "database.port",
+			field:    fieldDatabasePort,
 			message:  "database.port is not set - defaulting to 5432",
 			severity: domain.CheckSeverityWarning,
 		})
@@ -130,7 +130,7 @@ func (c *PostgresChecker) buildConnConfig(
 		dbname = user
 
 		problems = append(problems, configProblem{
-			field: "database.dbname",
+			field: fieldDatabaseDBName,
 			message: fmt.Sprintf(
 				"database.dbname is not set - checks will run against the user database (%q)",
 				user,
@@ -140,7 +140,7 @@ func (c *PostgresChecker) buildConnConfig(
 	}
 
 	dsn := &url.URL{
-		Scheme: "postgres",
+		Scheme: postgresScheme,
 		Host:   net.JoinHostPort(host, port),
 		Path:   "/" + dbname,
 	}
@@ -156,7 +156,7 @@ func (c *PostgresChecker) buildConnConfig(
 	connConfig, err := pgx.ParseConfig(dsn.String())
 	if err != nil {
 		problems = append(problems, configProblem{
-			field:    "database.hostname",
+			field:    fieldDatabaseHostname,
 			message:  "could not build connection settings",
 			severity: domain.CheckSeverityError,
 		})

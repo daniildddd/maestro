@@ -14,6 +14,13 @@ const (
 	autocreateModeDisabled = "disabled"
 	maxConfigProblems      = 6
 	maxPermissionsChecks   = 6
+
+	fieldDatabaseHostname = "database.hostname"
+	fieldDatabasePort     = "database.port"
+	fieldDatabaseUser     = "database.user"
+	fieldDatabasePassword = "database.password"
+	fieldDatabaseDBName   = "database.dbname"
+	postgresScheme        = "postgres"
 )
 
 type PostgresChecker struct {
@@ -75,7 +82,7 @@ func (c *PostgresChecker) Check(
 			ID: domain.StepConnection,
 			Checks: []domain.ValidationCheck{fieldCheck(
 				"postgres.connection.auth", domain.CheckSeverityError,
-				"database.hostname", "could not connect: %v", err,
+				fieldDatabaseHostname, "could not connect: %v", err,
 			)},
 		})
 		steps = append(steps, skippedDBSteps(domain.StepConnection,

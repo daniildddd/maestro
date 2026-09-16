@@ -41,9 +41,9 @@ func (c *PostgresChecker) permissions(
 			"REPLICATION attribute is set"))
 	} else {
 		checks = append(checks, fixCheck(fieldCheck("postgres.privilege.replication",
-			domain.CheckSeverityError, "database.user",
-			"user %q has no REPLICATION attribute - logical decoding will fail", raw["database.user"]),
-			"ALTER ROLE "+raw["database.user"]+" REPLICATION;"))
+			domain.CheckSeverityError, fieldDatabaseUser,
+			"user %q has no REPLICATION attribute - logical decoding will fail", raw[fieldDatabaseUser]),
+			"ALTER ROLE "+raw[fieldDatabaseUser]+" REPLICATION;"))
 	}
 
 	canConnect, err := scanBool(stepCtx, conn,
@@ -57,12 +57,12 @@ func (c *PostgresChecker) permissions(
 
 	if canConnect {
 		checks = append(checks, check("postgres.privilege.connect", domain.CheckSeverityOK,
-			"CONNECT on %q is granted", raw["database.dbname"]))
+			"CONNECT on %q is granted", raw[fieldDatabaseDBName]))
 	} else {
 		checks = append(checks, fixCheck(fieldCheck("postgres.privilege.connect",
-			domain.CheckSeverityError, "database.user",
-			"user %q has no CONNECT privilege on %q", raw["database.user"], raw["database.dbname"]),
-			"GRANT CONNECT ON DATABASE "+raw["database.dbname"]+" TO "+raw["database.user"]+";"))
+			domain.CheckSeverityError, fieldDatabaseUser,
+			"user %q has no CONNECT privilege on %q", raw[fieldDatabaseUser], raw[fieldDatabaseDBName]),
+			"GRANT CONNECT ON DATABASE "+raw[fieldDatabaseDBName]+" TO "+raw[fieldDatabaseUser]+";"))
 	}
 
 	if publicationAutocreate(raw) != autocreateModeDisabled {
@@ -77,12 +77,12 @@ func (c *PostgresChecker) permissions(
 
 		if canCreate {
 			checks = append(checks, check("postgres.privilege.create", domain.CheckSeverityOK,
-				"CREATE on %q is granted (publication auto-creation)", raw["database.dbname"]))
+				"CREATE on %q is granted (publication auto-creation)", raw[fieldDatabaseDBName]))
 		} else {
 			checks = append(checks, fixCheck(fieldCheck("postgres.privilege.create",
-				domain.CheckSeverityWarning, "database.user",
-				"user %q has no CREATE privilege - publication auto-creation will fail", raw["database.user"]),
-				"GRANT CREATE ON DATABASE "+raw["database.dbname"]+" TO "+raw["database.user"]+";"))
+				domain.CheckSeverityWarning, fieldDatabaseUser,
+				"user %q has no CREATE privilege - publication auto-creation will fail", raw[fieldDatabaseUser]),
+				"GRANT CREATE ON DATABASE "+raw[fieldDatabaseDBName]+" TO "+raw[fieldDatabaseUser]+";"))
 		}
 	}
 
@@ -127,8 +127,8 @@ func (c *PostgresChecker) schemaPrivileges(
 		if !usage {
 			checks = append(checks, fixCheck(fieldCheck("postgres.privilege.schema_usage",
 				domain.CheckSeverityError, "table.include.list",
-				"user %q has no USAGE privilege on schema %q", raw["database.user"], schema),
-				"GRANT USAGE ON SCHEMA "+schema+" TO "+raw["database.user"]+";"))
+				"user %q has no USAGE privilege on schema %q", raw[fieldDatabaseUser], schema),
+				"GRANT USAGE ON SCHEMA "+schema+" TO "+raw[fieldDatabaseUser]+";"))
 		}
 	}
 
@@ -178,8 +178,8 @@ func (c *PostgresChecker) selectPrivileges(
 		default:
 			checks = append(checks, fixCheck(tableCheck("postgres.privilege.select",
 				domain.CheckSeverityError, schema+"."+table,
-				"user %q has no SELECT privilege on %q", raw["database.user"], schema+"."+table),
-				"GRANT SELECT ON TABLE "+schema+"."+table+" TO "+raw["database.user"]+";"))
+				"user %q has no SELECT privilege on %q", raw[fieldDatabaseUser], schema+"."+table),
+				"GRANT SELECT ON TABLE "+schema+"."+table+" TO "+raw[fieldDatabaseUser]+";"))
 		}
 	}
 

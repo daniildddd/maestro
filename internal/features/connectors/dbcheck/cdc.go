@@ -14,11 +14,11 @@ func publicationName(raw map[string]string) string {
 		return name
 	}
 
-	if dbname := raw["database.dbname"]; dbname != "" {
+	if dbname := raw[fieldDatabaseDBName]; dbname != "" {
 		return dbname
 	}
 
-	return raw["database.user"]
+	return raw[fieldDatabaseUser]
 }
 
 func publicationAutocreate(raw map[string]string) string {

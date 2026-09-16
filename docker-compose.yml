@@ -125,8 +125,11 @@ services:
       - KAFKA_CONNECT_RETRY_MAX_ATTEMPTS=${KAFKA_CONNECT_RETRY_MAX_ATTEMPTS}
       - KAFKA_CONNECT_RETRY_INITIAL_DELAY=${KAFKA_CONNECT_RETRY_INITIAL_DELAY}
       - SERVER_ADDR=${SERVER_ADDR:-:8080}
+      - METRICS_ADDR=${METRICS_ADDR:-:9100}
     ports:
       - "127.0.0.1:8080:8080"
+    expose:
+      - "9100"
 
     restart: unless-stopped
 

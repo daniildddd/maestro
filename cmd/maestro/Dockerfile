@@ -25,7 +25,7 @@ COPY --from=build /out/maestro /usr/local/bin/maestro
 ENV LOGGER_FOLDER=/var/log/maestro \
     SERVER_ADDR=:8080
 
-EXPOSE 8080
+EXPOSE 8080 9100
 
 USER 65532
 

@@ -335,7 +335,7 @@ func (c *HTTPClient) RestartConnector(
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
 
-	connector, err := c.GetConnectorByID(ctx, name)
+	connector, err := c.rereadConnector(ctx, name)
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -405,7 +405,7 @@ func (c *HTTPClient) putConnectorAction(
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
 
-	connector, err := c.GetConnectorByID(ctx, name)
+	connector, err := c.rereadConnector(ctx, name)
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
 	}

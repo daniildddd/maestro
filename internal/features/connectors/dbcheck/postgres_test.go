@@ -162,7 +162,7 @@ func TestPublicationName(t *testing.T) {
 		}))
 	require.Equal(t, "debezium",
 		publicationName(map[string]string{"database.user": "debezium"}))
-	require.Equal(t, "", publicationName(map[string]string{}))
+	require.Empty(t, publicationName(map[string]string{}))
 }
 
 func TestPublicationAutocreate(t *testing.T) {

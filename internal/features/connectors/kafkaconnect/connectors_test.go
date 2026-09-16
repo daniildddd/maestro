@@ -449,6 +449,11 @@ func TestHTTPClient_UpdateConnector(t *testing.T) {
 			},
 			wantIs: domain.ErrInvalidConnectorConfig,
 		},
+		{
+			name:    "rebalance 500 on final status maps to rebalance in progress",
+			handler: updateHandler(t, &flakyStatus{failFirst: 1 << 30}),
+			wantIs:  domain.ErrRebalanceInProgress,
+		},
 	}
 
 	for _, tt := range tests {
@@ -490,6 +495,74 @@ func TestHTTPClient_UpdateConnector(t *testing.T) {
 			)
 		})
 	}
+
+	t.Run("rebalance 500 on final status retries then succeeds", func(t *testing.T) {
+		t.Parallel()
+
+		must := require.New(t)
+
+		status := &flakyStatus{failFirst: 1}
+
+		srv := httptest.NewServer(updateHandler(t, status))
+		t.Cleanup(srv.Close)
+
+		client := newTestClientOnServer(t, srv)
+
+		connector, err := client.UpdateConnector(context.Background(), "pg-connector", map[string]string{
+			"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+			"database.hostname": "pg-2",
+		})
+
+		must.NoError(err)
+		must.Equal(2, status.Calls())
+		must.Equal(
+			domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
+				Config: domain.SourceConfig{},
+			},
+			connector,
+		)
+	})
+
+	t.Run("400 mentioning rebalance maps to invalid config without retry", func(t *testing.T) {
+		t.Parallel()
+
+		must := require.New(t)
+
+		var putCalls int
+
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if serveUpdateProbe(t, w, r) {
+				return
+			}
+
+			putCalls++
+
+			w.WriteHeader(http.StatusBadRequest)
+			writeJSON(t, w, map[string]any{
+				"error_code": 400,
+				"message":    "Connector configuration is invalid: rebalance is expected after fix",
+			})
+		}))
+		t.Cleanup(srv.Close)
+
+		client := newTestClientOnServer(t, srv)
+
+		_, err := client.UpdateConnector(context.Background(), "pg-connector", map[string]string{
+			"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+			"database.hostname": "pg-2",
+		})
+
+		must.ErrorIs(err, domain.ErrInvalidConnectorConfig)
+		must.Equal(1, putCalls)
+	})
 }
 
 func TestHTTPClient_PauseConnector(t *testing.T) {

@@ -64,11 +64,10 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 		return nil
 	case resp.StatusCode >= 500:
 		return fmt.Errorf(
-			"%s: %w: unexpected status %d: %s",
+			"%s: %w: %w",
 			op,
 			domain.ErrKafkaConnectUnavailable,
-			resp.StatusCode,
-			string(data),
+			&HTTPError{StatusCode: resp.StatusCode, Body: string(data)},
 		)
 	default:
 		return fmt.Errorf("%s: %w", op, &HTTPError{StatusCode: resp.StatusCode, Body: string(data)})

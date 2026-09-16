@@ -2,6 +2,7 @@ package kafkaconnect
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -236,12 +237,44 @@ func (c *HTTPClient) UpdateConnector(
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
 
-	connector, err := c.GetConnectorByID(ctx, name)
+	connector, err := c.rereadConnector(ctx, name)
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return connector, nil
+}
+
+func (c *HTTPClient) rereadConnector(
+	ctx context.Context,
+	name string,
+) (domain.Connector, error) {
+	const op = "connectors.kafkaconnect.rereadConnector"
+
+	var connector domain.Connector
+
+	var err error
+
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
+		connector, err = c.GetConnectorByID(ctx, name)
+		if err == nil {
+			return connector, nil
+		}
+
+		if !errors.Is(err, domain.ErrRebalanceInProgress) || attempt == c.retryMaxAttempts {
+			break
+		}
+
+		delay := c.retryWait(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
+		}
+	}
+
+	return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
 }
 
 func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {

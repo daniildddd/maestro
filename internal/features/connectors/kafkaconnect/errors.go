@@ -1,6 +1,7 @@
 package kafkaconnect
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -51,9 +52,32 @@ func isAlreadyExists(err error) bool {
 }
 
 func isRebalance(err error) bool {
+	if isRebalanceExpected(err) {
+		return true
+	}
+
 	status, ok := statusOf(err)
 
 	return ok && status == http.StatusConflict && !isAlreadyExists(err)
+}
+
+func isRebalanceExpected(err error) bool {
+	status, ok := statusOf(err)
+
+	return ok && status == http.StatusInternalServerError &&
+		strings.Contains(messageOf(err), "rebalance is expected")
+}
+
+func messageOf(err error) string {
+	var payload struct {
+		Message string `json:"message"`
+	}
+
+	if json.Unmarshal([]byte(bodyOf(err)), &payload) != nil {
+		return ""
+	}
+
+	return payload.Message
 }
 
 func isInvalidConfig(err error) bool {

@@ -60,6 +60,85 @@ func newTestClientOnServer(t *testing.T, srv *httptest.Server) *kafkaconnect.HTT
 	)
 }
 
+func serveUpdateProbe(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
+	t.Helper()
+
+	if r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector" {
+		writeJSON(t, w, map[string]any{
+			"name": "pg-connector",
+			"config": map[string]string{
+				"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+			},
+		})
+
+		return true
+	}
+
+	return false
+}
+
+type flakyStatus struct {
+	failFirst int
+	calls     int
+}
+
+func (f *flakyStatus) Calls() int {
+	return f.calls
+}
+
+func (f *flakyStatus) serve(t *testing.T, w http.ResponseWriter) {
+	t.Helper()
+
+	f.calls++
+
+	if f.calls <= f.failFirst {
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJSON(t, w, map[string]any{
+			"error_code": 500,
+			"message":    "Request cannot be completed because a rebalance is expected",
+		})
+
+		return
+	}
+
+	writeJSON(t, w, map[string]any{
+		"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+		"tasks": []map[string]any{
+			{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+		},
+	})
+}
+
+func updateHandler(t *testing.T, status *flakyStatus) http.HandlerFunc {
+	t.Helper()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		if serveUpdateProbe(t, w, r) {
+			return
+		}
+
+		if r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/config" {
+			w.WriteHeader(http.StatusOK)
+			writeJSON(t, w, map[string]any{
+				"name": "pg-connector",
+				"config": map[string]string{
+					"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+				},
+			})
+
+			return
+		}
+
+		if r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status" {
+			status.serve(t, w)
+
+			return
+		}
+
+		http.NotFound(w, nil)
+	}
+}
+
 func writeJSON(t *testing.T, w http.ResponseWriter, payload any) {
 	t.Helper()
 

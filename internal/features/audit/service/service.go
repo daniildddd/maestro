@@ -10,14 +10,24 @@ import (
 
 type AuditService struct {
 	auditRepository AuditRepository
+	users           UserDirectory
 }
 
 func NewAuditService(
 	auditRepository AuditRepository,
+	users UserDirectory,
 ) *AuditService {
 	return &AuditService{
 		auditRepository: auditRepository,
+		users:           users,
 	}
+}
+
+type UserDirectory interface {
+	GetUsersByIDs(
+		ctx context.Context,
+		ids []uuid.UUID,
+	) ([]domain.User, error)
 }
 
 type AuditRepository interface {

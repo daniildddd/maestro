@@ -20,5 +20,11 @@ func (s *AuditService) GetLogByID(
 		return domain.AuditEvent{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return event, nil
+	events := []domain.AuditEvent{event}
+
+	if err := resolveActorLogins(ctx, s.users, events); err != nil {
+		return domain.AuditEvent{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return events[0], nil
 }

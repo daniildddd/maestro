@@ -53,7 +53,9 @@ func TestAuditService_DeleteLogByID(t *testing.T) {
 			repo := NewMockAuditRepository(t)
 			tt.setupMock(repo)
 
-			svc := service.NewAuditService(repo)
+			users := NewMockUserDirectory(t)
+
+			svc := service.NewAuditService(repo, users)
 
 			err := svc.DeleteLogByID(t.Context(), id)
 

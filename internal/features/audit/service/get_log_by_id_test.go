@@ -19,11 +19,18 @@ func TestAuditService_GetLogByID(t *testing.T) {
 	id := uuid.New()
 	event := mustNewAuditEvent(id)
 
+	empty := mustNewAuditEvent(uuid.New())
+	empty.ActorLogin = ""
+
+	filledEmpty := empty
+	filledEmpty.ActorLogin = "bob"
+
 	tests := []struct {
-		name      string
-		setupMock func(m *MockAuditRepository)
-		wantBody  domain.AuditEvent
-		wantIs    error
+		name       string
+		setupMock  func(m *MockAuditRepository)
+		setupUsers func(m *MockUserDirectory)
+		wantBody   domain.AuditEvent
+		wantIs     error
 	}{
 		{
 			name: "success returns event",
@@ -45,6 +52,38 @@ func TestAuditService_GetLogByID(t *testing.T) {
 			},
 			wantIs: errs.ErrAuditLogNotFound,
 		},
+		{
+			name: "empty actor login is enriched from users",
+			setupMock: func(m *MockAuditRepository) {
+				m.EXPECT().
+					GetLogByID(mock.Anything, id).
+					Return(empty, nil).
+					Once()
+			},
+			setupUsers: func(m *MockUserDirectory) {
+				m.EXPECT().
+					GetUsersByIDs(mock.Anything, mock.Anything).
+					Return([]domain.User{{ID: empty.ActorID, Username: "bob"}}, nil).
+					Once()
+			},
+			wantBody: filledEmpty,
+		},
+		{
+			name: "users lookup error is wrapped",
+			setupMock: func(m *MockAuditRepository) {
+				m.EXPECT().
+					GetLogByID(mock.Anything, id).
+					Return(empty, nil).
+					Once()
+			},
+			setupUsers: func(m *MockUserDirectory) {
+				m.EXPECT().
+					GetUsersByIDs(mock.Anything, mock.Anything).
+					Return(nil, errs.ErrInternal).
+					Once()
+			},
+			wantIs: errs.ErrInternal,
+		},
 	}
 
 	for _, tt := range tests {
@@ -57,7 +96,13 @@ func TestAuditService_GetLogByID(t *testing.T) {
 			repo := NewMockAuditRepository(t)
 			tt.setupMock(repo)
 
-			svc := service.NewAuditService(repo)
+			users := NewMockUserDirectory(t)
+
+			if tt.setupUsers != nil {
+				tt.setupUsers(users)
+			}
+
+			svc := service.NewAuditService(repo, users)
 
 			got, err := svc.GetLogByID(t.Context(), id)
 

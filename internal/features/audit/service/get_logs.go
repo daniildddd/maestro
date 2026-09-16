@@ -26,5 +26,9 @@ func (s *AuditService) GetLogs(
 		events = trimmed
 	}
 
+	if err := resolveActorLogins(ctx, s.users, events); err != nil {
+		return nil, false, fmt.Errorf("%s: %w", op, err)
+	}
+
 	return events, hasMore, nil
 }

@@ -96,6 +96,7 @@ packages:
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       AuditRepository:
+      UserDirectory:
 
   github.com/daniildddd/maestro/internal/features/audit/transport:
     config:

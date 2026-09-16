@@ -81,7 +81,9 @@ func run() int {
 
 	auditRepository := auditrepository.NewAuditRepository(postgresPool)
 
-	auditService := auditservice.NewAuditService(auditRepository)
+	usersRepository := usersrepository.NewUsersRepository(postgresPool)
+
+	auditService := auditservice.NewAuditService(auditRepository, usersRepository)
 
 	auditTransportHTTP := audittransport.NewAuditHTTPHandler(auditService)
 
@@ -121,8 +123,6 @@ func run() int {
 		authService,
 		transport.NewConfigMust(),
 	)
-
-	usersRepository := usersrepository.NewUsersRepository(postgresPool)
 
 	usersService := usersservice.NewUsersService(
 		usersRepository,
@@ -211,6 +211,7 @@ func run() int {
 
 	srv.RegisterAPIRouters(publicV1, privateV1)
 	srv.RegisterNotFound(logger)
+	srv.RegisterSPA()
 
 	healthHandler := health.NewHealthHandler(postgresPool, kafkaConnectClient, health.NewConfigMust())
 	srv.RegisterRoute(healthHandler.Routes()...)

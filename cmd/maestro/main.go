@@ -27,6 +27,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/auth/repository"
 	"github.com/daniildddd/maestro/internal/features/auth/service"
 	"github.com/daniildddd/maestro/internal/features/auth/transport"
+	"github.com/daniildddd/maestro/internal/features/connectors/collector"
 	"github.com/daniildddd/maestro/internal/features/connectors/dbcheck"
 	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
@@ -216,11 +217,11 @@ func run() int {
 
 	metricsSrv := core_metrics.NewServer(appMetrics, metricsCfg, logger)
 
-	collector := connectorsservice.NewCollector(
+	metricsCollector := collector.NewCollector(
 		kafkaConnectClient,
 		appMetrics,
 		logger,
-		connectorsservice.NewCollectorConfigMust(),
+		collector.NewCollectorConfigMust(),
 	)
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -242,7 +243,7 @@ func run() int {
 	})
 
 	g.Go(func() error {
-		collector.Run(ctx)
+		metricsCollector.Run(ctx)
 
 		return nil
 	})

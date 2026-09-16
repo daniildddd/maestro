@@ -29,6 +29,7 @@ func (s *UsersService) DeleteUser(
 		Action:      domain.ActionUserDeleted,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectUser,
 		SubjectID:   deleted.ID.String(),
 		SubjectName: deleted.Username,

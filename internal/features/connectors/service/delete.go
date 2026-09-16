@@ -32,6 +32,7 @@ func (s *ConnectorsService) Delete(ctx context.Context, name string) error {
 		Action:      domain.ActionConnectorDeleted,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectConnector,
 		SubjectID:   name,
 		SubjectName: name,

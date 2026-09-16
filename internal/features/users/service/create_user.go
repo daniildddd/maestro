@@ -69,6 +69,7 @@ func (s *UsersService) CreateUser(
 		Action:      domain.ActionUserCreated,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectUser,
 		SubjectID:   created.ID.String(),
 		SubjectName: created.Username,

@@ -41,6 +41,7 @@ func (s *UsersService) UpdateUser(
 		Action:      domain.ActionUserUpdated,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectUser,
 		SubjectID:   after.ID.String(),
 		SubjectName: after.Username,

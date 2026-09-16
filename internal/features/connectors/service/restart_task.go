@@ -40,6 +40,7 @@ func (s *ConnectorsService) RestartTask(
 		Action:      domain.ActionConnectorTaskRestarted,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectConnector,
 		SubjectID:   connectorName,
 		SubjectName: connectorName,

@@ -42,6 +42,7 @@ func (s *ConnectorsService) RestartConnector(
 		Action:      domain.ActionConnectorRestarted,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectConnector,
 		SubjectID:   connector.Name,
 		SubjectName: connector.Name,

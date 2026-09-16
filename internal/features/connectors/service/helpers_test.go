@@ -27,6 +27,7 @@ var userID = uuid.New()
 func testCtx() context.Context {
 	ctx := context.Background()
 	ctx = reqctx.WithUserID(ctx, userID)
+	ctx = reqctx.WithUsername(ctx, "alice")
 	ctx = reqctx.WithRequestID(ctx, uuid.New())
 	ctx = reqctx.WithClientInfo(ctx, "203.0.113.7", "test-agent")
 

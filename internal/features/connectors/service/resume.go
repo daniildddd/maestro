@@ -40,6 +40,7 @@ func (s *ConnectorsService) ResumeConnector(
 		Action:      domain.ActionConnectorResumed,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectConnector,
 		SubjectID:   connector.Name,
 		SubjectName: connector.Name,

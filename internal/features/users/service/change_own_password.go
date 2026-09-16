@@ -66,6 +66,7 @@ func (s *UsersService) ChangeOwnPassword(
 		Action:      domain.ActionUserPasswordChanged,
 		Outcome:     domain.OutcomeSuccess,
 		ActorID:     actorID,
+		ActorLogin:  reqctx.Username(ctx),
 		SubjectType: domain.AuditSubjectUser,
 		SubjectID:   userID.String(),
 		RequestID:   reqctx.RequestID(ctx).String(),

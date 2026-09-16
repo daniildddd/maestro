@@ -38,6 +38,8 @@ tags:
     description: Available connector plugins and their configuration schemas.
   - name: smt-plugins
     description: Available Single Message Transform (SMT) plugins.
+  - name: metrics
+    description: Prometheus metrics.
 
 paths:
   /api/v1/login:
@@ -1148,6 +1150,31 @@ paths:
           $ref: '#/components/responses/SmtPluginNotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+
+  /metrics:
+    get:
+      tags: [metrics]
+      summary: Prometheus metrics
+      description: Served by the internal metrics listener, not published to the host.
+      operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Prometheus exposition format
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP http_server_requests_total Total HTTP requests.
+                # TYPE http_server_requests_total counter
+                http_server_requests_total{method="GET",route="GET /healthz",status="200"} 42
+                # HELP maestro_connector_info Current connector state.
+                # TYPE maestro_connector_info gauge
+                maestro_connector_info{connector="pg-connector",state="running"} 1
+                # HELP maestro_connector_tasks Number of tasks by state.
+                # TYPE maestro_connector_tasks gauge
+                maestro_connector_tasks{connector="pg-connector",state="RUNNING"} 1
 
 components:
   parameters:

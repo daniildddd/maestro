@@ -9,7 +9,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
 
-func TestRegistryFor(t *testing.T) {
+func TestRegistry_For(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -91,7 +91,7 @@ func TestRegistryFor(t *testing.T) {
 	}
 }
 
-func TestDb2AdapterMatch(t *testing.T) {
+func TestDb2Adapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -103,7 +103,7 @@ func TestDb2AdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestDb2AdapterCanonicalize(t *testing.T) {
+func TestDb2Adapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -161,7 +161,7 @@ func TestDb2AdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestInformixAdapterMatch(t *testing.T) {
+func TestInformixAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -173,7 +173,7 @@ func TestInformixAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestInformixAdapterCanonicalize(t *testing.T) {
+func TestInformixAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -231,7 +231,7 @@ func TestInformixAdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestMariaDBAdapterMatch(t *testing.T) {
+func TestMariaDBAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -243,7 +243,7 @@ func TestMariaDBAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestMariaDBAdapterCanonicalize(t *testing.T) {
+func TestMariaDBAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -287,7 +287,7 @@ func TestMariaDBAdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestMySQLAdapterMatch(t *testing.T) {
+func TestMySQLAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -299,7 +299,7 @@ func TestMySQLAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestMySQLAdapterCanonicalize(t *testing.T) {
+func TestMySQLAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -357,7 +357,7 @@ func TestMySQLAdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestOracleAdapterMatch(t *testing.T) {
+func TestOracleAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -369,7 +369,7 @@ func TestOracleAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestOracleAdapterCanonicalize(t *testing.T) {
+func TestOracleAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -414,7 +414,7 @@ func TestOracleAdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestPostgresAdapterMatch(t *testing.T) {
+func TestPostgresAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -426,7 +426,7 @@ func TestPostgresAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestPostgresAdapterCanonicalize(t *testing.T) {
+func TestPostgresAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -489,7 +489,7 @@ func TestPostgresAdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestSQLServerAdapterMatch(t *testing.T) {
+func TestSQLServerAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -501,7 +501,7 @@ func TestSQLServerAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestSQLServerAdapterCanonicalize(t *testing.T) {
+func TestSQLServerAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -560,7 +560,7 @@ func TestSQLServerAdapterCanonicalize(t *testing.T) {
 	}
 }
 
-func TestVitessAdapterMatch(t *testing.T) {
+func TestVitessAdapter_Match(t *testing.T) {
 	t.Parallel()
 
 	must := require.New(t)
@@ -572,7 +572,7 @@ func TestVitessAdapterMatch(t *testing.T) {
 	must.False(adapter.Match(""))
 }
 
-func TestVitessAdapterCanonicalize(t *testing.T) {
+func TestVitessAdapter_Canonicalize(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

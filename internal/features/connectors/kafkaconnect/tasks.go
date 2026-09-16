@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
@@ -48,25 +47,11 @@ func (c *HTTPClient) RestartTask(ctx context.Context, name string, taskID int) e
 
 	path := fmt.Sprintf("/connectors/%s/tasks/%d/restart", url.PathEscape(name), taskID)
 
-	var err error
-
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
-		err = c.do(ctx, http.MethodPost, path, nil, nil)
-		if err == nil {
-			return nil
-		}
-
-		if !isRebalance(err) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return fmt.Errorf("%s: %w", op, ctx.Err())
-		}
+	err := c.withRetry(ctx, isRebalance, func() error {
+		return c.do(ctx, http.MethodPost, path, nil, nil)
+	})
+	if err == nil {
+		return nil
 	}
 
 	if isNotFound(err) {

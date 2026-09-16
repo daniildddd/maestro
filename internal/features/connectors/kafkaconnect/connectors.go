@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
@@ -155,27 +154,9 @@ func (c *HTTPClient) CreateConnector(
 
 	var created connectorInfo
 
-	var err error
-
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
-		err = c.do(ctx, http.MethodPost, "/connectors", body, &created)
-		if err == nil {
-			break
-		}
-
-		if !isRebalance(err) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
-		}
-	}
-
+	err := c.withRetry(ctx, isRebalance, func() error {
+		return c.do(ctx, http.MethodPost, "/connectors", body, &created)
+	})
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
@@ -212,27 +193,9 @@ func (c *HTTPClient) UpdateConnector(
 
 	var updated connectorInfo
 
-	var err error
-
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
-		err = c.do(ctx, http.MethodPut, "/connectors/"+url.PathEscape(name)+"/config", config, &updated)
-		if err == nil {
-			break
-		}
-
-		if !isRebalance(err) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
-		}
-	}
-
+	err := c.withRetry(ctx, isRebalance, func() error {
+		return c.do(ctx, http.MethodPut, "/connectors/"+url.PathEscape(name)+"/config", config, &updated)
+	})
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
@@ -253,28 +216,20 @@ func (c *HTTPClient) rereadConnector(
 
 	var connector domain.Connector
 
-	var err error
+	err := c.withRetry(ctx, func(err error) bool {
+		return errors.Is(err, domain.ErrRebalanceInProgress)
+	}, func() error {
+		var err error
 
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
 		connector, err = c.GetConnectorByID(ctx, name)
-		if err == nil {
-			return connector, nil
-		}
 
-		if !errors.Is(err, domain.ErrRebalanceInProgress) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
-		}
+		return err
+	})
+	if err != nil {
+		return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return domain.Connector{}, fmt.Errorf("%s: %w", op, err)
+	return connector, nil
 }
 
 func (c *HTTPClient) PauseConnector(ctx context.Context, name string) (domain.Connector, error) {
@@ -310,27 +265,9 @@ func (c *HTTPClient) RestartConnector(
 		path += "?" + query.Encode()
 	}
 
-	var err error
-
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
-		err = c.do(ctx, http.MethodPost, path, nil, nil)
-		if err == nil {
-			break
-		}
-
-		if !isRebalance(err) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
-		}
-	}
-
+	err := c.withRetry(ctx, isRebalance, func() error {
+		return c.do(ctx, http.MethodPost, path, nil, nil)
+	})
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}
@@ -348,28 +285,13 @@ func (c *HTTPClient) Delete(ctx context.Context, name string) error {
 
 	path := "/connectors/" + url.PathEscape(name)
 
-	var err error
-
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
-		err = c.do(ctx, http.MethodDelete, path, nil, nil)
-		if err == nil {
-			return nil
-		}
-
-		if !isRebalance(err) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return fmt.Errorf("%s: %w", op, ctx.Err())
-		}
+	if err := c.withRetry(ctx, isRebalance, func() error {
+		return c.do(ctx, http.MethodDelete, path, nil, nil)
+	}); err != nil {
+		return fmt.Errorf("%s: %w", op, connectorError(err))
 	}
 
-	return fmt.Errorf("%s: %w", op, connectorError(err))
+	return nil
 }
 
 func (c *HTTPClient) putConnectorAction(
@@ -380,27 +302,9 @@ func (c *HTTPClient) putConnectorAction(
 
 	path := "/connectors/" + url.PathEscape(name) + "/" + action
 
-	var err error
-
-	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
-		err = c.do(ctx, http.MethodPut, path, nil, nil)
-		if err == nil {
-			break
-		}
-
-		if !isRebalance(err) || attempt == c.retryMaxAttempts {
-			break
-		}
-
-		delay := c.retryWait(attempt)
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			return domain.Connector{}, fmt.Errorf("%s: %w", op, ctx.Err())
-		}
-	}
-
+	err := c.withRetry(ctx, isRebalance, func() error {
+		return c.do(ctx, http.MethodPut, path, nil, nil)
+	})
 	if err != nil {
 		return domain.Connector{}, fmt.Errorf("%s: %w", op, connectorError(err))
 	}

@@ -74,6 +74,34 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, body, out any)
 	}
 }
 
+func (c *HTTPClient) withRetry(
+	ctx context.Context,
+	retryable func(error) bool,
+	fn func() error,
+) error {
+	var err error
+
+	for attempt := 1; attempt <= c.retryMaxAttempts; attempt++ {
+		if err = fn(); err == nil {
+			return nil
+		}
+
+		if !retryable(err) || attempt == c.retryMaxAttempts {
+			break
+		}
+
+		delay := c.retryWait(attempt)
+
+		select {
+		case <-time.After(delay):
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+
+	return err
+}
+
 func (c *HTTPClient) Ping(ctx context.Context) error {
 	const op = "connectors.kafkaconnect.Ping"
 

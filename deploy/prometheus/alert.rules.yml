@@ -26,3 +26,30 @@ groups:
         annotations:
           summary: 'Kafka Connect scrape target down'
           description: 'up{job="kafka-connect"}==0 for 1m. connect:8084 unreachable; all debezium_* stale. Check maestro-connect container + JMX agent.'
+  - name: maestro
+    interval: 15s
+    rules:
+      - alert: MaestroDown
+        expr: up{job="maestro"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Maestro scrape target down'
+          description: 'up{job="maestro"}==0 for 1m. maestro:9100 unreachable; check maestro-app container.'
+      - alert: MaestroHighErrorRate
+        expr: sum(rate(http_server_requests_total{status=~"5.."}[5m])) / sum(rate(http_server_requests_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Maestro high 5xx rate'
+          description: 'More than 1% of maestro HTTP responses are 5xx for 5m. Check maestro logs.'
+      - alert: FailedConnectors
+        expr: sum(maestro_connector_info{state="failed"}) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Kafka connector in FAILED state'
+          description: 'At least one connector reported failed state for 1m. Check connector status in GUI.'

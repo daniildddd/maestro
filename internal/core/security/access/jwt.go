@@ -24,17 +24,20 @@ func NewManager(cfg Config) *Manager {
 type jwtClaims struct {
 	jwt.RegisteredClaims
 
-	Role string `json:"role"`
+	Role     string `json:"role"`
+	Username string `json:"username"`
 }
 
 type AuthUser struct {
-	UserID uuid.UUID
-	Role   string
+	UserID   uuid.UUID
+	Role     string
+	Username string
 }
 
 func (m *Manager) Generate(
 	userID uuid.UUID,
 	role string,
+	username string,
 ) (string, error) {
 	const op = "security.access.Generate"
 
@@ -47,7 +50,8 @@ func (m *Manager) Generate(
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(now.Add(m.cfg.AccessTTL)),
 		},
-		Role: role,
+		Role:     role,
+		Username: username,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -111,7 +115,8 @@ func (m *Manager) Verify(
 	}
 
 	return AuthUser{
-		UserID: userID,
-		Role:   claims.Role,
+		UserID:   userID,
+		Role:     claims.Role,
+		Username: claims.Username,
 	}, nil
 }

@@ -47,7 +47,7 @@ func TestAuthService_Login(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -56,7 +56,7 @@ func TestAuthService_Login(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("access-token", nil).
 					Once()
 
@@ -173,7 +173,7 @@ func TestAuthService_Login(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -182,7 +182,7 @@ func TestAuthService_Login(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("", errs.ErrInternal).
 					Once()
 			},
@@ -201,7 +201,7 @@ func TestAuthService_Login(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -210,7 +210,7 @@ func TestAuthService_Login(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("access-token", nil).
 					Once()
 
@@ -234,7 +234,7 @@ func TestAuthService_Login(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -243,7 +243,7 @@ func TestAuthService_Login(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("access-token", nil).
 					Once()
 
@@ -271,7 +271,7 @@ func TestAuthService_Login(t *testing.T) {
 			) {
 				repo.EXPECT().
 					GetUserByName(mock.Anything, "alice").
-					Return(domain.User{ID: userID, PasswordHash: "hash", Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", PasswordHash: "hash", Role: "admin"}, nil).
 					Once()
 
 				hasher.EXPECT().
@@ -280,7 +280,7 @@ func TestAuthService_Login(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("access-token", nil).
 					Once()
 

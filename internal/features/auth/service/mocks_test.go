@@ -125,8 +125,8 @@ func (_m *MockAccessTokenGenerator) EXPECT() *MockAccessTokenGenerator_Expecter 
 }
 
 // Generate provides a mock function for the type MockAccessTokenGenerator
-func (_mock *MockAccessTokenGenerator) Generate(userID uuid.UUID, role string) (string, error) {
-	ret := _mock.Called(userID, role)
+func (_mock *MockAccessTokenGenerator) Generate(userID uuid.UUID, role string, username string) (string, error) {
+	ret := _mock.Called(userID, role, username)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Generate")
@@ -134,16 +134,16 @@ func (_mock *MockAccessTokenGenerator) Generate(userID uuid.UUID, role string) (
 
 	var r0 string
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, string) (string, error)); ok {
-		return returnFunc(userID, role)
+	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, string, string) (string, error)); ok {
+		return returnFunc(userID, role, username)
 	}
-	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, string) string); ok {
-		r0 = returnFunc(userID, role)
+	if returnFunc, ok := ret.Get(0).(func(uuid.UUID, string, string) string); ok {
+		r0 = returnFunc(userID, role, username)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
-	if returnFunc, ok := ret.Get(1).(func(uuid.UUID, string) error); ok {
-		r1 = returnFunc(userID, role)
+	if returnFunc, ok := ret.Get(1).(func(uuid.UUID, string, string) error); ok {
+		r1 = returnFunc(userID, role, username)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -158,11 +158,12 @@ type MockAccessTokenGenerator_Generate_Call struct {
 // Generate is a helper method to define mock.On call
 //   - userID uuid.UUID
 //   - role string
-func (_e *MockAccessTokenGenerator_Expecter) Generate(userID any, role any) *MockAccessTokenGenerator_Generate_Call {
-	return &MockAccessTokenGenerator_Generate_Call{Call: _e.mock.On("Generate", userID, role)}
+//   - username string
+func (_e *MockAccessTokenGenerator_Expecter) Generate(userID any, role any, username any) *MockAccessTokenGenerator_Generate_Call {
+	return &MockAccessTokenGenerator_Generate_Call{Call: _e.mock.On("Generate", userID, role, username)}
 }
 
-func (_c *MockAccessTokenGenerator_Generate_Call) Run(run func(userID uuid.UUID, role string)) *MockAccessTokenGenerator_Generate_Call {
+func (_c *MockAccessTokenGenerator_Generate_Call) Run(run func(userID uuid.UUID, role string, username string)) *MockAccessTokenGenerator_Generate_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 uuid.UUID
 		if args[0] != nil {
@@ -172,9 +173,14 @@ func (_c *MockAccessTokenGenerator_Generate_Call) Run(run func(userID uuid.UUID,
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
@@ -185,7 +191,7 @@ func (_c *MockAccessTokenGenerator_Generate_Call) Return(s string, err error) *M
 	return _c
 }
 
-func (_c *MockAccessTokenGenerator_Generate_Call) RunAndReturn(run func(userID uuid.UUID, role string) (string, error)) *MockAccessTokenGenerator_Generate_Call {
+func (_c *MockAccessTokenGenerator_Generate_Call) RunAndReturn(run func(userID uuid.UUID, role string, username string) (string, error)) *MockAccessTokenGenerator_Generate_Call {
 	_c.Call.Return(run)
 	return _c
 }

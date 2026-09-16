@@ -50,6 +50,7 @@ func Auth(tv TokenVerifier) Middleware {
 
 			ctx = reqctx.WithUserID(ctx, claims.UserID)
 			ctx = reqctx.WithRole(ctx, claims.Role)
+			ctx = reqctx.WithUsername(ctx, claims.Username)
 
 			if rw, ok := w.(*core_http_response.RWriter); ok {
 				rw.UserID = claims.UserID

@@ -62,7 +62,7 @@ func (s *AuthService) Login(
 		)
 	}
 
-	accessToken, err := s.accessGen.Generate(user.ID, user.Role)
+	accessToken, err := s.accessGen.Generate(user.ID, user.Role, user.Username)
 	if err != nil {
 		return domain.TokenPair{}, fmt.Errorf(
 			"%s: generate access token: %w",

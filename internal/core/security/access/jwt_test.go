@@ -82,11 +82,17 @@ func wrongAlgToken(t *testing.T, userID uuid.UUID, role string) string {
 	return signed
 }
 
-func validToken(t *testing.T, m *access.Manager, userID uuid.UUID, role string) string {
+func validToken(
+	t *testing.T,
+	m *access.Manager,
+	userID uuid.UUID,
+	role string,
+	username string,
+) string {
 	t.Helper()
 	must := require.New(t)
 
-	token, err := m.Generate(userID, role)
+	token, err := m.Generate(userID, role, username)
 	must.NoError(err)
 
 	return token
@@ -106,8 +112,9 @@ func TestManager_Generate(t *testing.T) {
 
 	userID := uuid.New()
 	role := "admin"
+	username := "alice"
 
-	token, err := manager.Generate(userID, role)
+	token, err := manager.Generate(userID, role, username)
 
 	must.NoError(err)
 	is.NotEmpty(token)
@@ -125,6 +132,19 @@ func TestManager_Generate(t *testing.T) {
 	is.Equal(role, claims.Role)
 	is.NotNil(claims.ExpiresAt)
 	is.NotNil(claims.IssuedAt)
+
+	var fullClaims struct {
+		jwt.RegisteredClaims
+
+		Role     string `json:"role"`
+		Username string `json:"username"`
+	}
+
+	_, err = jwt.ParseWithClaims(token, &fullClaims, func(_ *jwt.Token) (any, error) {
+		return []byte(cfg.Secret), nil
+	})
+	must.NoError(err)
+	is.Equal(username, fullClaims.Username)
 }
 
 func TestManager_Verify(t *testing.T) {
@@ -149,9 +169,21 @@ func TestManager_Verify(t *testing.T) {
 		wantUser *access.AuthUser
 	}{
 		{
-			name:     "success returns auth user",
-			token:    validToken(t, manager, validUserID, validRole),
-			wantUser: &access.AuthUser{UserID: validUserID, Role: validRole},
+			name:  "success returns auth user",
+			token: validToken(t, manager, validUserID, validRole, "alice"),
+			wantUser: &access.AuthUser{
+				UserID:   validUserID,
+				Role:     validRole,
+				Username: "alice",
+			},
+		},
+		{
+			name:  "token without username verifies with empty username",
+			token: signToken(t, cfg, validUserID.String(), validRole, time.Now().Add(time.Minute)),
+			wantUser: &access.AuthUser{
+				UserID: validUserID,
+				Role:   validRole,
+			},
 		},
 		{
 			name:   "expired token maps to ErrAccessTokenExpired",

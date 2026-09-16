@@ -51,6 +51,7 @@ type AccessTokenGenerator interface {
 	Generate(
 		userID uuid.UUID,
 		role string,
+		username string,
 	) (string, error)
 }
 

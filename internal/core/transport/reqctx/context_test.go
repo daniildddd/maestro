@@ -107,6 +107,40 @@ func TestUserId(t *testing.T) {
 	})
 }
 
+func TestUsername(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns username when set in context", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		ctx := reqctx.WithUsername(context.Background(), "alice")
+
+		is.Equal("alice", reqctx.Username(ctx))
+	})
+
+	t.Run("overwrites username when set multiple times", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		ctx := reqctx.WithUsername(context.Background(), "alice")
+		ctx = reqctx.WithUsername(ctx, "bob")
+
+		is.Equal("bob", reqctx.Username(ctx))
+	})
+
+	t.Run("panics when username not in context", func(t *testing.T) {
+		t.Parallel()
+		is := assert.New(t)
+
+		ctx := context.Background()
+
+		is.PanicsWithValue("username not found in context", func() {
+			reqctx.Username(ctx)
+		})
+	})
+}
+
 func TestRequestId(t *testing.T) {
 	t.Parallel()
 

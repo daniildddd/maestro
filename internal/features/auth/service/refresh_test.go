@@ -60,7 +60,7 @@ func TestAuthService_Refresh(t *testing.T) {
 
 				repo.EXPECT().
 					GetUserByID(mock.Anything, userID).
-					Return(domain.User{ID: userID, Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", Role: "admin"}, nil).
 					Once()
 
 				refreshGen.EXPECT().
@@ -85,7 +85,7 @@ func TestAuthService_Refresh(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("new-access", nil).
 					Once()
 			},
@@ -427,7 +427,7 @@ func TestAuthService_Refresh(t *testing.T) {
 
 				repo.EXPECT().
 					GetUserByID(mock.Anything, userID).
-					Return(domain.User{ID: userID, Role: "admin"}, nil).
+					Return(domain.User{ID: userID, Username: "alice", Role: "admin"}, nil).
 					Once()
 
 				refreshGen.EXPECT().
@@ -446,7 +446,7 @@ func TestAuthService_Refresh(t *testing.T) {
 					Once()
 
 				accessGen.EXPECT().
-					Generate(userID, "admin").
+					Generate(userID, "admin", "alice").
 					Return("", errs.ErrInternal).
 					Once()
 			},

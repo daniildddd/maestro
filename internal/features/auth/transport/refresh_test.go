@@ -71,10 +71,9 @@ func TestAuthHTTPHandler_Refresh(t *testing.T) {
 			wantToken:  "new-access-token",
 		},
 		{
-			name:       "missing cookie returns INVALID_REFRESH_TOKEN",
+			name:       "missing cookie returns 204 without body and cookie",
 			setupMock:  func(_ *MockAuthService) {},
-			wantStatus: http.StatusUnauthorized,
-			wantCode:   "INVALID_REFRESH_TOKEN",
+			wantStatus: http.StatusNoContent,
 		},
 		{
 			name:        "service error returns error response without cookie",
@@ -107,6 +106,14 @@ func TestAuthHTTPHandler_Refresh(t *testing.T) {
 			handler.Refresh(rw, newRefreshRequest(t, tt.cookieValue))
 
 			must.Equal(tt.wantStatus, rec.Code)
+
+			if tt.wantStatus == http.StatusNoContent {
+				// no session: empty body, no cookie, no service call
+				is.Empty(rec.Body.String())
+				is.Empty(rec.Header().Get("Set-Cookie"))
+
+				return
+			}
 
 			if tt.wantCode != "" {
 				var body errorResponseBody

@@ -83,7 +83,7 @@ test-integration: ## Run integration tests (testcontainers, needs Docker daemon)
 	@go test -tags integration -race ./test/integration/...
 
 validate-swagger: ## Validate OpenAPI spec
-	@vacuum lint -r vacuum.yml docs/swagger.yaml
+	@vacuum lint -r vacuum.yml api/swagger.yaml
 
 help: ## Show available commands
 	@echo "Available commands:"

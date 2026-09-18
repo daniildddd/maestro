@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/daniildddd/maestro/internal/core/errs"
 	"github.com/daniildddd/maestro/internal/core/logger"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
@@ -22,13 +21,9 @@ func (h *AuthHTTPHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		responseHandler.ErrorResponse(
-			fmt.Errorf(
-				"%s: missing refresh token cookie: %w",
-				op,
-				errs.ErrMissingRefreshToken,
-			),
-		)
+		// no cookie is a normal guest state, not an auth failure:
+		// answer 204 so browsers do not log a console error
+		responseHandler.NoContent()
 
 		return
 	}

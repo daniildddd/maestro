@@ -1,0 +1,369 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(kafka_connect_worker_connector_count)",
+          "legendFormat": "worker",
+          "refId": "A"
+        }
+      ],
+      "title": "Connectors on worker",
+      "description": "How many connectors does the worker hold?",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum(kafka_connect_worker_task_count)",
+          "legendFormat": "worker",
+          "refId": "A"
+        }
+      ],
+      "title": "Tasks on worker",
+      "description": "How many tasks does the worker run?",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "round(increase(kafka_connect_worker_rebalance_completed_rebalances[$__range]))",
+          "legendFormat": "rebalances",
+          "refId": "A"
+        }
+      ],
+      "title": "Rebalances in selected period",
+      "description": "How many rebalances happened in the selected period?",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 22,
+        "w": 12,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (instance, area) (jvm_memory_used_bytes{job=\"kafka-connect\"})",
+          "legendFormat": "{{instance}} {{area}}",
+          "refId": "A"
+        }
+      ],
+      "title": "JVM memory by worker",
+      "description": "How much memory does each worker use?",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "jvm_threads_current{job=\"kafka-connect\"}",
+          "legendFormat": "threads",
+          "refId": "A"
+        }
+      ],
+      "title": "JVM threads",
+      "description": "Is the thread count stable or leaking?",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "rate(kafka_connect_worker_rebalance_completed_rebalances[15m])",
+          "legendFormat": "rebalances/sec",
+          "refId": "A"
+        }
+      ],
+      "title": "Rebalance activity",
+      "description": "How frequently is the worker rebalancing?",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum by (connector) (rate(kafka_connect_task_error_total_record_errors[5m]))",
+          "legendFormat": "{{connector}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Record processing errors",
+      "description": "Which connector tasks are encountering record processing errors?",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 14,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "sum(up{job=\"kafka-connect\"})",
+          "legendFormat": "up",
+          "refId": "A"
+        }
+      ],
+      "title": "Workers UP",
+      "type": "stat",
+      "description": "How many Connect workers are alive?",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 13,
+      "targets": [
+        {
+          "expr": "count(up{job=\"kafka-connect\"})",
+          "legendFormat": "total",
+          "refId": "A"
+        }
+      ],
+      "title": "Workers total",
+      "type": "stat",
+      "description": "How many Connect workers should be alive?",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "kafka_connect_worker_rebalance_time_since_last_rebalance_ms",
+          "legendFormat": "since last",
+          "refId": "A"
+        }
+      ],
+      "title": "Time since last rebalance",
+      "description": "How long ago was the last rebalance? Recent ones deserve attention.",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurationms",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 3600000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 12,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 14,
+      "targets": [
+        {
+          "expr": "kafka_connect_task_offset_commit_avg_time_ms",
+          "legendFormat": "{{connector}}/task {{task}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Commit latency",
+      "type": "timeseries",
+      "description": "How long does offset commit take? Growth means trouble in Kafka or the network.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 24,
+        "h": 8
+      }
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Kafka Connect Cluster",
+  "uid": "maestro-cluster",
+  "version": 1
+}

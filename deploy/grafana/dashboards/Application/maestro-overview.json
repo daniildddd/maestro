@@ -1,0 +1,390 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "count(count by (connector) (maestro_connector_info))",
+          "legendFormat": "connectors",
+          "refId": "A"
+        }
+      ],
+      "title": "Connectors",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 6
+      },
+      "description": "How many connectors exist right now?"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(maestro_connector_tasks)",
+          "legendFormat": "tasks",
+          "refId": "A"
+        }
+      ],
+      "title": "Tasks",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 6
+      },
+      "description": "How many tasks exist right now?"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "count(debezium_milliseconds_behind_source > 5000)",
+          "legendFormat": "servers",
+          "refId": "A"
+        }
+      ],
+      "title": "High Lag",
+      "description": "Debezium servers more than 5000ms behind source (alert DebeziumLagHigh).",
+      "type": "stat",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 6
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (server) (rate(debezium_total_events_seen[5m]))",
+          "legendFormat": "{{server}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Throughput",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "description": "What is the event throughput per source server?"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "debezium_milliseconds_behind_source",
+          "legendFormat": "{{server}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Source Record Lag",
+      "description": "Threshold 5000 mirrors alert DebeziumLagHigh.",
+      "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5000
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "maestro_connector_info == 1",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{connector}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (connector, state) (maestro_connector_tasks)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{connector}}",
+          "refId": "B"
+        },
+        {
+          "expr": "label_replace(debezium_milliseconds_behind_source >= 0, \"connector\", \"$1\", \"server\", \"(.+)\")",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{connector}}",
+          "refId": "C"
+        }
+      ],
+      "title": "Connector status",
+      "description": "What state is each connector in, how many tasks and lag does it have?",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "connector",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value #A": "Up",
+              "Value #B": "Tasks",
+              "Value #C": "Lag ms",
+              "state 1": "State",
+              "state 2": "Task state"
+            }
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "connector",
+                "State",
+                "Task state",
+                "Tasks",
+                "Lag ms"
+              ]
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum by (state) (maestro_connector_info)",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Connectors by state",
+      "type": "timeseries",
+      "description": "Which states are connectors in?",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum by (state) (maestro_connector_tasks)",
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Tasks by state",
+      "type": "timeseries",
+      "description": "Which states are tasks in?",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 22,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "min(debezium_connected)",
+          "legendFormat": "connected",
+          "refId": "A"
+        }
+      ],
+      "title": "Debezium connected",
+      "type": "stat",
+      "description": "Are all Debezium servers connected? (alert DebeziumDisconnected)",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 38,
+        "w": 12,
+        "h": 6
+      }
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Maestro Overview",
+  "uid": "maestro-overview",
+  "version": 1
+}

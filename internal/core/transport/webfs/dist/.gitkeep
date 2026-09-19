@@ -1,0 +1,3 @@
+Built web assets (web/dist) are injected here at image build time.
+See cmd/maestro/Dockerfile. The directory must exist so go:embed compiles
+on builds without a UI; in that case webfs serves a placeholder.

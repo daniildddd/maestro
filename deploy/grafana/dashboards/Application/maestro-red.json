@@ -98,6 +98,62 @@
         "h": 8
       },
       "description": "How slow are the slowest 5% of requests?"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum by (route) (rate(http_server_requests_total{status=~\"5..\"}[5m]))",
+          "legendFormat": "{{route}}",
+          "refId": "A"
+        }
+      ],
+      "title": "5xx by route",
+      "type": "timeseries",
+      "description": "Which endpoints return 5xx?",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (route, le) (rate(http_server_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{route}}",
+          "refId": "A"
+        }
+      ],
+      "title": "P95 by route",
+      "type": "timeseries",
+      "description": "Which endpoints are slowest for 5% of requests?",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      }
     }
   ],
   "refresh": "15s",

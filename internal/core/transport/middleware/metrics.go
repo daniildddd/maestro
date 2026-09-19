@@ -11,7 +11,6 @@ import (
 func Metrics(m *core_metrics.Metrics) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Self-scrape must not feed back into RED.
 			if r.URL.Path == "/metrics" {
 				next.ServeHTTP(w, r)
 

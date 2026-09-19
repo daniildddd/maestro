@@ -69,7 +69,6 @@ func (l *Logger) Close() error {
 	const op = "core.logger.Close"
 
 	//nolint:errcheck // zap docs: Sync fails with EINVAL on stdout/stderr;
-	// errors not actionable at shutdown (https://github.com/uber-go/zap/issues/370)
 	_ = l.Sync()
 
 	if err := l.file.Close(); err != nil {

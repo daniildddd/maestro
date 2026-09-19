@@ -86,7 +86,6 @@ func TestAuth(t *testing.T) {
 				capturedUserID = reqctx.UserID(r.Context())
 				capturedRole = reqctx.Role(r.Context())
 				//nolint:contextcheck // test handler: request context from
-				// httptest.NewRequest is not derived from a parent
 				core_logger.FromContext(r.Context()).Info("test")
 				w.WriteHeader(http.StatusOK)
 			})

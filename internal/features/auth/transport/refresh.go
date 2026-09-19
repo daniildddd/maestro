@@ -21,8 +21,6 @@ func (h *AuthHTTPHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		// no cookie is a normal guest state, not an auth failure:
-		// answer 204 so browsers do not log a console error
 		responseHandler.NoContent()
 
 		return

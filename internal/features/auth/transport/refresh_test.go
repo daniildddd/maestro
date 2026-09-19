@@ -108,7 +108,6 @@ func TestAuthHTTPHandler_Refresh(t *testing.T) {
 			must.Equal(tt.wantStatus, rec.Code)
 
 			if tt.wantStatus == http.StatusNoContent {
-				// no session: empty body, no cookie, no service call
 				is.Empty(rec.Body.String())
 				is.Empty(rec.Header().Get("Set-Cookie"))
 

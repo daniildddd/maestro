@@ -101,7 +101,6 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 		defer cancelShutdown()
 
 		//nolint:contextcheck // graceful shutdown needs a fresh root context:
-		// parent ctx is already cancelled here (case <-ctx.Done())
 		if err := server.Shutdown(ctxShutdown); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				return nil

@@ -64,7 +64,7 @@
       "id": 3,
       "targets": [
         {
-          "expr": "count(debezium_milliseconds_behind_source > 5000)",
+          "expr": "count(debezium_milliseconds_behind_source > 5000) or vector(0)",
           "legendFormat": "servers",
           "refId": "A"
         }
@@ -199,7 +199,7 @@
         }
       ],
       "title": "Connector status",
-      "description": "What state is each connector in, how many tasks and lag does it have?",
+      "description": "Which connectors are in trouble right now? Lag joins on connector name (convention: connector == topic.prefix == server).",
       "type": "table",
       "transformations": [
         {
@@ -327,9 +327,9 @@
         ]
       },
       "gridPos": {
-        "x": 0,
-        "y": 22,
-        "w": 24,
+        "x": 12,
+        "y": 30,
+        "w": 12,
         "h": 8
       }
     },
@@ -373,7 +373,7 @@
       "gridPos": {
         "x": 0,
         "y": 38,
-        "w": 12,
+        "w": 24,
         "h": 6
       }
     }

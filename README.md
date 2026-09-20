@@ -32,7 +32,6 @@ Prometheus / Grafana observability stack — so you never have to touch
 - [Observability](#observability)
 - [Development](#development)
 - [Project structure](#project-structure)
-- [Troubleshooting & FAQ](#troubleshooting--faq)
 - [Contributing](CONTRIBUTING.md)
 - [License](#license)
 
@@ -379,42 +378,42 @@ parallel tests where possible; integration tests live in `test/integration`
 ## Project structure
 
 ```
-cmd/maestro            entrypoint, Dockerfile
-internal/core          shared kernel: domain, metrics, logger, security, transport
-internal/features      vertical slices: auth, users, connectors, audit
-  <slice>/{domain,service,repository,transport}
-migrations             golang-migrate SQL versions
-deploy                 prometheus / alertmanager / grafana / jmx-exporter as code
-api                    swagger.yaml (OpenAPI contract)
-docs                   assets (logo + screenshots for this README)
-test/integration       testcontainers suites (pgxadapter, users, auth, audit, dbcheck)
-web                    React + Vite console (maestro-web)
+maestro
+├── api                      # OpenAPI contract (swagger.yaml, vacuum-linted)
+├── cmd
+│   └── maestro              # entrypoint (main.go), Dockerfile
+├── internal
+│   ├── core                 # shared kernel
+│   │   ├── domain           # entities: users, connectors, audit, validation
+│   │   ├── errs             # common errors
+│   │   ├── logger           # zap logger + config
+│   │   ├── metrics          # RED metrics, :9100 server
+│   │   ├── repository
+│   │   │   └── postgres     # pgx pool + adapter
+│   │   ├── security         # access (JWT), hasher (bcrypt), refresh tokens
+│   │   └── transport        # health, middleware, reqctx, request, response, server, webfs
+│   └── features             # vertical slices: auth, users, connectors, audit
+│       ├── audit            # repository / service / transport
+│       ├── auth             # cleanup / repository / service / transport
+│       ├── connectors       # collector / dbcheck / kafkaconnect / plugins / service / transport
+│       └── users            # repository / service / transport
+├── migrations               # golang-migrate SQL versions
+├── deploy                   # infra as code
+│   ├── alertmanager         # alertmanager.yml + gitignored slack_api_url
+│   ├── grafana              # provisioned datasource + dashboards (Maestro RED, …)
+│   ├── jmx-exporter         # config.yml + gitignored agent jar
+│   └── prometheus           # prometheus.yml + alert.rules.yml
+├── docs
+│   └── assets               # logo + README screenshots
+├── test
+│   └── integration          # testcontainers suites (audit, auth, dbcheck, pgxadapter, users)
+└── web                      # React + Vite console (maestro-web)
+    └── src
+        ├── api              # client, endpoints, types
+        ├── auth             # AuthContext
+        ├── components       # Layout, SchemaField, ui, …
+        └── pages            # Dashboard, Connectors, Create/Detail, Audit, Users, …
 ```
-
-## Troubleshooting & FAQ
-
-- **`connect: connection refused / 503 KafkaConnectUnavailable`** — Connect is
-  still starting (Kafka healthcheck → Connect). `docker compose ps`, wait for
-  `healthy`, retry. Maestro retries with backoff during rebalances.
-- **`wal_level=logical` error from dbcheck** — compose already sets
-  `postgres -c wal_level=logical`, but an old volume keeps the previous setting.
-  `docker compose down -v postgres_data` (data loss!) or `ALTER SYSTEM SET
-  wal_level=logical` + restart.
-- **Publication / slot errors** — create the publication explicitly
-  (`CREATE PUBLICATION ... FOR TABLE ...`), use a dedicated `slot.name` per
-  connector, check free `max_replication_slots` / `max_wal_senders`.
-- **`REPLICA IDENTITY` / PK complaint** — tables need a PK or
-  `REPLICA IDENTITY FULL` to capture updates/deletes.
-- **Cannot log in after fresh install** — expected: create the first admin via
-  the SQL snippet in [Quick start](#quick-start-5-minutes). There is no
-  self-registration by design.
-- **CORS errors in local dev** — set `MIDDLEWARE_ALLOWED_ORIGINS` to your Vite
-  origin (e.g. `http://127.0.0.1:5173`); the compose default targets `:8080`.
-- **Grafana empty** — check Prometheus targets (`:9090/targets`): `maestro:9100`
-  is only reachable inside the compose network; when running Maestro via
-  `make run` outside Docker, point Prometheus at `host.docker.internal:9100`.
-- **Apple Silicon / Linux file permissions** — `LOGGER_FOLDER` must be writable;
-  the image uses non-root `65532` with `/var/log/maestro` pre-chowned.
 
 ## Contributing
 

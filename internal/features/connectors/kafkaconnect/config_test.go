@@ -56,6 +56,22 @@ func TestNewConfigMust(t *testing.T) {
 
 		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
 	})
+
+	t.Run("zero TIMEOUT panics on validation", func(t *testing.T) {
+		unsetAllKafkaConnectEnv(t)
+		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+		t.Setenv("KAFKA_CONNECT_TIMEOUT", "0s")
+
+		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
+	})
+
+	t.Run("zero RETRY_MAX_ATTEMPTS panics on validation", func(t *testing.T) {
+		unsetAllKafkaConnectEnv(t)
+		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+		t.Setenv("KAFKA_CONNECT_RETRY_MAX_ATTEMPTS", "0")
+
+		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
+	})
 }
 
 func mustPanic(t *testing.T, fn func()) {

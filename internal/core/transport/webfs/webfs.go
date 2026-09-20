@@ -16,15 +16,19 @@ func Handler() http.Handler {
 		return placeholder()
 	}
 
-	if _, err := fs.Stat(sub, "index.html"); err != nil {
+	return serveFileSystem(sub)
+}
+
+func serveFileSystem(fsys fs.FS) http.Handler {
+	if _, err := fs.Stat(fsys, "index.html"); err != nil {
 		return placeholder()
 	}
 
-	files := http.FileServer(http.FS(sub))
+	files := http.FileServer(http.FS(fsys))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := fs.Stat(sub, strings.TrimPrefix(r.URL.Path, "/")); err != nil {
-			http.ServeFileFS(w, r, sub, "index.html")
+		if _, err := fs.Stat(fsys, strings.TrimPrefix(r.URL.Path, "/")); err != nil {
+			http.ServeFileFS(w, r, fsys, "index.html")
 
 			return
 		}

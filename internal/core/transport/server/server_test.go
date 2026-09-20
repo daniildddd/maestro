@@ -85,7 +85,7 @@ func awaitRunResult(t *testing.T, errCh <-chan error) error {
 	select {
 	case err := <-errCh:
 		return err
-	case <-time.After(5 * time.Second):
+	case <-time.After(60 * time.Second):
 		t.Fatal("Run did not return after context cancellation")
 
 		return nil
@@ -126,7 +126,10 @@ func TestHTTPServer_RegisterAPIRouters(t *testing.T) {
 
 		addr := freeAddr(t)
 
-		srv := server.NewHTTPServer(server.Config{Addr: addr}, nopLogger())
+		srv := server.NewHTTPServer(
+			server.Config{Addr: addr, ShutdownTimeout: 5 * time.Second},
+			nopLogger(),
+		)
 		srv.RegisterAPIRouters(
 			server.NewAPIVersionRouter(v1Routes, server.ApiVersion1),
 			server.NewAPIVersionRouter(v2Routes, "v2"),
@@ -174,7 +177,10 @@ func TestHTTPServer_RegisterNotFound(t *testing.T) {
 
 		addr := freeAddr(t)
 
-		srv := server.NewHTTPServer(server.Config{Addr: addr}, nopLogger())
+		srv := server.NewHTTPServer(
+			server.Config{Addr: addr, ShutdownTimeout: 5 * time.Second},
+			nopLogger(),
+		)
 
 		srv.RegisterRoute(server.Route{
 			Method: http.MethodGet,

@@ -28,9 +28,8 @@ Prometheus / Grafana observability stack — so you never have to touch
 - [Demo scenario: Postgres → Kafka in 10 minutes](#demo-scenario-postgres--kafka-in-10-minutes)
 - [Screenshots](#screenshots)
 - [Compatibility](#compatibility)
-- [Configuration](#configuration)
-- [Observability](#observability)
 - [Development](#development)
+- [Documentation](#documentation)
 - [Project structure](#project-structure)
 - [Contributing](CONTRIBUTING.md)
 - [License](#license)
@@ -153,8 +152,8 @@ make migrate-up
 ### Create the first admin user
 
 There is no public self-registration: `POST /api/v1/users` requires the
-`admin` role, so the very first user must be inserted directly (bootstrap
-problem, see [#roadmap](#roadmap--limitations)). With the stack running:
+`admin` role, so the very first user must be inserted directly. With the stack
+running:
 
 ```bash
 # pgcrypto crypt() with Blowfish is bcrypt-compatible (default HASHER_COST=10)
@@ -310,8 +309,8 @@ Audit log shows who did what with before/after diffs.
 |---------------------------|-------------------------------|-----------------------------|
 | ![Dashboard](docs/assets/screenshot-dashboard.png) | ![Create wizard](docs/assets/screenshot-create.png) | ![Validation](docs/assets/screenshot-validation.png) |
 
-| Connector detail (tasks) | Audit log (before/after) | Grafana (Maestro RED) |
-|--------------------------|--------------------------|-----------------------|
+| Connector detail (tasks) | Audit log                                 | Grafana (Maestro RED) |
+|--------------------------|-------------------------------------------|-----------------------|
 | ![Detail](docs/assets/screenshot-detail.png) | ![Audit](docs/assets/screenshot-audit.png) | ![Grafana](docs/assets/screenshot-grafana.png) |
 
 To refresh them: `make docker-up && make migrate-up`, create the admin user
@@ -334,18 +333,6 @@ additionally verifies the live database at connector deploy time.
 | Grafana       | 12.2                   |
 | Node (web)    | 20+                    |
 
-## Configuration
-
-All settings come from the environment — see [`.env.example`](.env.example)
-to start, and [`docs/configuration.md`](docs/configuration.md) for the full
-reference (every variable, default, and which ones are required).
-
-## Observability
-
-RED metrics on the internal `:9100` listener, 6 Prometheus alerts with Slack
-delivery, and provisioned Grafana dashboards (`Maestro RED`, …) — details in
-[`docs/monitoring.md`](docs/monitoring.md).
-
 ## Development
 
 ```bash
@@ -354,7 +341,13 @@ make test              # unit tests, -race -cover
 make lint              # golangci-lint
 ```
 
-Targets, test conventions and CI — see [`docs/development.md`](docs/development.md).
+## Documentation
+
+- [Configuration](docs/configuration.md) — environment variables and settings
+- [Development](docs/development.md) — Make targets, conventions, CI
+- [Monitoring](docs/monitoring.md) — metrics, alerts, Grafana dashboards
+- [API reference](api/swagger.yaml) — OpenAPI contract (live spec, `vacuum`-linted)
+- [Architecture](#architecture) — service map and request flow (above)
 
 ## Project structure
 
@@ -374,10 +367,10 @@ maestro
 │   │   ├── security         # access (JWT), hasher (bcrypt), refresh tokens
 │   │   └── transport        # health, middleware, reqctx, request, response, server, webfs
 │   └── features             # vertical slices: auth, users, connectors, audit
-│       ├── audit            # repository / service / transport
-│       ├── auth             # cleanup / repository / service / transport
-│       ├── connectors       # collector / dbcheck / kafkaconnect / plugins / service / transport
-│       └── users            # repository / service / transport
+│       ├── audit            # change history: who did what, with before/after snapshots
+│       ├── auth             # JWT login / refresh / logout and expired-token cleanup
+│       ├── connectors       # lifecycle: validation, dbcheck, Connect proxy, state collector
+│       └── users            # user accounts: roles, passwords, profiles
 ├── migrations               # golang-migrate SQL versions
 ├── deploy                   # infra as code
 │   ├── alertmanager         # alertmanager.yml + gitignored slack_api_url

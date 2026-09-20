@@ -4,6 +4,11 @@
 
 # Maestro
 
+[![go](https://img.shields.io/badge/go-1.25-00ADD8)](https://go.dev)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![test](https://github.com/daniildddd/maestro/actions/workflows/test.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/test.yml)
+[![lint](https://github.com/daniildddd/maestro/actions/workflows/lint.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/lint.yml)
+
 Maestro is a control plane for Debezium CDC connectors running on Kafka Connect.
 It wraps the Kafka Connect REST API with an authenticated backend, a web console,
 pre-deploy database checks, config validation, audit history, and a full
@@ -86,6 +91,23 @@ make migrate-up
 
 API contract: [`api/swagger.yaml`](api/swagger.yaml) (OpenAPI, `vacuum`-linted).
 
+## Compatibility
+
+Pinned in [`docker-compose.yml`](docker-compose.yml) — CDC stacks break silently
+on version drift, so check this table before changing images. `dbcheck`
+additionally verifies the live database at connector deploy time.
+
+| Component     | Version                |
+|---------------|------------------------|
+| Go            | 1.25                   |
+| Kafka Connect | Debezium 3.5.2         |
+| Apache Kafka  | 4.3.1                  |
+| PostgreSQL    | 17 (`wal_level=logical`) |
+| Prometheus    | 3.5.0                  |
+| Alertmanager  | 0.28.1                 |
+| Grafana       | 12.2                   |
+| Node (web)    | 20+                    |
+
 ## Configuration
 
 All settings come from the environment (see [`.env.example`](.env.example),
@@ -136,7 +158,12 @@ internal/features      vertical slices: auth, users, connectors, audit
   <slice>/{domain,service,repository,transport}
 migrations             golang-migrate SQL versions
 deploy                 prometheus / alertmanager / grafana / jmx-exporter as code
-docs                   swagger.yaml (OpenAPI contract)
+api                    swagger.yaml (OpenAPI contract)
+docs                   assets (README images)
 test/integration       testcontainers suites (pgxadapter, users, auth, audit, dbcheck)
 web                    React + Vite console (maestro-web)
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).

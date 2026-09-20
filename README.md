@@ -4,7 +4,7 @@
 
 # Maestro
 
-[![go](https://img.shields.io/badge/go-1.25-00ADD8)](https://go.dev)
+[![go](https://img.shields.io/badge/go-1.26-00ADD8)](https://go.dev)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![test](https://github.com/daniildddd/maestro/actions/workflows/test.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/test.yml)
 [![lint](https://github.com/daniildddd/maestro/actions/workflows/lint.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/lint.yml)
@@ -44,19 +44,19 @@ Prometheus / Grafana observability stack — so you never have to touch
 ## Architecture
 
 ```
-                    ┌─────────────┐
-                    │  Web console │  React + Vite (served by :8080)
-                    └──────┬──────┘
-                           │ JWT
-                    ┌──────▼──────┐      ┌──────────────┐
-                    │ Maestro API │─────▶│ Kafka Connect│──▶ Kafka ──▶ Debezium ──▶ Postgres
-                    │   :8080     │      │    :8083     │
-                    └──────┬──────┘      └──────┬───────┘
-                           │                    │ JMX :8084
-                    ┌──────▼──────┐      ┌──────▼───────┐
-                    │  Postgres   │      │  Prometheus  │──▶ Grafana :3000
-                    │ (app + CDC) │      │    :9090     │──▶ Alertmanager :9093 ──▶ Slack
-                    └─────────────┘      └──────────────┘
+                    ┌───────────────┐
+                    │  Web console  │  React + Vite (served by :8080)
+                    └───────┬───────┘
+                            │ JWT
+                    ┌───────▼───────┐      ┌───────────────┐
+                    │  Maestro API  │─────▶│ Kafka Connect │──▶ Kafka ──▶ Debezium ──▶ Postgres
+                    │     :8080     │      │     :8083     │
+                    └───────┬───────┘      └───────┬───────┘
+                            │                      │ JMX :8084
+                    ┌───────▼───────┐      ┌───────▼───────┐
+                    │   Postgres    │      │  Prometheus   │──▶ Grafana :3000
+                    │  (app + CDC)  │      │     :9090     │──▶ Alertmanager :9093 ──▶ Slack
+                    └───────────────┘      └───────────────┘
 ```
 
 Scrape targets: `maestro:9100` (app RED metrics), `connect:8084` (JMX),
@@ -64,7 +64,7 @@ plus Prometheus self-scrape and Alertmanager.
 
 ## Quick start
 
-Prerequisites: Go 1.25+, Docker with Compose v2, Node 20+ (only for web dev).
+Prerequisites: Go 1.26+, Docker with Compose v2, Node 20+ (only for web dev).
 
 ```bash
 # 1. Configure environment
@@ -99,7 +99,7 @@ additionally verifies the live database at connector deploy time.
 
 | Component     | Version                |
 |---------------|------------------------|
-| Go            | 1.25                   |
+| Go            | 1.26                   |
 | Kafka Connect | Debezium 3.5.2         |
 | Apache Kafka  | 4.3.1                  |
 | PostgreSQL    | 17 (`wal_level=logical`) |

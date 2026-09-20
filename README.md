@@ -17,20 +17,16 @@ Prometheus / Grafana observability stack — so you never have to touch
 
 > **TL;DR:** `cp .env.example .env && make alertmanager-config && make docker-up && make migrate-up` →
 > open `http://127.0.0.1:8080`, validate a Postgres config, create a connector,
-> watch rows flow into Kafka. Full walkthrough in [Demo scenario](#demo-scenario-postgres--kafka-in-10-minutes).
+> watch rows flow into Kafka. Full walkthrough in [Demo](docs/demo.md).
 
 ## Contents
 
 - [What is Maestro?](#what-is-maestro)
 - [Features](#features)
-- [Architecture](#architecture)
 - [Quick start](#quick-start)
-- [Demo scenario: Postgres → Kafka in 10 minutes](#demo-scenario-postgres--kafka-in-10-minutes)
 - [Screenshots](#screenshots)
 - [Compatibility](#compatibility)
-- [Development](#development)
 - [Documentation](#documentation)
-- [Project structure](#project-structure)
 - [Contributing](CONTRIBUTING.md)
 - [License](#license)
 
@@ -80,39 +76,7 @@ lifecycle — Debezium still does the CDC.
   live statuses, connector list with task drill-down, schema-driven config
   editor, audit and users pages.
 
-## Architecture
-
-```
-                    ┌───────────────┐
-                    │  Web console  │  React + Vite (served by :8080)
-                    └───────┬───────┘
-                            │ JWT
-                    ┌───────▼───────┐      ┌───────────────┐
-                    │  Maestro API  │─────▶│ Kafka Connect │──▶ Kafka ──▶ Debezium ──▶ Postgres
-                    │     :8080     │      │     :8083     │
-                    └───────┬───────┘      └───────┬───────┘
-                            │                      │ JMX :8084
-                    ┌───────▼───────┐      ┌───────▼───────┐
-                    │   Postgres    │      │  Prometheus   │──▶ Grafana :3000
-                    │  (app + CDC)  │      │     :9090     │──▶ Alertmanager :9093 ──▶ Slack
-                    └───────────────┘      └───────────────┘
-```
-
-Scrape targets: `maestro:9100` (app RED metrics), `connect:8084` (JMX),
-plus Prometheus self-scrape and Alertmanager.
-
-Request flow for a typical "create connector":
-
-1. Web console (or `curl`) calls `POST /api/v1/connectors/validate` with
-   `plugin_type + name + config`.
-2. Maestro validates types/required fields against the Connect plugin schema,
-   then runs Postgres `dbcheck` (connection → permissions → CDC → tables).
-3. On `valid: true` the UI enables **Create** → `POST /api/v1/connectors`
-   proxies to Kafka Connect, writes an audit entry with the config snapshot.
-4. The background collector exports connector/task states as
-   `maestro_connector_info/tasks` for Prometheus/Grafana/alerts.
-
-API contract: [`api/swagger.yaml`](api/swagger.yaml) (OpenAPI, `vacuum`-linted).
+Service map, request flow and project structure: [`docs/architecture.md`](docs/architecture.md).
 
 ## Quick start
 
@@ -138,159 +102,14 @@ make migrate-up
 
 | Service      | URL                      | Credentials (defaults) |
 |--------------|--------------------------|------------------------|
-| API / Web UI | http://127.0.0.1:8080    | create first user, see below |
+| API / Web UI | http://127.0.0.1:8080    | create first user, see [Demo](docs/demo.md) |
 | Grafana      | http://127.0.0.1:3000    | `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` (default `admin`/`admin`) |
 
 Only Maestro and Grafana publish host ports — Grafana because the Metrics page
 embeds it via iframe in your browser. Postgres, Kafka, Connect, Prometheus and
 Alertmanager live inside the compose network only.
 
-### Create the first admin user
-
-There is no public self-registration: `POST /api/v1/users` requires the
-`admin` role, so the very first user must be inserted directly. With the stack
-running:
-
-```bash
-# pgcrypto crypt() with Blowfish is bcrypt-compatible (default HASHER_COST=10)
-docker exec -i maestro-postgres psql -U postgres -d postgres -c \
-  "CREATE EXTENSION IF NOT EXISTS pgcrypto;
-   INSERT INTO users (username, password_hash, role)
-   VALUES ('admin', crypt('admin12345', gen_salt('bf', 10)), 'admin')
-   ON CONFLICT (username) DO NOTHING;"
-```
-
-Then open `http://127.0.0.1:8080`, sign in as `admin` / `admin12345`,
-change the password under Profile, and create the rest of the team via
-Users → Create user (or `POST /api/v1/users` with the admin token).
-
-Sanity check (Connect is reachable through the Maestro API, no direct port):
-
-```bash
-curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/healthz
-docker compose ps
-```
-
-## Demo scenario: Postgres → Kafka in 10 minutes
-
-Goal: capture changes of `public.orders` in Postgres and see them land in
-Kafka, entirely through Maestro.
-
-**0. Stack is up** (see Quick start) and you are logged into the web console
-as admin.
-
-**1. Prepare the source table** (run against the compose Postgres):
-
-```bash
-docker exec -i maestro-postgres psql -U postgres -d postgres <<'SQL'
-CREATE TABLE IF NOT EXISTS public.orders (
-  id SERIAL PRIMARY KEY,
-  status TEXT NOT NULL DEFAULT 'new',
-  total NUMERIC NOT NULL DEFAULT 0
-);
-ALTER TABLE public.orders REPLICA IDENTITY DEFAULT;
-DROP PUBLICATION IF EXISTS maestro_pub;
-CREATE PUBLICATION maestro_pub FOR TABLE public.orders;
-SQL
-```
-
-Why: `dbcheck` will verify the table exists, is readable, has a PK /
-`REPLICA IDENTITY`, and is covered by a publication. If you skip this step,
-validation returns the exact fix hint instead of failing silently later.
-
-**2. Validate the config before creating anything.**
-
-UI path (recommended): Connectors → Create connector → pick
-`io.debezium.connector.postgresql.PostgresConnector` → fill
-`topic.prefix=maestro-demo`, `database.hostname=postgres`,
-`database.port=5432`, `database.user/postgres/password/dbname`,
-`slot.name=maestro_demo`, `publication.name=maestro_pub`,
-`table.include.list=public.orders` → Review & validate.
-
-API path:
-
-```bash
-TOKEN=$(curl -s -X POST http://127.0.0.1:8080/api/v1/login \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"admin","password":"admin12345"}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-
-curl -s -X POST http://127.0.0.1:8080/api/v1/connectors/validate \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{
-    "plugin_type": "io.debezium.connector.postgresql.PostgresConnector",
-    "name": "pg-orders-cdc",
-    "config": {
-      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-      "topic.prefix": "maestro-demo",
-      "database.hostname": "postgres",
-      "database.port": "5432",
-      "database.user": "postgres",
-      "database.password": "pass",
-      "database.dbname": "postgres",
-      "database.server.name": "maestro-demo",
-      "plugin.name": "pgoutput",
-      "slot.name": "maestro_demo",
-      "publication.name": "maestro_pub",
-      "table.include.list": "public.orders"
-    }
-  }' | python3 -m json.tool
-```
-
-Expected: `{"valid": true, "steps": [{"id":"config","status":"ok",...},
-{"id":"connection",...}, {"id":"permissions",...}, {"id":"cdc",...},
-{"id":"tables",...}]}`. On error you get HTTP 400 with
-`CONNECTOR_CONFIG_INVALID` and the same report with `valid: false`,
-per-check `fix_hint`, `field` and `table` pointers.
-
-**3. Create the connector.**
-
-```bash
-curl -s -X POST http://127.0.0.1:8080/api/v1/connectors \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"name":"pg-orders-cdc","config":{
-    "connector.class":"io.debezium.connector.postgresql.PostgresConnector",
-    "topic.prefix":"maestro-demo",
-    "database.hostname":"postgres","database.port":"5432",
-    "database.user":"postgres","database.password":"pass","database.dbname":"postgres",
-    "plugin.name":"pgoutput","slot.name":"maestro_demo",
-    "publication.name":"maestro_pub","table.include.list":"public.orders"}}' \
-  | python3 -m json.tool
-```
-
-The connector appears on the Dashboard as `starting` → `running`
-(live-polling, ~7s). Open its detail page for per-task state and trace.
-
-**4. Generate CDC traffic and watch it.**
-
-```bash
-docker exec -i maestro-postgres psql -U postgres -d postgres -c \
-  "INSERT INTO public.orders (status, total) VALUES ('paid', 42.50);"
-
-docker exec maestro-kafka /opt/kafka/bin/kafka-console-consumer.sh \
-  --bootstrap-server localhost:9092 --topic maestro-demo.public.orders --from-beginning --max-messages 1
-```
-
-You should see the Debezium envelope (`before`/`after`/`op: c`).
-Every create/update/delete is also written to the Audit log page.
-
-**5. Operate it:** pause → resume → restart failed tasks only.
-
-```bash
-curl -s -X POST http://127.0.0.1:8080/api/v1/connectors/pg-orders-cdc/pause \
-  -H "Authorization: Bearer $TOKEN" | head -c 300; echo
-curl -s -X POST http://127.0.0.1:8080/api/v1/connectors/pg-orders-cdc/resume \
-  -H "Authorization: Bearer $TOKEN" | head -c 300; echo
-# restart connector + tasks, or only failed ones:
-curl -s -X POST 'http://127.0.0.1:8080/api/v1/connectors/pg-orders-cdc/restart?include_tasks=true&only_failed=true' \
-  -H "Authorization: Bearer $TOKEN" | head -c 300; echo
-```
-
-**6. Observe:** Grafana → `Maestro RED` dashboard (latency, 5xx, connector/task
-states, Debezium lag); Prometheus alerts fire to Slack on disconnect/lag/down.
-Audit log shows who did what with before/after diffs.
-
-**7. Clean up:** `DELETE /api/v1/connectors/pg-orders-cdc` (or Delete button),
-`DROP PUBLICATION maestro_pub; DROP TABLE public.orders;`.
+Next: [Demo](docs/demo.md) — first admin user, then Postgres → Kafka end to end.
 
 ## Screenshots
 
@@ -310,7 +129,7 @@ Audit log shows who did what with before/after diffs.
 | ![Detail](docs/assets/screenshot-detail.png) | ![Audit](docs/assets/screenshot-audit.png) | ![Grafana](docs/assets/screenshot-grafana.png) |
 
 To refresh them: `make docker-up && make migrate-up`, create the admin user
-(see Quick start), run the demo scenario, and re-capture the pages above.
+(see [Demo](docs/demo.md)), run the demo scenario, and re-capture the pages above.
 
 ## Compatibility
 
@@ -329,64 +148,14 @@ additionally verifies the live database at connector deploy time.
 | Grafana       | 12.2                   |
 | Node (web)    | 20+                    |
 
-## Development
-
-```bash
-make build             # go build -o bin/maestro ./cmd/maestro
-make test              # unit tests, -race -cover
-make lint              # golangci-lint
-```
-
 ## Documentation
 
+- [Architecture](docs/architecture.md) — service map, request flow, project structure
+- [Demo](docs/demo.md) — first admin user + Postgres → Kafka end to end
 - [Configuration](docs/configuration.md) — environment variables and settings
 - [Development](docs/development.md) — Make targets, conventions, CI
 - [Monitoring](docs/monitoring.md) — metrics, alerts, Grafana dashboards
 - [API reference](api/swagger.yaml) — OpenAPI contract (live spec, `vacuum`-linted)
-- [Architecture](#architecture) — service map and request flow (above)
-
-## Project structure
-
-```
-maestro
-├── api                      # OpenAPI contract (swagger.yaml, vacuum-linted)
-├── cmd
-│   └── maestro              # entrypoint (main.go), Dockerfile
-├── internal
-│   ├── core                 # shared kernel
-│   │   ├── domain           # entities: users, connectors, audit, validation
-│   │   ├── errs             # common errors
-│   │   ├── logger           # zap logger + config
-│   │   ├── metrics          # RED metrics, :9100 server
-│   │   ├── repository
-│   │   │   └── postgres     # pgx pool + adapter
-│   │   ├── security         # access (JWT), hasher (bcrypt), refresh tokens
-│   │   └── transport        # health, middleware, reqctx, request, response, server, webfs
-│   └── features             # vertical slices: auth, users, connectors, audit
-│       ├── audit            # change history: who did what, with before/after snapshots
-│       ├── auth             # JWT login / refresh / logout and expired-token cleanup
-│       ├── connectors       # lifecycle: validation, dbcheck, Connect proxy, state collector
-│       └── users            # user accounts: roles, passwords, profiles
-├── migrations               # golang-migrate SQL versions
-├── deploy                   # infra as code
-│   ├── alertmanager         # alertmanager.yml + gitignored slack_api_url
-│   ├── grafana              # provisioned datasource + dashboards (Maestro RED, …)
-│   ├── jmx-exporter         # config.yml + gitignored agent jar
-│   └── prometheus           # prometheus.yml + alert.rules.yml
-├── docs
-│   ├── assets               # logo + README screenshots
-│   ├── configuration.md     # full env reference
-│   ├── development.md       # make targets, conventions, CI
-│   └── monitoring.md        # metrics, alerts, dashboards
-├── test
-│   └── integration          # testcontainers suites (audit, auth, dbcheck, pgxadapter, users)
-└── web                      # React + Vite console (maestro-web)
-    └── src
-        ├── api              # client, endpoints, types
-        ├── auth             # AuthContext
-        ├── components       # Layout, SchemaField, ui, …
-        └── pages            # Dashboard, Connectors, Create/Detail, Audit, Users, …
-```
 
 ## Contributing
 

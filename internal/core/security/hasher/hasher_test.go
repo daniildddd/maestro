@@ -1,6 +1,7 @@
 package hasher_test
 
 import (
+	"strings"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -163,4 +164,53 @@ func TestBcryptHasher_Hash(t *testing.T) {
 		hash2,
 		"bcrypt must produce different hashes for same password due to random salt",
 	)
+}
+
+func TestBcryptHasher_Hash_PasswordLength(t *testing.T) {
+	t.Parallel()
+	must := require.New(t)
+
+	h, err := hasher.NewBcryptHasher(hasher.Config{Cost: bcrypt.MinCost})
+	must.NoError(err)
+
+	tests := []struct {
+		name      string
+		password  string
+		wantErrIs error
+	}{
+		{
+			name:     "72 bytes password hashes successfully",
+			password: strings.Repeat("a", 72),
+		},
+		{
+			name:      "73 bytes password fails",
+			password:  strings.Repeat("a", 73),
+			wantErrIs: bcrypt.ErrPasswordTooLong,
+		},
+		{
+			name:      "long password fails",
+			password:  strings.Repeat("password-", 10),
+			wantErrIs: bcrypt.ErrPasswordTooLong,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			must := require.New(t)
+
+			hash, err := h.Hash(tt.password)
+
+			if tt.wantErrIs != nil {
+				must.Error(err)
+				must.ErrorIs(err, tt.wantErrIs)
+				must.Empty(hash)
+
+				return
+			}
+
+			must.NoError(err)
+			must.NotEmpty(hash)
+		})
+	}
 }

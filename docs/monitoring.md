@@ -38,7 +38,8 @@ The agent jar itself is gitignored — fetch it with `make jmx-exporter`.
 | `kafka-connect` | `connect:8084` | Debezium JMX |
 | `maestro` | `maestro:9100` | app RED + connector states |
 
-> Running Maestro via `make run` outside Docker breaks the `maestro:9100`
+> The Prometheus (`:9090`) and Alertmanager (`:9093`) UIs are not published to
+> the host. Running Maestro via `make run` outside Docker breaks the `maestro:9100`
 > target (name only resolves inside the compose network). Point Prometheus at
 > `host.docker.internal:9100` for local runs.
 

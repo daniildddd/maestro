@@ -121,11 +121,6 @@ Prerequisites: Go 1.26+, Docker with Compose v2, Node 20+ (only for web dev).
 ```bash
 # 1. Configure environment
 cp .env.example .env
-# Minimal working .env for local demo (edit values for real use):
-#   POSTGRES_USER=postgres POSTGRES_PASSWORD=pass POSTGRES_DB=postgres
-#   POSTGRES_HOST=postgres (in compose) / localhost (for `make run`)
-#   JWT_SECRET=<random 32+ chars>  MIDDLEWARE_ALLOWED_ORIGINS=http://127.0.0.1:8080
-#   ALERTMANAGER_SLACK_API_URL=https://hooks.slack.com/... (or leave empty for local)
 
 # 2. JMX exporter jar (gitignored, required for the `connect` service)
 make jmx-exporter
@@ -145,9 +140,10 @@ make migrate-up
 |--------------|--------------------------|------------------------|
 | API / Web UI | http://127.0.0.1:8080    | create first user, see below |
 | Grafana      | http://127.0.0.1:3000    | `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` (default `admin`/`admin`) |
-| Prometheus   | http://127.0.0.1:9090    | — |
-| Alertmanager | http://127.0.0.1:9093    | — |
-| Kafka Connect| http://127.0.0.1:8083    | — (proxied by Maestro, do not expose publicly) |
+
+Only Maestro and Grafana publish host ports — Grafana because the Metrics page
+embeds it via iframe in your browser. Postgres, Kafka, Connect, Prometheus and
+Alertmanager live inside the compose network only.
 
 ### Create the first admin user
 
@@ -168,11 +164,11 @@ Then open `http://127.0.0.1:8080`, sign in as `admin` / `admin12345`,
 change the password under Profile, and create the rest of the team via
 Users → Create user (or `POST /api/v1/users` with the admin token).
 
-Sanity check:
+Sanity check (Connect is reachable through the Maestro API, no direct port):
 
 ```bash
-curl -s http://127.0.0.1:8080/healthz; echo
-curl -s http://127.0.0.1:8083/connectors | head -c 200; echo
+curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8080/healthz
+docker compose ps
 ```
 
 ## Demo scenario: Postgres → Kafka in 10 minutes

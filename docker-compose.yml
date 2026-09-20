@@ -9,8 +9,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL","pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -35,8 +33,6 @@ services:
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
-    ports:
-      - "127.0.0.1:9092:9092"
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 10s
@@ -64,9 +60,6 @@ services:
     volumes:
       - ./deploy/jmx-exporter/jmx_prometheus_javaagent.jar:/opt/jmx-exporter/jmx_prometheus_javaagent.jar
       - ./deploy/jmx-exporter/config.yml:/opt/jmx-exporter/config.yml
-    ports:
-      - "127.0.0.1:8083:8083"
-      - "127.0.0.1:8084:8084"
 
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -76,8 +69,6 @@ services:
       - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
       - ./deploy/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
-    ports:
-      - "127.0.0.1:9090:9090"
 
   alertmanager:
     image: prom/alertmanager:v0.28.1
@@ -89,8 +80,6 @@ services:
       - ./deploy/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./deploy/alertmanager/slack_api_url:/etc/alertmanager/slack_api_url:ro
       - alertmanager_data:/alertmanager
-    ports:
-      - "127.0.0.1:9093:9093"
     restart: unless-stopped
 
   grafana:

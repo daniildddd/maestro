@@ -283,3 +283,74 @@ func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) {
 		})
 	}
 }
+
+func TestConnectorsHTTPHandler_ValidateConnector_InvalidFullBody(t *testing.T) {
+	t.Parallel()
+
+	must := require.New(t)
+
+	invalidReport := domain.ValidationReport{
+		Valid: false,
+		Steps: []domain.ValidationStep{{
+			ID:     domain.StepCDC,
+			Status: domain.CheckSeverityError,
+			Checks: []domain.ValidationCheck{{
+				ID:       "postgres.cdc.wal_level",
+				Severity: domain.CheckSeverityError,
+				Message:  "wal_level = 'replica'",
+			}},
+		}},
+	}
+
+	wantDetails := transport.ValidateResponse{
+		Valid: false,
+		Steps: []transport.ValidateStepResponse{{
+			ID:     "cdc",
+			Status: "error",
+			Checks: []transport.ValidateCheckResponse{{
+				ID:       "postgres.cdc.wal_level",
+				Severity: "error",
+				Message:  "wal_level = 'replica'",
+			}},
+		}},
+	}
+
+	type fullErrorBody struct {
+		Code    string                     `json:"code"`
+		Message string                     `json:"message"`
+		Details transport.ValidateResponse `json:"details"`
+	}
+
+	wantBody := fullErrorBody{
+		Code:    "CONNECTOR_CONFIG_INVALID",
+		Message: "Connector configuration is invalid",
+		Details: wantDetails,
+	}
+
+	connectorsService := NewMockConnectorsService(t)
+	connectorsService.EXPECT().
+		ValidateConnector(mock.Anything, "p", mock.Anything).
+		Return(invalidReport, nil).
+		Once()
+
+	handler := newTestHandler(connectorsService)
+
+	body := `{
+		"plugin_type": "p",
+		"name": "n",
+		"config": {"a": "b"}
+	}`
+
+	rec := httptest.NewRecorder()
+	rw := core_http_response.NewResponseWriter(rec)
+
+	handler.ValidateConnector(rw, newValidateRequest(t, body, "application/json"))
+
+	must.Equal(http.StatusBadRequest, rec.Code)
+	must.Equal("application/json", rec.Header().Get("Content-Type"))
+
+	var got fullErrorBody
+
+	must.NoError(json.Unmarshal(rec.Body.Bytes(), &got))
+	must.Equal(wantBody, got)
+}

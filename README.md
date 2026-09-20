@@ -33,8 +33,7 @@ Prometheus / Grafana observability stack — so you never have to touch
 - [Development](#development)
 - [Project structure](#project-structure)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
-- [Roadmap & limitations](#roadmap--limitations)
-- [Contributing](#contributing)
+- [Contributing](CONTRIBUTING.md)
 - [License](#license)
 
 ## What is Maestro?
@@ -417,25 +416,9 @@ web                    React + Vite console (maestro-web)
 - **Apple Silicon / Linux file permissions** — `LOGGER_FOLDER` must be writable;
   the image uses non-root `65532` with `/var/log/maestro` pre-chowned.
 
-## Roadmap & limitations
-
-- [ ] Bootstrap admin (env-provided `ADMIN_*` or `maestro seed-admin` CLI) —
-      today the first user requires manual SQL.
-- [x] UI screenshots in `docs/assets/` — refresh them when the console changes.
-- [ ] First GitHub Release with `docker-compose` quickstart + changelog.
-- [ ] `dbcheck` for MySQL / Postgres logical-decoding plugins beyond `pgoutput`.
-- [ ] Connector config diff preview before update (audit already stores snapshots).
-- [ ] E2E demo script (`make demo` seeding orders + connector + consumer check).
-
-Known limitations: single Connect cluster per Maestro instance; no schema-registry
-management; JWT secret rotation invalidates sessions; Alertmanager Slack webhook
-is file-mounted (`deploy/alertmanager/slack_api_url`, gitignored).
-
 ## Contributing
 
-Issues and PRs welcome. Keep conventional commits, add/adjust table-driven tests,
-run `make lint test validate-swagger` before pushing. For large changes open an
-issue first describing the problem and the proposed solution.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

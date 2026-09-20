@@ -15,10 +15,6 @@ pre-deploy database checks, config validation, audit history, and a full
 Prometheus / Grafana observability stack — so you never have to touch
 `curl localhost:8083` again.
 
-> **TL;DR:** `cp .env.example .env && make alertmanager-config && make docker-up && make migrate-up` →
-> open `http://127.0.0.1:8080`, validate a Postgres config, create a connector,
-> watch rows flow into Kafka. Full walkthrough in [Demo](docs/demo.md).
-
 ## Contents
 
 - [What is Maestro?](#what-is-maestro)
@@ -76,8 +72,6 @@ lifecycle — Debezium still does the CDC.
   live statuses, connector list with task drill-down, schema-driven config
   editor, audit and users pages.
 
-Service map, request flow and project structure: [`docs/architecture.md`](docs/architecture.md).
-
 ## Quick start
 
 Prerequisites: Go 1.26+, Docker with Compose v2, Node 20+ (only for web dev).
@@ -127,9 +121,6 @@ Next: [Demo](docs/demo.md) — first admin user, then Postgres → Kafka end to 
 | Connector detail (tasks) | Audit log                                 | Grafana (Maestro RED) |
 |--------------------------|-------------------------------------------|-----------------------|
 | ![Detail](docs/assets/screenshot-detail.png) | ![Audit](docs/assets/screenshot-audit.png) | ![Grafana](docs/assets/screenshot-grafana.png) |
-
-To refresh them: `make docker-up && make migrate-up`, create the admin user
-(see [Demo](docs/demo.md)), run the demo scenario, and re-capture the pages above.
 
 ## Compatibility
 

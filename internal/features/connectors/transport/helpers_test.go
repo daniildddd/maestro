@@ -23,8 +23,6 @@ func nopLogger() *logger.Logger {
 	return &logger.Logger{Logger: zap.NewNop()}
 }
 
-func strPtr(s string) *string { return &s }
-
 func newTestHandler(service transport.ConnectorsService) *transport.ConnectorsHTTPHandler {
 	return transport.NewConnectorsHTTPHandler(service)
 }

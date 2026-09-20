@@ -21,8 +21,6 @@ func newAuditRepo(pool *MockPool) *repository.AuditRepository {
 	return repository.NewAuditRepository(pool)
 }
 
-func strPtr(s string) *string { return &s }
-
 func mustAuditEvent(t *testing.T, id uuid.UUID) domain.AuditEvent {
 	t.Helper()
 
@@ -79,17 +77,17 @@ func mustAuditRow(id uuid.UUID) auditRowFixture {
 		id:            id,
 		action:        "auth.login",
 		outcome:       "success",
-		failureReason: strPtr("invalid_credentials"),
+		failureReason: new("invalid_credentials"),
 		actorID:       &actorID,
-		actorLogin:    strPtr("alice"),
+		actorLogin:    new("alice"),
 		subjectType:   "user",
-		subjectID:     strPtr(id.String()),
-		subjectName:   strPtr("alice"),
+		subjectID:     new(id.String()),
+		subjectName:   new("alice"),
 		stateBefore:   []byte(`{"role":"user"}`),
 		stateAfter:    []byte(`{"role":"admin"}`),
-		requestID:     strPtr("req-" + id.String()),
-		ip:            strPtr("203.0.113.7"),
-		userAgent:     strPtr("test-agent"),
+		requestID:     new("req-" + id.String()),
+		ip:            new("203.0.113.7"),
+		userAgent:     new("test-agent"),
 		createdAt:     time.Now().UTC().Truncate(time.Second),
 	}
 }

@@ -43,7 +43,7 @@ func TestConnectorsHTTPHandler_RestartConnector(t *testing.T) {
 							ID:       0,
 							State:    "RUNNING",
 							WorkerID: "worker-1",
-							Trace:    strPtr("trace-1"),
+							Trace:    new("trace-1"),
 						}},
 						Config: domain.SourceConfig{
 							Hostname: "pg-1",
@@ -88,7 +88,7 @@ func TestConnectorsHTTPHandler_RestartConnector(t *testing.T) {
 							ID:       0,
 							State:    "RUNNING",
 							WorkerID: "worker-1",
-							Trace:    strPtr("trace-1"),
+							Trace:    new("trace-1"),
 						}},
 						Config: domain.SourceConfig{
 							Hostname: "pg-1",

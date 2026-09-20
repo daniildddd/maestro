@@ -37,7 +37,7 @@ func TestConnectorsHTTPHandler_GetConnectorTask(t *testing.T) {
 						ID:       0,
 						State:    "RUNNING",
 						WorkerID: "worker-1",
-						Trace:    strPtr("worker died: oom"),
+						Trace:    new("worker died: oom"),
 					}, nil).
 					Once()
 			},
@@ -46,7 +46,7 @@ func TestConnectorsHTTPHandler_GetConnectorTask(t *testing.T) {
 				ID:       0,
 				State:    "RUNNING",
 				WorkerID: "worker-1",
-				Trace:    strPtr("worker died: oom"),
+				Trace:    new("worker died: oom"),
 			},
 		},
 		{

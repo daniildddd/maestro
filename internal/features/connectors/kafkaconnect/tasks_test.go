@@ -32,7 +32,7 @@ func TestHTTPClient_GetTaskByID(t *testing.T) {
 				ID:       0,
 				State:    "running",
 				WorkerID: "worker-1",
-				Trace:    strPtr("worker died: oom"),
+				Trace:    new("worker died: oom"),
 			},
 		},
 		{

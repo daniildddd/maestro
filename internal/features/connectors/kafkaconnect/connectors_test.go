@@ -80,8 +80,8 @@ func TestHTTPClient_GetConnectors(t *testing.T) {
 						Hostname:   "maestro-postgres",
 						Port:       "5432",
 						User:       "postgres",
-						DBName:     strPtr("testdb"),
-						PluginName: strPtr("pgoutput"),
+						DBName:     new("testdb"),
+						PluginName: new("pgoutput"),
 					},
 				},
 				{
@@ -226,7 +226,7 @@ func TestHTTPClient_GetConnectorByID(t *testing.T) {
 			},
 			Config: domain.SourceConfig{
 				Hostname: "pg-1",
-				DBName:   strPtr("testdb"),
+				DBName:   new("testdb"),
 			},
 		},
 		connector,
@@ -278,7 +278,7 @@ func TestHTTPClient_CreateConnector(t *testing.T) {
 				Tasks:      []domain.Task{},
 				Config: domain.SourceConfig{
 					Hostname: "pg-1",
-					DBName:   strPtr("testdb"),
+					DBName:   new("testdb"),
 				},
 			},
 			connector,

@@ -147,8 +147,6 @@ func writeJSON(t *testing.T, w http.ResponseWriter, payload any) {
 	}
 }
 
-func strPtr(s string) *string { return &s }
-
 type listResponse map[string]expansion
 
 type expansion struct {

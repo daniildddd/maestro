@@ -125,7 +125,7 @@ func TestDb2Adapter_Canonicalize(t *testing.T) {
 				Hostname: "db2-host",
 				Port:     "50000",
 				User:     "dbz",
-				DBName:   strPtr("testdb"),
+				DBName:   new("testdb"),
 			},
 		},
 		{
@@ -195,7 +195,7 @@ func TestInformixAdapter_Canonicalize(t *testing.T) {
 				Hostname: "informix-host",
 				Port:     "50000",
 				User:     "dbz",
-				DBName:   strPtr("testdb"),
+				DBName:   new("testdb"),
 			},
 		},
 		{
@@ -391,7 +391,7 @@ func TestOracleAdapter_Canonicalize(t *testing.T) {
 				Hostname: "oracle",
 				Port:     "1521",
 				User:     "dbzuser",
-				DBName:   strPtr("ORCLCDB"),
+				DBName:   new("ORCLCDB"),
 			},
 		},
 		{
@@ -450,8 +450,8 @@ func TestPostgresAdapter_Canonicalize(t *testing.T) {
 				Hostname:   "maestro-postgres",
 				Port:       "5432",
 				User:       "postgres",
-				DBName:     strPtr("testdb"),
-				PluginName: strPtr("pgoutput"),
+				DBName:     new("testdb"),
+				PluginName: new("pgoutput"),
 			},
 		},
 		{
@@ -466,7 +466,7 @@ func TestPostgresAdapter_Canonicalize(t *testing.T) {
 				Hostname: "maestro-postgres",
 				Port:     "5432",
 				User:     "postgres",
-				DBName:   strPtr("testdb"),
+				DBName:   new("testdb"),
 			},
 		},
 		{
@@ -522,7 +522,7 @@ func TestSQLServerAdapter_Canonicalize(t *testing.T) {
 				Hostname: "sqlserver",
 				Port:     "1433",
 				User:     "sa",
-				DBName:   strPtr("inventory"),
+				DBName:   new("inventory"),
 			},
 		},
 		{
@@ -537,7 +537,7 @@ func TestSQLServerAdapter_Canonicalize(t *testing.T) {
 				Hostname: "sqlserver",
 				Port:     "1433",
 				User:     "sa",
-				DBName:   strPtr("inventory,orders"),
+				DBName:   new("inventory,orders"),
 			},
 		},
 		{
@@ -594,7 +594,7 @@ func TestVitessAdapter_Canonicalize(t *testing.T) {
 				Hostname: "vitess-host",
 				Port:     "50000",
 				User:     "dbz",
-				DBName:   strPtr("test_keyspace"),
+				DBName:   new("test_keyspace"),
 			},
 		},
 		{
@@ -628,8 +628,4 @@ func TestVitessAdapter_Canonicalize(t *testing.T) {
 			must.Equal(tt.want, got)
 		})
 	}
-}
-
-func strPtr(value string) *string {
-	return &value
 }

@@ -53,7 +53,7 @@ func TestConnectorsHTTPHandler_UpdateConnector(t *testing.T) {
 							ID:       0,
 							State:    "RUNNING",
 							WorkerID: "worker-1",
-							Trace:    strPtr("trace-1"),
+							Trace:    new("trace-1"),
 						}},
 						Config: domain.SourceConfig{
 							Hostname: "pg-2",
@@ -131,7 +131,7 @@ func TestConnectorsHTTPHandler_UpdateConnector(t *testing.T) {
 			body: `{
 				"config": {"a": "b"}
 			}`,
-			contentType: strPtr(""),
+			contentType: new(""),
 			setupMock:   func(_ *MockConnectorsService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",
@@ -142,7 +142,7 @@ func TestConnectorsHTTPHandler_UpdateConnector(t *testing.T) {
 			body: `{
 				"config": {"a": "b"}
 			}`,
-			contentType: strPtr("text/plain"),
+			contentType: new("text/plain"),
 			setupMock:   func(_ *MockConnectorsService) {},
 			wantStatus:  http.StatusBadRequest,
 			wantCode:    "INVALID_CONTENT_TYPE",

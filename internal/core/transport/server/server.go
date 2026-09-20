@@ -11,6 +11,7 @@ import (
 	"github.com/daniildddd/maestro/internal/core/errs"
 	core_logger "github.com/daniildddd/maestro/internal/core/logger"
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
+	"github.com/daniildddd/maestro/internal/core/transport/webfs"
 )
 
 type HTTPServer struct {
@@ -57,6 +58,10 @@ func (s *HTTPServer) RegisterNotFound(log *core_logger.Logger) {
 			fmt.Errorf("route not found: %s %s: %w", r.Method, r.URL.Path, errs.ErrNotFound),
 		)
 	}))
+}
+
+func (s *HTTPServer) RegisterSPA() {
+	s.mux.Handle("/", webfs.Handler())
 }
 
 func (s *HTTPServer) Run(ctx context.Context) error {

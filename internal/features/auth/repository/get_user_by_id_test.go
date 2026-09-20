@@ -138,6 +138,24 @@ func TestAuthRepository_GetUserByID(t *testing.T) {
 			},
 			wantIs: errs.ErrInternal,
 		},
+		{
+			name:   "invalid row data maps to validation error",
+			userID: id,
+			setup: func(pool *MockPool, row *MockRow) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					QueryRow(mock.Anything, mock.Anything, []any{id}).
+					Return(row).
+					Once()
+
+				scanUserIntoRow(row, mustUserRow(id, "invalid username!", "hash", "admin", createdAt, nil))
+			},
+			wantIs: domain.ErrInvalidUsername,
+		},
 	}
 
 	for _, tt := range tests {

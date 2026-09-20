@@ -492,3 +492,200 @@ func TestHTTPClient_ValidateConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestHTTPClient_GetConnectorPluginSchemaWithValues_Errors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		handler func(w http.ResponseWriter, r *http.Request)
+		want    domain.ConnectorPluginSchema
+		wantIs  error
+	}{
+		{
+			name: "success merges values",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method {
+				case http.MethodGet:
+					writeJSON(t, w, []map[string]any{
+						{
+							"name":       "insert.field",
+							"type":       "STRING",
+							"required":   false,
+							"importance": "MEDIUM",
+						},
+					})
+				case http.MethodPut:
+					writeJSON(t, w, map[string]any{
+						"configs": []map[string]any{
+							{
+								"value": map[string]any{
+									"name":               "insert.field",
+									"recommended_values": []string{"op", "ts_ms", "op", "ts_ms"},
+								},
+							},
+							{
+								"value": map[string]any{
+									"name":               "database.hostname",
+									"recommended_values": []any{},
+								},
+							},
+						},
+					})
+				default:
+					http.NotFound(w, nil)
+				}
+			},
+			want: domain.ConnectorPluginSchema{Fields: []domain.ConnectorPluginField{{
+				Name:       "insert.field",
+				Type:       "STRING",
+				Required:   false,
+				Importance: "MEDIUM",
+				Values:     []string{"op", "ts_ms"},
+			}}},
+		},
+		{
+			name: "schema not found maps to plugin not found",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusNotFound)
+					writeJSON(t, w, map[string]string{"error_code": "404", "message": "not found"})
+
+					return
+				}
+
+				writeJSON(t, w, map[string]any{"configs": []map[string]any{}})
+			},
+			wantIs: domain.ErrConnectorPluginNotFound,
+		},
+		{
+			name: "values error maps to unavailable",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method {
+				case http.MethodGet:
+					writeJSON(t, w, []map[string]any{
+						{
+							"name":       "insert.field",
+							"type":       "STRING",
+							"required":   false,
+							"importance": "MEDIUM",
+						},
+					})
+				default:
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			},
+			wantIs: domain.ErrKafkaConnectUnavailable,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			got, err := client.GetConnectorPluginSchemaWithValues(
+				context.Background(),
+				"io.debezium.transforms.ExtractNewRecordState",
+			)
+
+			if tt.wantIs != nil {
+				must.ErrorIs(err, tt.wantIs)
+
+				return
+			}
+
+			must.NoError(err)
+			must.Equal(tt.want, got)
+		})
+	}
+}
+
+func TestHTTPClient_ValidateConfig_EmptyError(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		handler func(w http.ResponseWriter, _ *http.Request)
+		want    []domain.ValidationCheck
+		wantIs  error
+	}{
+		{
+			name: "valid config returns ok",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				writeJSON(t, w, map[string]any{
+					"configs": []map[string]any{
+						{"value": map[string]any{"name": "database.hostname", "errors": []any{}}},
+					},
+				})
+			},
+			want: []domain.ValidationCheck{{
+				ID:       "config.schema",
+				Message:  "configuration accepted by Kafka Connect",
+				Severity: domain.CheckSeverityOK,
+			}},
+		},
+		{
+			name: "empty error string maps to invalid value",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				writeJSON(t, w, map[string]any{
+					"configs": []map[string]any{
+						{
+							"value": map[string]any{
+								"name":   "database.hostname",
+								"errors": []string{""},
+							},
+						},
+					},
+				})
+			},
+			want: []domain.ValidationCheck{{
+				ID:       "config.database.hostname",
+				Message:  "invalid value",
+				Severity: domain.CheckSeverityError,
+				Field:    "database.hostname",
+			}},
+		},
+		{
+			name: "missing plugin maps to not found",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				http.NotFound(w, nil)
+			},
+			wantIs: domain.ErrConnectorPluginNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			got, err := client.ValidateConfig(
+				context.Background(),
+				"io.debezium.connector.postgresql.PostgresConnector",
+				map[string]string{"database.hostname": "pg-1"},
+			)
+
+			if tt.wantIs != nil {
+				must.ErrorIs(err, tt.wantIs)
+
+				return
+			}
+
+			must.NoError(err)
+			must.Equal(tt.want, got)
+		})
+	}
+}

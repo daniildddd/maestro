@@ -17,7 +17,7 @@ func Logger(log *core_logger.Logger) Middleware {
 
 			l := log.With(
 				zap.String("request_id", requestID.String()),
-				zap.String("url", r.URL.Path),
+				zap.String("url", core_logger.Sanitize(r.URL.Path)),
 			)
 
 			ctx = core_logger.ToContext(ctx, l)

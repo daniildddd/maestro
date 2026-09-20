@@ -68,6 +68,33 @@ func TestLogger(t *testing.T) {
 		})
 	}
 
+	t.Run("sanitizes newline in logged url", func(t *testing.T) {
+		t.Parallel()
+		must := require.New(t)
+
+		requestID := uuid.New()
+		log, recordedLogs := newObservableLogger(t, zapcore.InfoLevel)
+
+		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			logger.FromContext(r.Context()).Info("test")
+			w.WriteHeader(http.StatusOK)
+		})
+
+		req := newTestRequest(t, http.MethodGet, "/api/v1/users%0Ainjected", nil)
+		req = req.WithContext(reqctx.WithRequestID(req.Context(), requestID))
+		rec := httptest.NewRecorder()
+
+		middleware.Logger(log)(nextHandler).ServeHTTP(rec, req)
+
+		must.Equal(http.StatusOK, rec.Code)
+
+		logs := recordedLogs.All()
+		must.Len(logs, 1)
+
+		contextMap := logs[0].ContextMap()
+		must.Equal("/api/v1/usersinjected", contextMap["url"])
+	})
+
 	t.Run("panics without request_id in context", func(t *testing.T) {
 		t.Parallel()
 		must := require.New(t)

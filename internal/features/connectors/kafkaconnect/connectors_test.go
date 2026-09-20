@@ -860,3 +860,517 @@ func TestHTTPClient_Delete(t *testing.T) {
 		})
 	}
 }
+
+func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		handler func(w http.ResponseWriter, r *http.Request)
+		want    domain.Connector
+		wantIs  error
+	}{
+		{
+			name: "success returns full connector",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/connectors/pg-connector":
+					writeJSON(t, w, map[string]any{
+						"name": "pg-connector",
+						"config": map[string]string{
+							"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+							"database.hostname": "pg-1",
+							"database.dbname":   "testdb",
+						},
+					})
+				case "/connectors/pg-connector/status":
+					writeJSON(t, w, map[string]any{
+						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+						"tasks": []map[string]any{
+							{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+						},
+					})
+				default:
+					http.NotFound(w, nil)
+				}
+			},
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
+				Config: domain.SourceConfig{
+					Hostname: "pg-1",
+					DBName:   new("testdb"),
+				},
+			},
+		},
+		{
+			name: "missing info maps to not found",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				http.NotFound(w, nil)
+			},
+			wantIs: domain.ErrConnectorNotFound,
+		},
+		{
+			name: "status error maps to unavailable",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/connectors/pg-connector":
+					writeJSON(t, w, map[string]any{
+						"name": "pg-connector",
+						"config": map[string]string{
+							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+						},
+					})
+				default:
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			},
+			wantIs: domain.ErrKafkaConnectUnavailable,
+		},
+		{
+			name: "missing plugin maps to invalid",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/connectors/pg-connector":
+					writeJSON(t, w, map[string]any{
+						"name":   "pg-connector",
+						"config": map[string]string{},
+					})
+				case "/connectors/pg-connector/status":
+					writeJSON(t, w, map[string]any{
+						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+						"tasks":     []map[string]any{},
+					})
+				default:
+					http.NotFound(w, nil)
+				}
+			},
+			wantIs: domain.ErrInvalidConnector,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			got, err := client.GetConnectorByID(context.Background(), "pg-connector")
+
+			if tt.wantIs != nil {
+				must.ErrorIs(err, tt.wantIs)
+
+				return
+			}
+
+			must.NoError(err)
+			must.Equal(tt.want, got)
+		})
+	}
+}
+
+func TestHTTPClient_CreateConnector_Validation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		handler func(w http.ResponseWriter, _ *http.Request)
+		want    domain.Connector
+		wantIs  error
+	}{
+		{
+			name: "201 returns starting connector",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusCreated)
+				writeJSON(t, w, map[string]any{
+					"name": "pg-connector",
+					"config": map[string]string{
+						"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+						"database.hostname": "pg-1",
+						"database.dbname":   "testdb",
+					},
+				})
+			},
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusStarting,
+				TasksCount: 0,
+				Tasks:      []domain.Task{},
+				Config: domain.SourceConfig{
+					Hostname: "pg-1",
+					DBName:   new("testdb"),
+				},
+			},
+		},
+		{
+			name: "201 without plugin maps to invalid",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusCreated)
+				writeJSON(t, w, map[string]any{
+					"name":   "pg-connector",
+					"config": map[string]string{},
+				})
+			},
+			wantIs: domain.ErrInvalidConnector,
+		},
+		{
+			name: "201 without name maps to invalid",
+			handler: func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusCreated)
+				writeJSON(t, w, map[string]any{
+					"name": "",
+					"config": map[string]string{
+						"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+					},
+				})
+			},
+			wantIs: domain.ErrInvalidConnector,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			got, err := client.CreateConnector(context.Background(), "pg-connector", map[string]string{
+				"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+			})
+
+			if tt.wantIs != nil {
+				must.ErrorIs(err, tt.wantIs)
+
+				return
+			}
+
+			must.NoError(err)
+			must.Equal(tt.want, got)
+		})
+	}
+}
+
+func serveRestartRunning(t *testing.T) http.HandlerFunc {
+	t.Helper()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart":
+			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+			writeJSON(t, w, map[string]any{
+				"name": "pg-connector",
+				"config": map[string]string{
+					"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+				},
+			})
+		case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+			writeJSON(t, w, map[string]any{
+				"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+				"tasks": []map[string]any{
+					{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+				},
+			})
+		default:
+			http.NotFound(w, nil)
+		}
+	}
+}
+
+func TestHTTPClient_RestartConnector_TaskFlags(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		includeTasks bool
+		onlyFailed   bool
+		want         domain.Connector
+	}{
+		{
+			name:         "204 with tasks returns running",
+			includeTasks: true,
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
+				Config: domain.SourceConfig{},
+			},
+		},
+		{
+			name:       "204 with only failed returns running",
+			onlyFailed: true,
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
+				Config: domain.SourceConfig{},
+			},
+		},
+		{
+			name:         "204 with all flags returns running",
+			includeTasks: true,
+			onlyFailed:   true,
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
+				Config: domain.SourceConfig{},
+			},
+		},
+		{
+			name: "204 without flags returns running",
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
+				Config: domain.SourceConfig{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(serveRestartRunning(t))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			got, err := client.RestartConnector(context.Background(), "pg-connector", tt.includeTasks, tt.onlyFailed)
+
+			must.NoError(err)
+			must.Equal(tt.want, got)
+		})
+	}
+}
+
+func TestHTTPClient_RestartConnector_RereadErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		handler func(w http.ResponseWriter, r *http.Request)
+		wantIs  error
+	}{
+		{
+			name: "reread missing maps to not found",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart" {
+					w.WriteHeader(http.StatusNoContent)
+
+					return
+				}
+
+				http.NotFound(w, nil)
+			},
+			wantIs: domain.ErrConnectorNotFound,
+		},
+		{
+			name: "reread invalid maps to invalid",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch {
+				case r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart":
+					w.WriteHeader(http.StatusNoContent)
+				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+					writeJSON(t, w, map[string]any{
+						"name":   "pg-connector",
+						"config": map[string]string{},
+					})
+				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+					writeJSON(t, w, map[string]any{
+						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+						"tasks":     []map[string]any{},
+					})
+				default:
+					http.NotFound(w, nil)
+				}
+			},
+			wantIs: domain.ErrInvalidConnector,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			_, err := client.RestartConnector(context.Background(), "pg-connector", false, false)
+
+			must.ErrorIs(err, tt.wantIs)
+		})
+	}
+}
+
+func servePauseOK(t *testing.T) http.HandlerFunc {
+	t.Helper()
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause":
+			w.WriteHeader(http.StatusAccepted)
+		case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+			writeJSON(t, w, map[string]any{
+				"name": "pg-connector",
+				"config": map[string]string{
+					"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+				},
+			})
+		case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+			writeJSON(t, w, map[string]any{
+				"connector": map[string]any{"state": "PAUSED", "worker_id": "worker-1"},
+				"tasks":     []map[string]any{},
+			})
+		default:
+			http.NotFound(w, nil)
+		}
+	}
+}
+
+func TestHTTPClient_PauseConnector_Reread(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		want domain.Connector
+	}{
+		{
+			name: "202 returns paused connector",
+			want: domain.Connector{
+				Name:       "pg-connector",
+				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+				Status:     domain.ConnectorStatusPaused,
+				WorkerID:   "worker-1",
+				TasksCount: 0,
+				Tasks:      []domain.Task{},
+				Config:     domain.SourceConfig{},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(servePauseOK(t))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			got, err := client.PauseConnector(context.Background(), "pg-connector")
+
+			must.NoError(err)
+			must.Equal(tt.want, got)
+		})
+	}
+}
+
+func TestHTTPClient_PauseConnector_RereadErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		handler func(w http.ResponseWriter, r *http.Request)
+		wantIs  error
+	}{
+		{
+			name: "reread missing maps to not found",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause" {
+					w.WriteHeader(http.StatusAccepted)
+
+					return
+				}
+
+				http.NotFound(w, nil)
+			},
+			wantIs: domain.ErrConnectorNotFound,
+		},
+		{
+			name: "reread invalid maps to invalid",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				switch {
+				case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause":
+					w.WriteHeader(http.StatusAccepted)
+				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+					writeJSON(t, w, map[string]any{
+						"name":   "pg-connector",
+						"config": map[string]string{},
+					})
+				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+					writeJSON(t, w, map[string]any{
+						"connector": map[string]any{"state": "PAUSED", "worker_id": "worker-1"},
+						"tasks":     []map[string]any{},
+					})
+				default:
+					http.NotFound(w, nil)
+				}
+			},
+			wantIs: domain.ErrInvalidConnector,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			must := require.New(t)
+
+			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
+			t.Cleanup(srv.Close)
+
+			client := newTestClientOnServer(t, srv)
+
+			_, err := client.PauseConnector(context.Background(), "pg-connector")
+
+			must.ErrorIs(err, tt.wantIs)
+		})
+	}
+}

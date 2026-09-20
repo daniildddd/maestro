@@ -24,7 +24,7 @@ Prometheus / Grafana observability stack — so you never have to touch
 - [What is Maestro?](#what-is-maestro)
 - [Features](#features)
 - [Architecture](#architecture)
-- [Quick start (5 minutes)](#quick-start-5-minutes)
+- [Quick start](#quick-start)
 - [Demo scenario: Postgres → Kafka in 10 minutes](#demo-scenario-postgres--kafka-in-10-minutes)
 - [Screenshots](#screenshots)
 - [Compatibility](#compatibility)
@@ -114,7 +114,7 @@ Request flow for a typical "create connector":
 
 API contract: [`api/swagger.yaml`](api/swagger.yaml) (OpenAPI, `vacuum`-linted).
 
-## Quick start (5 minutes)
+## Quick start
 
 Prerequisites: Go 1.26+, Docker with Compose v2, Node 20+ (only for web dev).
 

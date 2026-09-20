@@ -114,6 +114,32 @@ func (f fakeRow) Scan(_ ...any) error {
 	return f.scanErr
 }
 
+type stubTx struct {
+	pgx.Tx
+
+	execTag     pgconn.CommandTag
+	execErr     error
+	queryRow    pgx.Row
+	commitErr   error
+	rollbackErr error
+}
+
+func (s stubTx) Exec(_ context.Context, _ string, _ ...any) (pgconn.CommandTag, error) {
+	return s.execTag, s.execErr
+}
+
+func (s stubTx) QueryRow(_ context.Context, _ string, _ ...any) pgx.Row {
+	return s.queryRow
+}
+
+func (s stubTx) Commit(_ context.Context) error {
+	return s.commitErr
+}
+
+func (s stubTx) Rollback(_ context.Context) error {
+	return s.rollbackErr
+}
+
 func runMapErrorsTable(t *testing.T, wrap func(error) error) {
 	t.Helper()
 
@@ -210,4 +236,230 @@ func TestPgxRow_Scan(t *testing.T) {
 	runMapErrorsTable(t, wrap)
 	runPassthroughTable(t, wrap)
 	runPlainErrorTest(t, wrap)
+}
+
+func TestPgxTx_Exec(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		execErr error
+		wantIs  error
+		wantNot error
+	}{
+		{
+			name:    "success returns command tag",
+			execErr: nil,
+		},
+		{
+			name:    "no rows maps to ErrNoRows",
+			execErr: pgx.ErrNoRows,
+			wantIs:  core_postgres_pool.ErrNoRows,
+			wantNot: core_postgres_pool.ErrUnknown,
+		},
+		{
+			name:    "plain error maps to ErrUnknown",
+			execErr: errors.New("boom"),
+			wantIs:  core_postgres_pool.ErrUnknown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			is := assert.New(t)
+			must := require.New(t)
+
+			tx := pgxadapter.PgxTx{Tx: stubTx{
+				execTag: pgconn.NewCommandTag("SELECT 1"),
+				execErr: tt.execErr,
+			}}
+
+			tag, err := tx.Exec(context.Background(), "SELECT 1")
+
+			if tt.wantIs != nil {
+				must.Error(err)
+				is.ErrorIs(err, tt.wantIs)
+
+				if tt.wantNot != nil {
+					must.NotErrorIs(err, tt.wantNot)
+				}
+
+				return
+			}
+
+			must.NoError(err)
+			is.Equal(int64(1), tag.RowsAffected())
+		})
+	}
+}
+
+func TestPgxTx_QueryRow(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		scanErr error
+		wantIs  error
+		wantNot error
+	}{
+		{
+			name:    "success scans row",
+			scanErr: nil,
+		},
+		{
+			name:    "no rows maps to ErrNoRows",
+			scanErr: pgx.ErrNoRows,
+			wantIs:  core_postgres_pool.ErrNoRows,
+			wantNot: core_postgres_pool.ErrUnknown,
+		},
+		{
+			name:    "plain error maps to ErrUnknown",
+			scanErr: errors.New("boom"),
+			wantIs:  core_postgres_pool.ErrUnknown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			is := assert.New(t)
+			must := require.New(t)
+
+			tx := pgxadapter.PgxTx{Tx: stubTx{
+				queryRow: fakeRow{scanErr: tt.scanErr},
+			}}
+
+			err := tx.QueryRow(context.Background(), "SELECT 1").Scan()
+
+			if tt.wantIs != nil {
+				must.Error(err)
+				is.ErrorIs(err, tt.wantIs)
+
+				if tt.wantNot != nil {
+					must.NotErrorIs(err, tt.wantNot)
+				}
+
+				return
+			}
+
+			must.NoError(err)
+		})
+	}
+}
+
+func TestPgxTx_Commit(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		commitErr error
+		wantIs    error
+		wantNot   error
+	}{
+		{
+			name:      "success returns nil",
+			commitErr: nil,
+		},
+		{
+			name:      "no rows maps to ErrNoRows",
+			commitErr: pgx.ErrNoRows,
+			wantIs:    core_postgres_pool.ErrNoRows,
+			wantNot:   core_postgres_pool.ErrUnknown,
+		},
+		{
+			name:      "context canceled returned as-is",
+			commitErr: context.Canceled,
+			wantIs:    context.Canceled,
+			wantNot:   core_postgres_pool.ErrUnknown,
+		},
+		{
+			name:      "plain error maps to ErrUnknown",
+			commitErr: errors.New("boom"),
+			wantIs:    core_postgres_pool.ErrUnknown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			is := assert.New(t)
+			must := require.New(t)
+
+			tx := pgxadapter.PgxTx{Tx: stubTx{commitErr: tt.commitErr}}
+
+			err := tx.Commit(context.Background())
+
+			if tt.wantIs != nil {
+				must.Error(err)
+				is.ErrorIs(err, tt.wantIs)
+
+				if tt.wantNot != nil {
+					must.NotErrorIs(err, tt.wantNot)
+				}
+
+				return
+			}
+
+			must.NoError(err)
+		})
+	}
+}
+
+func TestPgxTx_Rollback(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		rollbackErr error
+		wantIs      error
+		wantNot     error
+	}{
+		{
+			name:        "success returns nil",
+			rollbackErr: nil,
+		},
+		{
+			name:        "no rows maps to ErrNoRows",
+			rollbackErr: pgx.ErrNoRows,
+			wantIs:      core_postgres_pool.ErrNoRows,
+			wantNot:     core_postgres_pool.ErrUnknown,
+		},
+		{
+			name:        "context deadline exceeded returned as-is",
+			rollbackErr: context.DeadlineExceeded,
+			wantIs:      context.DeadlineExceeded,
+			wantNot:     core_postgres_pool.ErrUnknown,
+		},
+		{
+			name:        "plain error maps to ErrUnknown",
+			rollbackErr: errors.New("boom"),
+			wantIs:      core_postgres_pool.ErrUnknown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			is := assert.New(t)
+			must := require.New(t)
+
+			tx := pgxadapter.PgxTx{Tx: stubTx{rollbackErr: tt.rollbackErr}}
+
+			err := tx.Rollback(context.Background())
+
+			if tt.wantIs != nil {
+				must.Error(err)
+				is.ErrorIs(err, tt.wantIs)
+
+				if tt.wantNot != nil {
+					must.NotErrorIs(err, tt.wantNot)
+				}
+
+				return
+			}
+
+			must.NoError(err)
+		})
+	}
 }

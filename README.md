@@ -336,44 +336,25 @@ additionally verifies the live database at connector deploy time.
 
 ## Configuration
 
-All settings come from the environment (see [`.env.example`](.env.example),
-`kelseyhightower/envconfig` under the hood):
-
-| Prefix            | Purpose                                  |
-|-------------------|------------------------------------------|
-| `POSTGRES_*`      | app database + CDC source checks         |
-| `JWT_*`, `AUTH_*` | auth, sessions, cookie                   |
-| `SERVER_*`        | public HTTP server (`:8080`)             |
-| `METRICS_*`       | internal metrics listener (`:9100`)      |
-| `KAFKA_CONNECT_*` | Connect base URL, timeouts, retry policy |
+All settings come from the environment — see [`.env.example`](.env.example)
+to start, and [`docs/configuration.md`](docs/configuration.md) for the full
+reference (every variable, default, and which ones are required).
 
 ## Observability
 
-- **Metrics** — `http_server_requests_total`, `http_server_request_duration_seconds`,
-  `maestro_connector_info/tasks` on the internal listener (never exposed publicly).
-- **Alerts** — [`deploy/prometheus/alert.rules.yml`](deploy/prometheus/alert.rules.yml):
-  Debezium lag / disconnect, Connect down, Maestro down, 5xx rate, failed connectors.
-- **Dashboards** — [`deploy/grafana/`](deploy/grafana/): datasource + `Maestro RED`
-  dashboard are provisioned from git on Grafana startup (datasource, RED, P95,
-  connector/task states, Debezium lag). No clicking in the UI — edit JSON, restart.
+RED metrics on the internal `:9100` listener, 6 Prometheus alerts with Slack
+delivery, and provisioned Grafana dashboards (`Maestro RED`, …) — details in
+[`docs/monitoring.md`](docs/monitoring.md).
 
 ## Development
 
 ```bash
 make build             # go build -o bin/maestro ./cmd/maestro
-make run               # build + run
 make test              # unit tests, -race -cover
-make test-integration  # testcontainers suites (needs Docker)
 make lint              # golangci-lint
-make mocks             # regenerate mockery mocks
-make validate-swagger  # vacuum lint api/swagger.yaml
-make lint-dockerfile   # hadolint via compose
-make lint-trivy        # Trivy HIGH/CRITICAL scan
 ```
 
-Conventions: table-driven tests with full comparisons, `goleak` in suites,
-parallel tests where possible; integration tests live in `test/integration`
-(.overlay network via testcontainers, real PostgreSQL); conventional commits.
+Targets, test conventions and CI — see [`docs/development.md`](docs/development.md).
 
 ## Project structure
 
@@ -404,7 +385,10 @@ maestro
 │   ├── jmx-exporter         # config.yml + gitignored agent jar
 │   └── prometheus           # prometheus.yml + alert.rules.yml
 ├── docs
-│   └── assets               # logo + README screenshots
+│   ├── assets               # logo + README screenshots
+│   ├── configuration.md     # full env reference
+│   ├── development.md       # make targets, conventions, CI
+│   └── monitoring.md        # metrics, alerts, dashboards
 ├── test
 │   └── integration          # testcontainers suites (audit, auth, dbcheck, pgxadapter, users)
 └── web                      # React + Vite console (maestro-web)

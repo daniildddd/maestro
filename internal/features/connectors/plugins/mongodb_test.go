@@ -74,6 +74,26 @@ func TestMongoDBAdapter_Canonicalize(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid connection string falls back to user",
+			config: map[string]string{
+				"mongodb.connection.string": "://bad-url",
+				"mongodb.user":              "debezium",
+			},
+			want: domain.SourceConfig{
+				User: "debezium",
+			},
+		},
+		{
+			name: "connection string without host falls back to user",
+			config: map[string]string{
+				"mongodb.connection.string": "/just/a/path",
+				"mongodb.user":              "debezium",
+			},
+			want: domain.SourceConfig{
+				User: "debezium",
+			},
+		},
+		{
 			name:   "empty config yields zero value",
 			config: map[string]string{},
 			want:   domain.SourceConfig{},

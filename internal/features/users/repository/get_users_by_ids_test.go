@@ -120,6 +120,93 @@ func TestUsersRepository_GetUsersByIDs(t *testing.T) {
 			},
 			wantIs: errs.ErrInternal,
 		},
+		{
+			name: "scan error is wrapped",
+			ids:  []uuid.UUID{aliceID},
+			setup: func(pool *MockPool, rows *MockRows) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					Query(mock.Anything, mock.Anything, mock.Anything).
+					Return(rows, nil).
+					Once()
+
+				rows.EXPECT().
+					Next().
+					Return(true).
+					Once()
+
+				rows.EXPECT().
+					Scan(mock.Anything).
+					Return(errs.ErrInternal).
+					Once()
+
+				rows.EXPECT().
+					Close().
+					Once()
+			},
+			wantIs: errs.ErrInternal,
+		},
+		{
+			name: "invalid row data maps to validation error",
+			ids:  []uuid.UUID{aliceID},
+			setup: func(pool *MockPool, rows *MockRows) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					Query(mock.Anything, mock.Anything, mock.Anything).
+					Return(rows, nil).
+					Once()
+
+				rows.EXPECT().
+					Next().
+					Return(true).
+					Once()
+
+				scanUserIntoRows(rows, mustUserRow(uuid.New(), "alice", "hash", "root", time.Time{}, nil))
+
+				rows.EXPECT().
+					Close().
+					Once()
+			},
+			wantIs: domain.ErrInvalidRole,
+		},
+		{
+			name: "rows error is wrapped",
+			ids:  []uuid.UUID{aliceID},
+			setup: func(pool *MockPool, rows *MockRows) {
+				pool.EXPECT().
+					OpTimeout().
+					Return(opTimeout).
+					Once()
+
+				pool.EXPECT().
+					Query(mock.Anything, mock.Anything, mock.Anything).
+					Return(rows, nil).
+					Once()
+
+				rows.EXPECT().
+					Next().
+					Return(false).
+					Once()
+
+				rows.EXPECT().
+					Err().
+					Return(errs.ErrInternal).
+					Once()
+
+				rows.EXPECT().
+					Close().
+					Once()
+			},
+			wantIs: errs.ErrInternal,
+		},
 	}
 
 	for _, tt := range tests {

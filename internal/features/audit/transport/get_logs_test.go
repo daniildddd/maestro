@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -269,4 +270,124 @@ func TestAuditHTTPHandler_GetLogsResponseDTO(t *testing.T) {
 	is.Equal(1, body.Meta.Page)
 	is.Equal(10, body.Meta.Limit)
 	is.False(body.HasMore)
+}
+
+func TestAuditHTTPHandler_GetLogsDTOMapping(t *testing.T) {
+	t.Parallel()
+
+	id := uuid.New()
+	createdAt := time.Now().UTC().Truncate(time.Second)
+	failure := "invalid_credentials"
+
+	full := domain.AuditEvent{
+		ID:            id,
+		CreatedAt:     createdAt,
+		Action:        domain.ActionAuthLogin,
+		Outcome:       domain.OutcomeSuccess,
+		FailureReason: failure,
+		ActorID:       id,
+		ActorLogin:    "alice",
+		SubjectType:   domain.AuditSubjectUser,
+		SubjectID:     id.String(),
+		SubjectName:   "alice",
+		RequestID:     "req-" + id.String(),
+		IP:            "203.0.113.7",
+		UserAgent:     "test-agent",
+	}
+
+	fullDTO := transport.AuditEventDTOResponse{
+		ID:            id.String(),
+		CreatedAt:     createdAt,
+		Action:        "auth.login",
+		Outcome:       "success",
+		FailureReason: &failure,
+		Actor: &transport.ActorDTO{
+			ID:       id.String(),
+			Username: "alice",
+		},
+		Subject: transport.SubjectDTO{
+			Type: domain.AuditSubjectUser,
+			ID:   id.String(),
+			Name: "alice",
+		},
+		Request: &transport.RequestDTO{
+			ID:        "req-" + id.String(),
+			IP:        "203.0.113.7",
+			UserAgent: "test-agent",
+		},
+	}
+
+	nilActorEvent := full
+	nilActorEvent.ActorID = uuid.Nil
+	nilActorEvent.ActorLogin = ""
+	nilActorDTO := fullDTO
+	nilActorDTO.Actor = nil
+
+	emptyFailureEvent := full
+	emptyFailureEvent.FailureReason = ""
+	emptyFailureDTO := fullDTO
+	emptyFailureDTO.FailureReason = nil
+
+	emptyRequestEvent := full
+	emptyRequestEvent.RequestID = ""
+	emptyRequestEvent.IP = ""
+	emptyRequestEvent.UserAgent = ""
+	emptyRequestDTO := fullDTO
+	emptyRequestDTO.Request = nil
+
+	tests := []struct {
+		name  string
+		event domain.AuditEvent
+		want  transport.AuditEventDTOResponse
+	}{
+		{
+			name:  "success maps full event with actor failure and request",
+			event: full,
+			want:  fullDTO,
+		},
+		{
+			name:  "nil actor when ActorID is Nil",
+			event: nilActorEvent,
+			want:  nilActorDTO,
+		},
+		{
+			name:  "nil failure reason when empty",
+			event: emptyFailureEvent,
+			want:  emptyFailureDTO,
+		},
+		{
+			name:  "nil request when RequestID is empty",
+			event: emptyRequestEvent,
+			want:  emptyRequestDTO,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			is := assert.New(t)
+			must := require.New(t)
+
+			auditService := NewMockAuditService(t)
+			auditService.EXPECT().
+				GetLogs(mock.Anything, mock.Anything).
+				Return([]domain.AuditEvent{tt.event}, false, nil).
+				Once()
+
+			handler := newAuditTestHandler(auditService)
+
+			rec := httptest.NewRecorder()
+			rw := core_http_response.NewResponseWriter(rec)
+
+			handler.GetLogs(rw, newAuditRequest(t, http.MethodGet, "/audit-logs?page=1&limit=10"))
+
+			must.Equal(http.StatusOK, rec.Code)
+
+			var body transport.GetLogsResponse
+
+			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+			must.Len(body.Data, 1)
+			is.Equal(tt.want, body.Data[0])
+		})
+	}
 }

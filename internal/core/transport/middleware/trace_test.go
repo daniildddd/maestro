@@ -247,6 +247,31 @@ func TestTrace(t *testing.T) {
 		must.Equal("admin", ctxMap["role"])
 	})
 
+	t.Run("sanitizes newline in logged path", func(t *testing.T) {
+		t.Parallel()
+		must := require.New(t)
+
+		log, recordedLogs := newObservableLogger(t, zapcore.InfoLevel)
+
+		nextHandler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+
+		req := newTestRequest(t, http.MethodGet, "/api/v1/users%0Ainjected", nil)
+		req = req.WithContext(logger.ToContext(req.Context(), log))
+		req = req.WithContext(reqctx.WithClientInfo(req.Context(), "203.0.113.7", "test-agent"))
+		rec := httptest.NewRecorder()
+
+		chained := middleware.Trace()(nextHandler)
+		chained.ServeHTTP(rec, req)
+
+		logs := recordedLogs.All()
+		must.Len(logs, 1)
+
+		ctxMap := logs[0].ContextMap()
+		must.Equal("/api/v1/usersinjected", ctxMap["path"])
+	})
+
 	t.Run("warning when handler writes no response", func(t *testing.T) {
 		t.Parallel()
 		must := require.New(t)

@@ -23,10 +23,10 @@ func Trace() Middleware {
 			next.ServeHTTP(rw, r)
 
 			fields := []zap.Field{
-				zap.String("method", r.Method),
-				zap.String("path", r.URL.Path),
-				zap.String("client_ip", reqctx.ClientIP(r.Context())),
-				zap.String("user_agent", reqctx.UserAgent(r.Context())),
+				zap.String("method", logger.Sanitize(r.Method)),
+				zap.String("path", logger.Sanitize(r.URL.Path)),
+				zap.String("client_ip", logger.Sanitize(reqctx.ClientIP(r.Context()))),
+				zap.String("user_agent", logger.Sanitize(reqctx.UserAgent(r.Context()))),
 				zap.Duration("latency", time.Since(before)),
 			}
 

@@ -54,8 +54,7 @@ jobs:
         run: go vet -tags integration ./...
 
       - name: Run unit tests
-        run: ALLURE_RESULTS_DIR=$PWD/allure-results go test -race -shuffle=on -count=1 ./...
-
+        run: ALLURE_RESULTS_DIR=$PWD/allure-results go test -race -shuffle=on -count=1 -coverprofile=coverage.out ./...
       - name: Generate Allure report
         if: always()
         run: npx --yes allure-commandline generate ./allure-results --clean --output ./allure-report
@@ -67,3 +66,12 @@ jobs:
           name: allure-report-go-${{ matrix.go }}
           path: ./allure-report
           retention-days: 14
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-go-${{ matrix.go }}
+          path: coverage.out
+          retention-days: 14
+

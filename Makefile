@@ -5,7 +5,7 @@ ALERTMANAGER_SLACK_API_URL := $(or $(_ALERTMANAGER_SLACK_API_URL_ENV),$(ALERTMAN
 
 .DEFAULT_GOAL := help
 
-.PHONY: build run migrate-action migrate-create jmx-exporter docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration validate-swagger alertmanager-config
+.PHONY: build run migrate-action migrate-create jmx-exporter docker-up docker-down ps lint lint-fix lint-actions lint-dockerfile lint-trivy mocks test test-integration test-allure allure-report validate-swagger alertmanager-config
 
 build:
 	@go build -o bin/maestro ./cmd/maestro
@@ -81,6 +81,12 @@ test: ## Run unit tests with race detection and coverage
 
 test-integration: ## Run integration tests (testcontainers, needs Docker daemon)
 	@go test -tags integration -race ./test/integration/...
+
+test-allure: ## Run unit tests collecting Allure results into ./allure-results
+	@ALLURE_RESULTS_DIR=$(PWD)/allure-results go test -race -cover ./...
+
+allure-report: ## Generate Allure HTML report from ./allure-results (needs allure CLI or npx)
+	@npx --yes allure-commandline generate ./allure-results --clean --output ./allure-report
 
 validate-swagger: ## Validate OpenAPI spec
 	@vacuum lint -r vacuum.yml api/swagger.yaml

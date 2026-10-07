@@ -6,6 +6,10 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c h1:udKWzYgxTojEK
 github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29 h1:0kQAzHq8vLs7Pptv+7TxjdETLf/nIqJpIB4oC6Ba4vY=
 github.com/Microsoft/go-winio v0.6.3-0.20251027160822-ad3df93bed29/go.mod h1:ZWa7ssZJT30CCDGJ7fk/2SBTq9BIQrrVjrcss0UW2s0=
+github.com/allure-framework/allure-go/commons v1.3.1 h1:Oj5pxx6LO24mj7H+SwsxwtGGvJc7FKFjWz7pU6CV9Og=
+github.com/allure-framework/allure-go/commons v1.3.1/go.mod h1:h+DnKOe9nlqqZFi18LjWq6UVfj3uno5z8itU7+sysAE=
+github.com/allure-framework/allure-go/testify v1.3.1 h1:V0Eqm1lT0p55pV5Q+KYuUM9Ld26J8wFGytWdNjCAZlQ=
+github.com/allure-framework/allure-go/testify v1.3.1/go.mod h1:S2Hfh8UHww6S1OjA8mGOysYSSlrJexztOWqurM89TFw=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bmatcuk/doublestar/v4 v4.10.0 h1:zU9WiOla1YA122oLM6i4EXvGW62DvKZVxIe6TYWexEs=

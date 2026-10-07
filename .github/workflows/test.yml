@@ -54,4 +54,16 @@ jobs:
         run: go vet -tags integration ./...
 
       - name: Run unit tests
-        run: go test -race -shuffle=on -count=1 ./...
+        run: ALLURE_RESULTS_DIR=$PWD/allure-results go test -race -shuffle=on -count=1 ./...
+
+      - name: Generate Allure report
+        if: always()
+        run: npx --yes allure-commandline generate ./allure-results --clean --output ./allure-report
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-go-${{ matrix.go }}
+          path: ./allure-report
+          retention-days: 14

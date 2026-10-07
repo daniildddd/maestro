@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	"github.com/allure-framework/allure-go/commons/httpexchange"
+
 	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
@@ -58,6 +61,15 @@ func newTestClientOnServer(t *testing.T, srv *httptest.Server) *kafkaconnect.HTT
 			plugins.OracleAdapter{},
 		),
 	)
+}
+
+func newAllureTestServer(a *gotest.Context, handler http.Handler) *httptest.Server {
+	a.T().Helper()
+
+	srv := httptest.NewServer(httpexchange.NewHandler(a.Context(), handler))
+	a.T().Cleanup(srv.Close)
+
+	return srv
 }
 
 func serveUpdateProbe(t *testing.T, w http.ResponseWriter, r *http.Request) bool {

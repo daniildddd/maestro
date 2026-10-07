@@ -3,279 +3,230 @@ package kafkaconnect_test
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func TestHTTPClient_GetConnectors(t *testing.T) {
-	t.Parallel()
+func TestHTTPClient_GetConnectors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "get connectors", func(a *gotest.Context) {
+		a.Step("list returns connectors of any engine without failures", func(a *gotest.Context) {
+			must := allurerequire.New(a)
 
-	t.Run("list returns connectors of any engine without failures", func(t *testing.T) {
-		t.Parallel()
+			srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				response := listResponse{
+					"pg-connector": newExpansion(
+						"io.debezium.connector.postgresql.PostgresConnector",
+						"RUNNING",
+						map[string]string{
+							"database.hostname": "maestro-postgres",
+							"database.port":     "5432",
+							"database.user":     "postgres",
+							"database.dbname":   "testdb",
+							"plugin.name":       "pgoutput",
+						},
+					),
+					"mysql-connector": newExpansion(
+						"io.debezium.connector.mysql.MySqlConnector",
+						"RUNNING",
+						map[string]string{
+							"database.hostname":     "mysql",
+							"database.port":         "3306",
+							"database.user":         "debezium",
+							"database.include.list": "inventory,orders",
+						},
+					),
+					"mongo-connector": newExpansion(
+						"io.debezium.connector.mongodb.MongoDbConnector",
+						"PAUSED",
+						map[string]string{
+							"mongodb.hosts": "mongo:27017",
+							"mongodb.name":  "inventory",
+						},
+					),
+					"unknown-connector": newExpansion(
+						"io.debezium.connector.vitess.VitessConnector",
+						"FAILED",
+						map[string]string{
+							"key.converter": "org.apache.kafka.connect.json.JsonConverter",
+						},
+					),
+				}
 
-		must := require.New(t)
+				writeJSON(a.T(), w, response)
+			}))
 
-		client := newTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
-			response := listResponse{
-				"pg-connector": newExpansion(
-					"io.debezium.connector.postgresql.PostgresConnector",
-					"RUNNING",
-					map[string]string{
-						"database.hostname": "maestro-postgres",
-						"database.port":     "5432",
-						"database.user":     "postgres",
-						"database.dbname":   "testdb",
-						"plugin.name":       "pgoutput",
+			client := newTestClientOnServer(a.T(), srv)
+
+			connectors, err := client.GetConnectors(a.Context())
+
+			must.NoError(err)
+			must.ElementsMatch(
+				[]domain.Connector{
+					{
+						Name:       "pg-connector",
+						PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+						Status:     domain.ConnectorStatusRunning,
+						TasksCount: 1,
+						Tasks: []domain.Task{
+							{ID: 0, State: "running", WorkerID: "worker-1"},
+						},
+						Config: domain.SourceConfig{
+							Hostname:   "maestro-postgres",
+							Port:       "5432",
+							User:       "postgres",
+							DBName:     new("testdb"),
+							PluginName: new("pgoutput"),
+						},
 					},
-				),
-				"mysql-connector": newExpansion(
-					"io.debezium.connector.mysql.MySqlConnector",
-					"RUNNING",
-					map[string]string{
-						"database.hostname":     "mysql",
-						"database.port":         "3306",
-						"database.user":         "debezium",
-						"database.include.list": "inventory,orders",
+					{
+						Name:       "mysql-connector",
+						PluginType: "io.debezium.connector.mysql.MySqlConnector",
+						Status:     domain.ConnectorStatusRunning,
+						TasksCount: 1,
+						Tasks: []domain.Task{
+							{ID: 0, State: "running", WorkerID: "worker-1"},
+						},
+						Config: domain.SourceConfig{
+							Hostname: "mysql",
+							Port:     "3306",
+							User:     "debezium",
+						},
 					},
-				),
-				"mongo-connector": newExpansion(
-					"io.debezium.connector.mongodb.MongoDbConnector",
-					"PAUSED",
-					map[string]string{
-						"mongodb.hosts": "mongo:27017",
-						"mongodb.name":  "inventory",
+					{
+						Name:       "mongo-connector",
+						PluginType: "io.debezium.connector.mongodb.MongoDbConnector",
+						Status:     domain.ConnectorStatusPaused,
+						TasksCount: 1,
+						Tasks: []domain.Task{
+							{ID: 0, State: "paused", WorkerID: "worker-1"},
+						},
+						Config: domain.SourceConfig{},
 					},
-				),
-				"unknown-connector": newExpansion(
-					"io.debezium.connector.vitess.VitessConnector",
-					"FAILED",
-					map[string]string{
+					{
+						Name:       "unknown-connector",
+						PluginType: "io.debezium.connector.vitess.VitessConnector",
+						Status:     domain.ConnectorStatusFailed,
+						TasksCount: 1,
+						Tasks: []domain.Task{
+							{ID: 0, State: "failed", WorkerID: "worker-1"},
+						},
+						Config: domain.SourceConfig{},
+					},
+				},
+				connectors,
+			)
+		})
+
+		a.Step("invalid entry fails with invalid connector", func(a *gotest.Context) {
+			must := allurerequire.New(a)
+
+			srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				writeJSON(a.T(), w, listResponse{
+					"broken": newExpansion("", "RUNNING", map[string]string{
 						"key.converter": "org.apache.kafka.connect.json.JsonConverter",
-					},
-				),
-			}
+					}),
+				})
+			}))
 
-			writeJSON(t, w, response)
+			client := newTestClientOnServer(a.T(), srv)
+
+			_, err := client.GetConnectors(a.Context())
+
+			must.ErrorIs(err, domain.ErrInvalidConnector)
 		})
 
-		connectors, err := client.GetConnectors(context.Background())
+		a.Step("server error maps to kafka connect unavailable", func(a *gotest.Context) {
+			must := allurerequire.New(a)
 
-		must.NoError(err)
-		must.ElementsMatch(
-			[]domain.Connector{
-				{
-					Name:       "pg-connector",
-					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-					Status:     domain.ConnectorStatusRunning,
-					TasksCount: 1,
-					Tasks: []domain.Task{
-						{ID: 0, State: "running", WorkerID: "worker-1"},
-					},
-					Config: domain.SourceConfig{
-						Hostname:   "maestro-postgres",
-						Port:       "5432",
-						User:       "postgres",
-						DBName:     new("testdb"),
-						PluginName: new("pgoutput"),
-					},
-				},
-				{
-					Name:       "mysql-connector",
-					PluginType: "io.debezium.connector.mysql.MySqlConnector",
-					Status:     domain.ConnectorStatusRunning,
-					TasksCount: 1,
-					Tasks: []domain.Task{
-						{ID: 0, State: "running", WorkerID: "worker-1"},
-					},
-					Config: domain.SourceConfig{
-						Hostname: "mysql",
-						Port:     "3306",
-						User:     "debezium",
-					},
-				},
-				{
-					Name:       "mongo-connector",
-					PluginType: "io.debezium.connector.mongodb.MongoDbConnector",
-					Status:     domain.ConnectorStatusPaused,
-					TasksCount: 1,
-					Tasks: []domain.Task{
-						{ID: 0, State: "paused", WorkerID: "worker-1"},
-					},
-					Config: domain.SourceConfig{},
-				},
-				{
-					Name:       "unknown-connector",
-					PluginType: "io.debezium.connector.vitess.VitessConnector",
-					Status:     domain.ConnectorStatusFailed,
-					TasksCount: 1,
-					Tasks: []domain.Task{
-						{ID: 0, State: "failed", WorkerID: "worker-1"},
-					},
-					Config: domain.SourceConfig{},
-				},
-			},
-			connectors,
-		)
-	})
+			srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			}))
 
-	t.Run("invalid entry fails with invalid connector", func(t *testing.T) {
-		t.Parallel()
+			client := newTestClientOnServer(a.T(), srv)
 
-		must := require.New(t)
+			_, err := client.GetConnectors(a.Context())
 
-		client := newTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
-			writeJSON(t, w, listResponse{
-				"broken": newExpansion("", "RUNNING", map[string]string{
-					"key.converter": "org.apache.kafka.connect.json.JsonConverter",
-				}),
-			})
+			must.ErrorIs(err, domain.ErrKafkaConnectUnavailable)
 		})
 
-		_, err := client.GetConnectors(context.Background())
+		a.Step("canceled context returns context canceled", func(a *gotest.Context) {
+			must := allurerequire.New(a)
 
-		must.ErrorIs(err, domain.ErrInvalidConnector)
-	})
+			ctx, cancel := context.WithCancel(a.Context())
+			a.T().Cleanup(cancel)
 
-	t.Run("server error maps to kafka connect unavailable", func(t *testing.T) {
-		t.Parallel()
+			srv := newAllureTestServer(a, http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+				cancel()
 
-		must := require.New(t)
+				select {
+				case <-r.Context().Done():
+				case <-time.After(2 * time.Second):
+					a.T().Error("request context was not canceled")
+				}
+			}))
 
-		client := newTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
+			client := newTestClientOnServer(a.T(), srv)
+
+			_, err := client.GetConnectors(ctx)
+
+			must.ErrorIs(err, context.Canceled)
+			must.NotErrorIs(err, domain.ErrKafkaConnectUnavailable)
 		})
-
-		_, err := client.GetConnectors(context.Background())
-
-		must.ErrorIs(err, domain.ErrKafkaConnectUnavailable)
-	})
-
-	t.Run("canceled context returns context canceled", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		t.Cleanup(cancel)
-
-		client := newTestClient(t, func(_ http.ResponseWriter, r *http.Request) {
-			cancel()
-
-			select {
-			case <-r.Context().Done():
-			case <-time.After(2 * time.Second):
-				t.Error("request context was not canceled")
-			}
-		})
-
-		_, err := client.GetConnectors(ctx)
-
-		must.ErrorIs(err, context.Canceled)
-		must.NotErrorIs(err, domain.ErrKafkaConnectUnavailable)
-	})
-}
-
-func TestHTTPClient_GetConnectorByID(t *testing.T) {
-	t.Parallel()
-
-	must := require.New(t)
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/connectors/pg-connector":
-			writeJSON(t, w, map[string]any{
-				"name": "pg-connector",
-				"config": map[string]string{
-					"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
-					"database.hostname": "pg-1",
-					"database.dbname":   "testdb",
-				},
-			})
-		case "/connectors/pg-connector/status":
-			writeJSON(t, w, map[string]any{
-				"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-				"tasks": []map[string]any{
-					{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
-				},
-			})
-		default:
-			http.NotFound(w, nil)
-		}
-	}))
-	t.Cleanup(srv.Close)
-
-	client := newTestClientOnServer(t, srv)
-
-	connector, err := client.GetConnectorByID(context.Background(), "pg-connector")
-
-	must.NoError(err)
-	must.Equal(
-		domain.Connector{
-			Name:       "pg-connector",
-			PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-			Status:     domain.ConnectorStatusRunning,
-			WorkerID:   "worker-1",
-			TasksCount: 1,
-			Tasks: []domain.Task{
-				{ID: 0, State: "running", WorkerID: "worker-1"},
-			},
-			Config: domain.SourceConfig{
-				Hostname: "pg-1",
-				DBName:   new("testdb"),
-			},
-		},
-		connector,
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Get connectors"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
 	)
 }
 
-func TestHTTPClient_CreateConnector(t *testing.T) {
-	t.Parallel()
+func TestHTTPClient_GetConnectorByID(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "get connector by id", func(a *gotest.Context) {
+		must := allurerequire.New(a)
 
-	create := func(t *testing.T, handler func(w http.ResponseWriter, r *http.Request)) (domain.Connector, error) {
-		t.Helper()
+		srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case "/connectors/pg-connector":
+				writeJSON(a.T(), w, map[string]any{
+					"name": "pg-connector",
+					"config": map[string]string{
+						"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+						"database.hostname": "pg-1",
+						"database.dbname":   "testdb",
+					},
+				})
+			case "/connectors/pg-connector/status":
+				writeJSON(a.T(), w, map[string]any{
+					"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+					"tasks": []map[string]any{
+						{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+					},
+				})
+			default:
+				http.NotFound(w, nil)
+			}
+		}))
 
-		srv := httptest.NewServer(http.HandlerFunc(handler))
-		t.Cleanup(srv.Close)
+		client := newTestClientOnServer(a.T(), srv)
 
-		client := newTestClientOnServer(t, srv)
-
-		return client.CreateConnector(context.Background(), "pg-connector", map[string]string{
-			"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
-			"database.hostname": "pg-1",
-		})
-	}
-
-	t.Run("201 response returns starting connector", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		connector, err := create(t, func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusCreated)
-			writeJSON(t, w, map[string]any{
-				"name": "pg-connector",
-				"config": map[string]string{
-					"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
-					"database.hostname": "pg-1",
-					"database.dbname":   "testdb",
-				},
-				"tasks": []any{},
-			})
-		})
+		connector, err := client.GetConnectorByID(a.Context(), "pg-connector")
 
 		must.NoError(err)
 		must.Equal(
 			domain.Connector{
 				Name:       "pg-connector",
 				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusStarting,
-				TasksCount: 0,
-				Tasks:      []domain.Task{},
+				Status:     domain.ConnectorStatusRunning,
+				WorkerID:   "worker-1",
+				TasksCount: 1,
+				Tasks: []domain.Task{
+					{ID: 0, State: "running", WorkerID: "worker-1"},
+				},
 				Config: domain.SourceConfig{
 					Hostname: "pg-1",
 					DBName:   new("testdb"),
@@ -283,202 +234,282 @@ func TestHTTPClient_CreateConnector(t *testing.T) {
 			},
 			connector,
 		)
-	})
-
-	t.Run("already exists maps to connector already exists", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		_, err := create(t, func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusConflict)
-			writeJSON(t, w, map[string]string{
-				"error_code": "409",
-				"message":    "Connector pg-connector already exists",
-			})
-		})
-
-		must.ErrorIs(err, domain.ErrConnectorAlreadyExists)
-	})
-
-	t.Run("invalid config maps to invalid connector config", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		_, err := create(t, func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusBadRequest)
-			writeJSON(t, w, map[string]any{
-				"error_code": 400,
-				"message":    "Connector configuration is invalid",
-			})
-		})
-
-		must.ErrorIs(err, domain.ErrInvalidConnectorConfig)
-	})
-
-	t.Run("server error maps to kafka connect unavailable", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		_, err := create(t, func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-		})
-
-		must.ErrorIs(err, domain.ErrKafkaConnectUnavailable)
-	})
-
-	t.Run("rebalance conflict retries then succeeds", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		calls := 0
-
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			calls++
-
-			if calls < 2 {
-				w.WriteHeader(http.StatusConflict)
-				writeJSON(t, w, map[string]string{
-					"error_code": "409",
-					"message":    "Request cannot be completed because a rebalance is expected",
-				})
-
-				return
-			}
-
-			w.WriteHeader(http.StatusCreated)
-			writeJSON(t, w, map[string]any{
-				"name": "pg-connector",
-				"config": map[string]string{
-					"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-				},
-				"tasks": []any{},
-			})
-		}))
-		t.Cleanup(srv.Close)
-
-		client := newTestClientOnServer(t, srv)
-
-		connector, err := client.CreateConnector(context.Background(), "pg-connector", map[string]string{
-			"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-		})
-
-		must.NoError(err)
-		must.Equal(2, calls)
-		must.Equal(
-			domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusStarting,
-				TasksCount: 0,
-				Tasks:      []domain.Task{},
-				Config:     domain.SourceConfig{},
-			},
-			connector,
-		)
-	})
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Get connector"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
-func TestHTTPClient_UpdateConnector(t *testing.T) {
-	t.Parallel()
+func TestHTTPClient_CreateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "create connector", func(a *gotest.Context) {
+		create := func(a *gotest.Context, handler func(w http.ResponseWriter, r *http.Request)) (domain.Connector, error) {
+			a.T().Helper()
 
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, r *http.Request)
-		wantIs  error
-	}{
-		{
-			name: "success puts config and returns fresh connector",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name": "pg-connector",
-						"config": map[string]string{
-							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-						},
+			srv := newAllureTestServer(a, http.HandlerFunc(handler))
+
+			client := newTestClientOnServer(a.T(), srv)
+
+			return client.CreateConnector(a.Context(), "pg-connector", map[string]string{
+				"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+				"database.hostname": "pg-1",
+			})
+		}
+
+		a.Step("201 response returns starting connector", func(a *gotest.Context) {
+			must := allurerequire.New(a)
+
+			connector, err := create(a, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusCreated)
+				writeJSON(a.T(), w, map[string]any{
+					"name": "pg-connector",
+					"config": map[string]string{
+						"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+						"database.hostname": "pg-1",
+						"database.dbname":   "testdb",
+					},
+					"tasks": []any{},
+				})
+			})
+
+			must.NoError(err)
+			must.Equal(
+				domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusStarting,
+					TasksCount: 0,
+					Tasks:      []domain.Task{},
+					Config: domain.SourceConfig{
+						Hostname: "pg-1",
+						DBName:   new("testdb"),
+					},
+				},
+				connector,
+			)
+		})
+
+		a.Step("already exists maps to connector already exists", func(a *gotest.Context) {
+			must := allurerequire.New(a)
+
+			_, err := create(a, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusConflict)
+				writeJSON(a.T(), w, map[string]string{
+					"error_code": "409",
+					"message":    "Connector pg-connector already exists",
+				})
+			})
+
+			must.ErrorIs(err, domain.ErrConnectorAlreadyExists)
+		})
+
+		a.Step("invalid config maps to invalid connector config", func(a *gotest.Context) {
+			must := allurerequire.New(a)
+
+			_, err := create(a, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusBadRequest)
+				writeJSON(a.T(), w, map[string]any{
+					"error_code": 400,
+					"message":    "Connector configuration is invalid",
+				})
+			})
+
+			must.ErrorIs(err, domain.ErrInvalidConnectorConfig)
+		})
+
+		a.Step("server error maps to kafka connect unavailable", func(a *gotest.Context) {
+			must := allurerequire.New(a)
+
+			_, err := create(a, func(w http.ResponseWriter, _ *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			})
+
+			must.ErrorIs(err, domain.ErrKafkaConnectUnavailable)
+		})
+
+		a.Step("rebalance conflict retries then succeeds", func(a *gotest.Context) {
+			must := allurerequire.New(a)
+
+			calls := 0
+
+			srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				calls++
+
+				if calls < 2 {
+					w.WriteHeader(http.StatusConflict)
+					writeJSON(a.T(), w, map[string]string{
+						"error_code": "409",
+						"message":    "Request cannot be completed because a rebalance is expected",
 					})
-				case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/config":
-					w.WriteHeader(http.StatusOK)
-					writeJSON(t, w, map[string]any{
-						"name": "pg-connector",
-						"config": map[string]string{
-							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-						},
-					})
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-						"tasks": []map[string]any{
-							{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
-						},
-					})
-				default:
+
+					return
+				}
+
+				w.WriteHeader(http.StatusCreated)
+				writeJSON(a.T(), w, map[string]any{
+					"name": "pg-connector",
+					"config": map[string]string{
+						"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+					},
+					"tasks": []any{},
+				})
+			}))
+
+			client := newTestClientOnServer(a.T(), srv)
+
+			connector, err := client.CreateConnector(a.Context(), "pg-connector", map[string]string{
+				"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+			})
+
+			must.NoError(err)
+			must.Equal(2, calls)
+			must.Equal(
+				domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusStarting,
+					TasksCount: 0,
+					Tasks:      []domain.Task{},
+					Config:     domain.SourceConfig{},
+				},
+				connector,
+			)
+		})
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Create connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
+}
+
+func TestHTTPClient_UpdateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "update connector", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, r *http.Request)
+			wantIs  error
+		}{
+			{
+				name: "success puts config and returns fresh connector",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch {
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+							},
+						})
+					case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/config":
+						w.WriteHeader(http.StatusOK)
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+							},
+						})
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+							"tasks": []map[string]any{
+								{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+							},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+			},
+			{
+				name: "missing connector on probe maps to connector not found",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
 					http.NotFound(w, nil)
+				},
+				wantIs: domain.ErrConnectorNotFound,
+			},
+			{
+				name: "invalid config on put maps to invalid connector config",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch {
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+							},
+						})
+					default:
+						w.WriteHeader(http.StatusBadRequest)
+						writeJSON(a.T(), w, map[string]any{
+							"error_code": 400,
+							"message":    "Connector configuration is invalid",
+						})
+					}
+				},
+				wantIs: domain.ErrInvalidConnectorConfig,
+			},
+			{
+				name:    "rebalance 500 on final status maps to rebalance in progress",
+				handler: updateHandler(a.T(), &flakyStatus{failFirst: 1 << 30}),
+				wantIs:  domain.ErrRebalanceInProgress,
+			},
+		}
+
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
+
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
+
+				client := newTestClientOnServer(a.T(), srv)
+
+				connector, err := client.UpdateConnector(a.Context(), "pg-connector", map[string]string{
+					"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+					"database.hostname": "pg-2",
+				})
+
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
+
+					return
 				}
-			},
-		},
-		{
-			name: "missing connector on probe maps to connector not found",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				http.NotFound(w, nil)
-			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "invalid config on put maps to invalid connector config",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch {
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name": "pg-connector",
-						"config": map[string]string{
-							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+
+				must.NoError(err)
+				must.Equal(
+					domain.Connector{
+						Name:       "pg-connector",
+						PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+						Status:     domain.ConnectorStatusRunning,
+						WorkerID:   "worker-1",
+						TasksCount: 1,
+						Tasks: []domain.Task{
+							{ID: 0, State: "running", WorkerID: "worker-1"},
 						},
-					})
-				default:
-					w.WriteHeader(http.StatusBadRequest)
-					writeJSON(t, w, map[string]any{
-						"error_code": 400,
-						"message":    "Connector configuration is invalid",
-					})
-				}
-			},
-			wantIs: domain.ErrInvalidConnectorConfig,
-		},
-		{
-			name:    "rebalance 500 on final status maps to rebalance in progress",
-			handler: updateHandler(t, &flakyStatus{failFirst: 1 << 30}),
-			wantIs:  domain.ErrRebalanceInProgress,
-		},
-	}
+						Config: domain.SourceConfig{},
+					},
+					connector,
+				)
+			})
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		a.Step("rebalance 500 on final status retries then succeeds", func(a *gotest.Context) {
+			must := allurerequire.New(a)
 
-			must := require.New(t)
+			status := &flakyStatus{failFirst: 1}
 
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
+			srv := newAllureTestServer(a, updateHandler(a.T(), status))
 
-			client := newTestClientOnServer(t, srv)
+			client := newTestClientOnServer(a.T(), srv)
 
-			connector, err := client.UpdateConnector(context.Background(), "pg-connector", map[string]string{
+			connector, err := client.UpdateConnector(a.Context(), "pg-connector", map[string]string{
 				"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
 				"database.hostname": "pg-2",
 			})
 
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
-
-				return
-			}
-
 			must.NoError(err)
+			must.Equal(2, status.Calls())
 			must.Equal(
 				domain.Connector{
 					Name:       "pg-connector",
@@ -494,27 +525,161 @@ func TestHTTPClient_UpdateConnector(t *testing.T) {
 				connector,
 			)
 		})
-	}
 
-	t.Run("rebalance 500 on final status retries then succeeds", func(t *testing.T) {
-		t.Parallel()
+		a.Step("400 mentioning rebalance maps to invalid config without retry", func(a *gotest.Context) {
+			must := allurerequire.New(a)
 
-		must := require.New(t)
+			var putCalls int
 
-		status := &flakyStatus{failFirst: 1}
+			srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if serveUpdateProbe(a.T(), w, r) {
+					return
+				}
 
-		srv := httptest.NewServer(updateHandler(t, status))
-		t.Cleanup(srv.Close)
+				putCalls++
 
-		client := newTestClientOnServer(t, srv)
+				w.WriteHeader(http.StatusBadRequest)
+				writeJSON(a.T(), w, map[string]any{
+					"error_code": 400,
+					"message":    "Connector configuration is invalid: rebalance is expected after fix",
+				})
+			}))
 
-		connector, err := client.UpdateConnector(context.Background(), "pg-connector", map[string]string{
-			"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
-			"database.hostname": "pg-2",
+			client := newTestClientOnServer(a.T(), srv)
+
+			_, err := client.UpdateConnector(a.Context(), "pg-connector", map[string]string{
+				"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+				"database.hostname": "pg-2",
+			})
+
+			must.ErrorIs(err, domain.ErrInvalidConnectorConfig)
+			must.Equal(1, putCalls)
 		})
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Update connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
+}
+
+func TestHTTPClient_PauseConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "pause connector", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, r *http.Request)
+			wantIs  error
+		}{
+			{
+				name: "202 response returns connector from status",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch {
+					case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause":
+						w.WriteHeader(http.StatusAccepted)
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+							},
+						})
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "PAUSED", "worker_id": "worker-1"},
+							"tasks":     []map[string]any{},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+			},
+			{
+				name: "missing connector maps to connector not found",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					http.NotFound(w, nil)
+				},
+				wantIs: domain.ErrConnectorNotFound,
+			},
+			{
+				name: "server error maps to kafka connect unavailable",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+				},
+				wantIs: domain.ErrKafkaConnectUnavailable,
+			},
+		}
+
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
+
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
+
+				client := newTestClientOnServer(a.T(), srv)
+
+				connector, err := client.PauseConnector(a.Context(), "pg-connector")
+
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
+
+					return
+				}
+
+				must.NoError(err)
+				must.Equal(
+					domain.Connector{
+						Name:       "pg-connector",
+						PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+						Status:     domain.ConnectorStatusPaused,
+						WorkerID:   "worker-1",
+						TasksCount: 0,
+						Tasks:      []domain.Task{},
+						Config:     domain.SourceConfig{},
+					},
+					connector,
+				)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Pause connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
+}
+
+func TestHTTPClient_ResumeConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "resume connector", func(a *gotest.Context) {
+		must := allurerequire.New(a)
+
+		srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch {
+			case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/resume":
+				w.WriteHeader(http.StatusAccepted)
+			case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+				writeJSON(a.T(), w, map[string]any{
+					"name": "pg-connector",
+					"config": map[string]string{
+						"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+					},
+				})
+			case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+				writeJSON(a.T(), w, map[string]any{
+					"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+					"tasks": []map[string]any{
+						{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+					},
+				})
+			default:
+				http.NotFound(w, nil)
+			}
+		}))
+
+		client := newTestClientOnServer(a.T(), srv)
+
+		connector, err := client.ResumeConnector(a.Context(), "pg-connector")
 
 		must.NoError(err)
-		must.Equal(2, status.Calls())
 		must.Equal(
 			domain.Connector{
 				Name:       "pg-connector",
@@ -529,246 +694,217 @@ func TestHTTPClient_UpdateConnector(t *testing.T) {
 			},
 			connector,
 		)
-	})
-
-	t.Run("400 mentioning rebalance maps to invalid config without retry", func(t *testing.T) {
-		t.Parallel()
-
-		must := require.New(t)
-
-		var putCalls int
-
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if serveUpdateProbe(t, w, r) {
-				return
-			}
-
-			putCalls++
-
-			w.WriteHeader(http.StatusBadRequest)
-			writeJSON(t, w, map[string]any{
-				"error_code": 400,
-				"message":    "Connector configuration is invalid: rebalance is expected after fix",
-			})
-		}))
-		t.Cleanup(srv.Close)
-
-		client := newTestClientOnServer(t, srv)
-
-		_, err := client.UpdateConnector(context.Background(), "pg-connector", map[string]string{
-			"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
-			"database.hostname": "pg-2",
-		})
-
-		must.ErrorIs(err, domain.ErrInvalidConnectorConfig)
-		must.Equal(1, putCalls)
-	})
-}
-
-func TestHTTPClient_PauseConnector(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, r *http.Request)
-		wantIs  error
-	}{
-		{
-			name: "202 response returns connector from status",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch {
-				case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause":
-					w.WriteHeader(http.StatusAccepted)
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name": "pg-connector",
-						"config": map[string]string{
-							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-						},
-					})
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "PAUSED", "worker_id": "worker-1"},
-						"tasks":     []map[string]any{},
-					})
-				default:
-					http.NotFound(w, nil)
-				}
-			},
-		},
-		{
-			name: "missing connector maps to connector not found",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				http.NotFound(w, nil)
-			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "server error maps to kafka connect unavailable",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			},
-			wantIs: domain.ErrKafkaConnectUnavailable,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			must := require.New(t)
-
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
-
-			client := newTestClientOnServer(t, srv)
-
-			connector, err := client.PauseConnector(context.Background(), "pg-connector")
-
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
-
-				return
-			}
-
-			must.NoError(err)
-			must.Equal(
-				domain.Connector{
-					Name:       "pg-connector",
-					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-					Status:     domain.ConnectorStatusPaused,
-					WorkerID:   "worker-1",
-					TasksCount: 0,
-					Tasks:      []domain.Task{},
-					Config:     domain.SourceConfig{},
-				},
-				connector,
-			)
-		})
-	}
-}
-
-func TestHTTPClient_ResumeConnector(t *testing.T) {
-	t.Parallel()
-
-	must := require.New(t)
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/resume":
-			w.WriteHeader(http.StatusAccepted)
-		case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-			writeJSON(t, w, map[string]any{
-				"name": "pg-connector",
-				"config": map[string]string{
-					"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-				},
-			})
-		case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
-			writeJSON(t, w, map[string]any{
-				"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-				"tasks": []map[string]any{
-					{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
-				},
-			})
-		default:
-			http.NotFound(w, nil)
-		}
-	}))
-	t.Cleanup(srv.Close)
-
-	client := newTestClientOnServer(t, srv)
-
-	connector, err := client.ResumeConnector(context.Background(), "pg-connector")
-
-	must.NoError(err)
-	must.Equal(
-		domain.Connector{
-			Name:       "pg-connector",
-			PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-			Status:     domain.ConnectorStatusRunning,
-			WorkerID:   "worker-1",
-			TasksCount: 1,
-			Tasks: []domain.Task{
-				{ID: 0, State: "running", WorkerID: "worker-1"},
-			},
-			Config: domain.SourceConfig{},
-		},
-		connector,
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Resume connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
 	)
 }
 
-func TestHTTPClient_RestartConnector(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, r *http.Request)
-		wantIs  error
-	}{
-		{
-			name: "204 response returns connector from status",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch {
-				case r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart":
-					w.WriteHeader(http.StatusNoContent)
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name": "pg-connector",
-						"config": map[string]string{
-							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-						},
-					})
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-						"tasks": []map[string]any{
-							{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
-						},
-					})
-				default:
+func TestHTTPClient_RestartConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "restart connector", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, r *http.Request)
+			wantIs  error
+		}{
+			{
+				name: "204 response returns connector from status",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch {
+					case r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart":
+						w.WriteHeader(http.StatusNoContent)
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+							},
+						})
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+							"tasks": []map[string]any{
+								{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+							},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+			},
+			{
+				name: "missing connector maps to connector not found",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
 					http.NotFound(w, nil)
+				},
+				wantIs: domain.ErrConnectorNotFound,
+			},
+			{
+				name: "server error maps to kafka connect unavailable",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusInternalServerError)
+				},
+				wantIs: domain.ErrKafkaConnectUnavailable,
+			},
+		}
+
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
+
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
+
+				client := newTestClientOnServer(a.T(), srv)
+
+				connector, err := client.RestartConnector(a.Context(), "pg-connector", true, false)
+
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
+
+					return
 				}
+
+				must.NoError(err)
+				must.Equal(
+					domain.Connector{
+						Name:       "pg-connector",
+						PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+						Status:     domain.ConnectorStatusRunning,
+						WorkerID:   "worker-1",
+						TasksCount: 1,
+						Tasks: []domain.Task{
+							{ID: 0, State: "running", WorkerID: "worker-1"},
+						},
+						Config: domain.SourceConfig{},
+					},
+					connector,
+				)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Restart connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
+}
+
+func TestHTTPClient_Delete(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "delete connector", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler http.HandlerFunc
+			wantIs  error
+		}{
+			{
+				name: "204 response deletes connector",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusNoContent)
+				},
 			},
-		},
-		{
-			name: "missing connector maps to connector not found",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				http.NotFound(w, nil)
+			{
+				name: "missing connector maps to connector not found",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					http.NotFound(w, nil)
+				},
+				wantIs: domain.ErrConnectorNotFound,
 			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "server error maps to kafka connect unavailable",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
+			{
+				name: "rebalance exhausts retries and maps to domain error",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusConflict)
+					writeJSON(a.T(), w, map[string]string{
+						"error_code": "409",
+						"message":    "Request cannot be completed because a rebalance is expected",
+					})
+				},
+				wantIs: domain.ErrRebalanceInProgress,
 			},
-			wantIs: domain.ErrKafkaConnectUnavailable,
-		},
-	}
+			{
+				name: "rebalance retries then succeeds",
+				handler: func() http.HandlerFunc {
+					attempts := 0
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+					return func(w http.ResponseWriter, _ *http.Request) {
+						attempts++
+						if attempts < 3 {
+							w.WriteHeader(http.StatusConflict)
+							writeJSON(a.T(), w, map[string]string{
+								"error_code": "409",
+								"message":    "Request cannot be completed because a rebalance is expected",
+							})
 
-			must := require.New(t)
+							return
+						}
 
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
+						w.WriteHeader(http.StatusNoContent)
+					}
+				}(),
+			},
+		}
 
-			client := newTestClientOnServer(t, srv)
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			connector, err := client.RestartConnector(context.Background(), "pg-connector", true, false)
+				srv := newAllureTestServer(a, tt.handler)
 
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
+				client := newTestClientOnServer(a.T(), srv)
 
-				return
-			}
+				err := client.Delete(a.Context(), "pg-connector")
 
-			must.NoError(err)
-			must.Equal(
-				domain.Connector{
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
+
+					return
+				}
+
+				must.NoError(err)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Delete connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
+}
+
+func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "get connector by id errors", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, r *http.Request)
+			want    domain.Connector
+			wantIs  error
+		}{
+			{
+				name: "success returns full connector",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch r.URL.Path {
+					case "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
+								"database.hostname": "pg-1",
+								"database.dbname":   "testdb",
+							},
+						})
+					case "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+							"tasks": []map[string]any{
+								{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
+							},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+				want: domain.Connector{
 					Name:       "pg-connector",
 					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
 					Status:     domain.ConnectorStatusRunning,
@@ -777,105 +913,99 @@ func TestHTTPClient_RestartConnector(t *testing.T) {
 					Tasks: []domain.Task{
 						{ID: 0, State: "running", WorkerID: "worker-1"},
 					},
-					Config: domain.SourceConfig{},
+					Config: domain.SourceConfig{
+						Hostname: "pg-1",
+						DBName:   new("testdb"),
+					},
 				},
-				connector,
-			)
-		})
-	}
-}
-
-func TestHTTPClient_Delete(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		handler http.HandlerFunc
-		wantIs  error
-	}{
-		{
-			name: "204 response deletes connector",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusNoContent)
 			},
-		},
-		{
-			name: "missing connector maps to connector not found",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				http.NotFound(w, nil)
+			{
+				name: "missing info maps to not found",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					http.NotFound(w, nil)
+				},
+				wantIs: domain.ErrConnectorNotFound,
 			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "rebalance exhausts retries and maps to domain error",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusConflict)
-				writeJSON(t, w, map[string]string{
-					"error_code": "409",
-					"message":    "Request cannot be completed because a rebalance is expected",
-				})
-			},
-			wantIs: domain.ErrRebalanceInProgress,
-		},
-		{
-			name: "rebalance retries then succeeds",
-			handler: func() http.HandlerFunc {
-				attempts := 0
-
-				return func(w http.ResponseWriter, _ *http.Request) {
-					attempts++
-					if attempts < 3 {
-						w.WriteHeader(http.StatusConflict)
-						writeJSON(t, w, map[string]string{
-							"error_code": "409",
-							"message":    "Request cannot be completed because a rebalance is expected",
+			{
+				name: "status error maps to unavailable",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch r.URL.Path {
+					case "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name": "pg-connector",
+							"config": map[string]string{
+								"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+							},
 						})
-
-						return
+					default:
+						w.WriteHeader(http.StatusInternalServerError)
 					}
+				},
+				wantIs: domain.ErrKafkaConnectUnavailable,
+			},
+			{
+				name: "missing plugin maps to invalid",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch r.URL.Path {
+					case "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name":   "pg-connector",
+							"config": map[string]string{},
+						})
+					case "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+							"tasks":     []map[string]any{},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+				wantIs: domain.ErrInvalidConnector,
+			},
+		}
 
-					w.WriteHeader(http.StatusNoContent)
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
+
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
+
+				client := newTestClientOnServer(a.T(), srv)
+
+				got, err := client.GetConnectorByID(a.Context(), "pg-connector")
+
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
+
+					return
 				}
-			}(),
-		},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			must := require.New(t)
-
-			client := newTestClient(t, tt.handler)
-
-			err := client.Delete(context.Background(), "pg-connector")
-
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
-
-				return
-			}
-
-			must.NoError(err)
-		})
-	}
+				must.NoError(err)
+				must.Equal(tt.want, got)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Get connector"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
-func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, r *http.Request)
-		want    domain.Connector
-		wantIs  error
-	}{
-		{
-			name: "success returns full connector",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch r.URL.Path {
-				case "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
+func TestHTTPClient_CreateConnector_Validation(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "create connector validation", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, _ *http.Request)
+			want    domain.Connector
+			wantIs  error
+		}{
+			{
+				name: "201 returns starting connector",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusCreated)
+					writeJSON(a.T(), w, map[string]any{
 						"name": "pg-connector",
 						"config": map[string]string{
 							"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
@@ -883,188 +1013,73 @@ func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) {
 							"database.dbname":   "testdb",
 						},
 					})
-				case "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-						"tasks": []map[string]any{
-							{"id": 0, "state": "RUNNING", "worker_id": "worker-1"},
-						},
+				},
+				want: domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusStarting,
+					TasksCount: 0,
+					Tasks:      []domain.Task{},
+					Config: domain.SourceConfig{
+						Hostname: "pg-1",
+						DBName:   new("testdb"),
+					},
+				},
+			},
+			{
+				name: "201 without plugin maps to invalid",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusCreated)
+					writeJSON(a.T(), w, map[string]any{
+						"name":   "pg-connector",
+						"config": map[string]string{},
 					})
-				default:
-					http.NotFound(w, nil)
-				}
-			},
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusRunning,
-				WorkerID:   "worker-1",
-				TasksCount: 1,
-				Tasks: []domain.Task{
-					{ID: 0, State: "running", WorkerID: "worker-1"},
 				},
-				Config: domain.SourceConfig{
-					Hostname: "pg-1",
-					DBName:   new("testdb"),
-				},
+				wantIs: domain.ErrInvalidConnector,
 			},
-		},
-		{
-			name: "missing info maps to not found",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				http.NotFound(w, nil)
-			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "status error maps to unavailable",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch r.URL.Path {
-				case "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name": "pg-connector",
+			{
+				name: "201 without name maps to invalid",
+				handler: func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(http.StatusCreated)
+					writeJSON(a.T(), w, map[string]any{
+						"name": "",
 						"config": map[string]string{
 							"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
 						},
 					})
-				default:
-					w.WriteHeader(http.StatusInternalServerError)
-				}
-			},
-			wantIs: domain.ErrKafkaConnectUnavailable,
-		},
-		{
-			name: "missing plugin maps to invalid",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch r.URL.Path {
-				case "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name":   "pg-connector",
-						"config": map[string]string{},
-					})
-				case "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-						"tasks":     []map[string]any{},
-					})
-				default:
-					http.NotFound(w, nil)
-				}
-			},
-			wantIs: domain.ErrInvalidConnector,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			must := require.New(t)
-
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
-
-			client := newTestClientOnServer(t, srv)
-
-			got, err := client.GetConnectorByID(context.Background(), "pg-connector")
-
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
-
-				return
-			}
-
-			must.NoError(err)
-			must.Equal(tt.want, got)
-		})
-	}
-}
-
-func TestHTTPClient_CreateConnector_Validation(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, _ *http.Request)
-		want    domain.Connector
-		wantIs  error
-	}{
-		{
-			name: "201 returns starting connector",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusCreated)
-				writeJSON(t, w, map[string]any{
-					"name": "pg-connector",
-					"config": map[string]string{
-						"connector.class":   "io.debezium.connector.postgresql.PostgresConnector",
-						"database.hostname": "pg-1",
-						"database.dbname":   "testdb",
-					},
-				})
-			},
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusStarting,
-				TasksCount: 0,
-				Tasks:      []domain.Task{},
-				Config: domain.SourceConfig{
-					Hostname: "pg-1",
-					DBName:   new("testdb"),
 				},
+				wantIs: domain.ErrInvalidConnector,
 			},
-		},
-		{
-			name: "201 without plugin maps to invalid",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusCreated)
-				writeJSON(t, w, map[string]any{
-					"name":   "pg-connector",
-					"config": map[string]string{},
+		}
+
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
+
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
+
+				client := newTestClientOnServer(a.T(), srv)
+
+				got, err := client.CreateConnector(a.Context(), "pg-connector", map[string]string{
+					"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
 				})
-			},
-			wantIs: domain.ErrInvalidConnector,
-		},
-		{
-			name: "201 without name maps to invalid",
-			handler: func(w http.ResponseWriter, _ *http.Request) {
-				w.WriteHeader(http.StatusCreated)
-				writeJSON(t, w, map[string]any{
-					"name": "",
-					"config": map[string]string{
-						"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-					},
-				})
-			},
-			wantIs: domain.ErrInvalidConnector,
-		},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
 
-			must := require.New(t)
+					return
+				}
 
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
-
-			client := newTestClientOnServer(t, srv)
-
-			got, err := client.CreateConnector(context.Background(), "pg-connector", map[string]string{
-				"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+				must.NoError(err)
+				must.Equal(tt.want, got)
 			})
-
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
-
-				return
-			}
-
-			must.NoError(err)
-			must.Equal(tt.want, got)
-		})
-	}
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Create connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
 func serveRestartRunning(t *testing.T) http.HandlerFunc {
@@ -1094,157 +1109,161 @@ func serveRestartRunning(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func TestHTTPClient_RestartConnector_TaskFlags(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name         string
-		includeTasks bool
-		onlyFailed   bool
-		want         domain.Connector
-	}{
-		{
-			name:         "204 with tasks returns running",
-			includeTasks: true,
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusRunning,
-				WorkerID:   "worker-1",
-				TasksCount: 1,
-				Tasks: []domain.Task{
-					{ID: 0, State: "running", WorkerID: "worker-1"},
+func TestHTTPClient_RestartConnector_TaskFlags(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "restart connector task flags", func(a *gotest.Context) {
+		tests := []struct {
+			name         string
+			includeTasks bool
+			onlyFailed   bool
+			want         domain.Connector
+		}{
+			{
+				name:         "204 with tasks returns running",
+				includeTasks: true,
+				want: domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusRunning,
+					WorkerID:   "worker-1",
+					TasksCount: 1,
+					Tasks: []domain.Task{
+						{ID: 0, State: "running", WorkerID: "worker-1"},
+					},
+					Config: domain.SourceConfig{},
 				},
-				Config: domain.SourceConfig{},
 			},
-		},
-		{
-			name:       "204 with only failed returns running",
-			onlyFailed: true,
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusRunning,
-				WorkerID:   "worker-1",
-				TasksCount: 1,
-				Tasks: []domain.Task{
-					{ID: 0, State: "running", WorkerID: "worker-1"},
+			{
+				name:       "204 with only failed returns running",
+				onlyFailed: true,
+				want: domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusRunning,
+					WorkerID:   "worker-1",
+					TasksCount: 1,
+					Tasks: []domain.Task{
+						{ID: 0, State: "running", WorkerID: "worker-1"},
+					},
+					Config: domain.SourceConfig{},
 				},
-				Config: domain.SourceConfig{},
 			},
-		},
-		{
-			name:         "204 with all flags returns running",
-			includeTasks: true,
-			onlyFailed:   true,
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusRunning,
-				WorkerID:   "worker-1",
-				TasksCount: 1,
-				Tasks: []domain.Task{
-					{ID: 0, State: "running", WorkerID: "worker-1"},
+			{
+				name:         "204 with all flags returns running",
+				includeTasks: true,
+				onlyFailed:   true,
+				want: domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusRunning,
+					WorkerID:   "worker-1",
+					TasksCount: 1,
+					Tasks: []domain.Task{
+						{ID: 0, State: "running", WorkerID: "worker-1"},
+					},
+					Config: domain.SourceConfig{},
 				},
-				Config: domain.SourceConfig{},
 			},
-		},
-		{
-			name: "204 without flags returns running",
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusRunning,
-				WorkerID:   "worker-1",
-				TasksCount: 1,
-				Tasks: []domain.Task{
-					{ID: 0, State: "running", WorkerID: "worker-1"},
+			{
+				name: "204 without flags returns running",
+				want: domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusRunning,
+					WorkerID:   "worker-1",
+					TasksCount: 1,
+					Tasks: []domain.Task{
+						{ID: 0, State: "running", WorkerID: "worker-1"},
+					},
+					Config: domain.SourceConfig{},
 				},
-				Config: domain.SourceConfig{},
 			},
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				srv := newAllureTestServer(a, serveRestartRunning(a.T()))
 
-			srv := httptest.NewServer(serveRestartRunning(t))
-			t.Cleanup(srv.Close)
+				client := newTestClientOnServer(a.T(), srv)
 
-			client := newTestClientOnServer(t, srv)
+				got, err := client.RestartConnector(a.Context(), "pg-connector", tt.includeTasks, tt.onlyFailed)
 
-			got, err := client.RestartConnector(context.Background(), "pg-connector", tt.includeTasks, tt.onlyFailed)
-
-			must.NoError(err)
-			must.Equal(tt.want, got)
-		})
-	}
+				must.NoError(err)
+				must.Equal(tt.want, got)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Restart connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
-func TestHTTPClient_RestartConnector_RereadErrors(t *testing.T) {
-	t.Parallel()
+func TestHTTPClient_RestartConnector_RereadErrors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "restart connector reread errors", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, r *http.Request)
+			wantIs  error
+		}{
+			{
+				name: "reread missing maps to not found",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart" {
+						w.WriteHeader(http.StatusNoContent)
 
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, r *http.Request)
-		wantIs  error
-	}{
-		{
-			name: "reread missing maps to not found",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart" {
-					w.WriteHeader(http.StatusNoContent)
+						return
+					}
 
-					return
-				}
-
-				http.NotFound(w, nil)
-			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "reread invalid maps to invalid",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch {
-				case r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart":
-					w.WriteHeader(http.StatusNoContent)
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name":   "pg-connector",
-						"config": map[string]string{},
-					})
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
-						"tasks":     []map[string]any{},
-					})
-				default:
 					http.NotFound(w, nil)
-				}
+				},
+				wantIs: domain.ErrConnectorNotFound,
 			},
-			wantIs: domain.ErrInvalidConnector,
-		},
-	}
+			{
+				name: "reread invalid maps to invalid",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch {
+					case r.Method == http.MethodPost && r.URL.Path == "/connectors/pg-connector/restart":
+						w.WriteHeader(http.StatusNoContent)
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name":   "pg-connector",
+							"config": map[string]string{},
+						})
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "RUNNING", "worker_id": "worker-1"},
+							"tasks":     []map[string]any{},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+				wantIs: domain.ErrInvalidConnector,
+			},
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
 
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
+				client := newTestClientOnServer(a.T(), srv)
 
-			client := newTestClientOnServer(t, srv)
+				_, err := client.RestartConnector(a.Context(), "pg-connector", false, false)
 
-			_, err := client.RestartConnector(context.Background(), "pg-connector", false, false)
-
-			must.ErrorIs(err, tt.wantIs)
-		})
-	}
+				must.ErrorIs(err, tt.wantIs)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Restart connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
 func servePauseOK(t *testing.T) http.HandlerFunc {
@@ -1272,105 +1291,109 @@ func servePauseOK(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func TestHTTPClient_PauseConnector_Reread(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name string
-		want domain.Connector
-	}{
-		{
-			name: "202 returns paused connector",
-			want: domain.Connector{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     domain.ConnectorStatusPaused,
-				WorkerID:   "worker-1",
-				TasksCount: 0,
-				Tasks:      []domain.Task{},
-				Config:     domain.SourceConfig{},
+func TestHTTPClient_PauseConnector_Reread(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "pause connector reread", func(a *gotest.Context) {
+		tests := []struct {
+			name string
+			want domain.Connector
+		}{
+			{
+				name: "202 returns paused connector",
+				want: domain.Connector{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     domain.ConnectorStatusPaused,
+					WorkerID:   "worker-1",
+					TasksCount: 0,
+					Tasks:      []domain.Task{},
+					Config:     domain.SourceConfig{},
+				},
 			},
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				srv := newAllureTestServer(a, servePauseOK(a.T()))
 
-			srv := httptest.NewServer(servePauseOK(t))
-			t.Cleanup(srv.Close)
+				client := newTestClientOnServer(a.T(), srv)
 
-			client := newTestClientOnServer(t, srv)
+				got, err := client.PauseConnector(a.Context(), "pg-connector")
 
-			got, err := client.PauseConnector(context.Background(), "pg-connector")
-
-			must.NoError(err)
-			must.Equal(tt.want, got)
-		})
-	}
+				must.NoError(err)
+				must.Equal(tt.want, got)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Pause connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
-func TestHTTPClient_PauseConnector_RereadErrors(t *testing.T) {
-	t.Parallel()
+func TestHTTPClient_PauseConnector_RereadErrors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "pause connector reread errors", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			handler func(w http.ResponseWriter, r *http.Request)
+			wantIs  error
+		}{
+			{
+				name: "reread missing maps to not found",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					if r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause" {
+						w.WriteHeader(http.StatusAccepted)
 
-	tests := []struct {
-		name    string
-		handler func(w http.ResponseWriter, r *http.Request)
-		wantIs  error
-	}{
-		{
-			name: "reread missing maps to not found",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				if r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause" {
-					w.WriteHeader(http.StatusAccepted)
+						return
+					}
 
-					return
-				}
-
-				http.NotFound(w, nil)
-			},
-			wantIs: domain.ErrConnectorNotFound,
-		},
-		{
-			name: "reread invalid maps to invalid",
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				switch {
-				case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause":
-					w.WriteHeader(http.StatusAccepted)
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
-					writeJSON(t, w, map[string]any{
-						"name":   "pg-connector",
-						"config": map[string]string{},
-					})
-				case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
-					writeJSON(t, w, map[string]any{
-						"connector": map[string]any{"state": "PAUSED", "worker_id": "worker-1"},
-						"tasks":     []map[string]any{},
-					})
-				default:
 					http.NotFound(w, nil)
-				}
+				},
+				wantIs: domain.ErrConnectorNotFound,
 			},
-			wantIs: domain.ErrInvalidConnector,
-		},
-	}
+			{
+				name: "reread invalid maps to invalid",
+				handler: func(w http.ResponseWriter, r *http.Request) {
+					switch {
+					case r.Method == http.MethodPut && r.URL.Path == "/connectors/pg-connector/pause":
+						w.WriteHeader(http.StatusAccepted)
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector":
+						writeJSON(a.T(), w, map[string]any{
+							"name":   "pg-connector",
+							"config": map[string]string{},
+						})
+					case r.Method == http.MethodGet && r.URL.Path == "/connectors/pg-connector/status":
+						writeJSON(a.T(), w, map[string]any{
+							"connector": map[string]any{"state": "PAUSED", "worker_id": "worker-1"},
+							"tasks":     []map[string]any{},
+						})
+					default:
+						http.NotFound(w, nil)
+					}
+				},
+				wantIs: domain.ErrInvalidConnector,
+			},
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				srv := newAllureTestServer(a, http.HandlerFunc(tt.handler))
 
-			srv := httptest.NewServer(http.HandlerFunc(tt.handler))
-			t.Cleanup(srv.Close)
+				client := newTestClientOnServer(a.T(), srv)
 
-			client := newTestClientOnServer(t, srv)
+				_, err := client.PauseConnector(a.Context(), "pg-connector")
 
-			_, err := client.PauseConnector(context.Background(), "pg-connector")
-
-			must.ErrorIs(err, tt.wantIs)
-		})
-	}
+				must.ErrorIs(err, tt.wantIs)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Pause connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

@@ -5,73 +5,81 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allureassert "github.com/allure-framework/allure-go/testify/assert"
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 
 	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
 )
 
-//nolint:paralleltest // t.Setenv is incompatible with t.Parallel (affects process-wide env)
+//nolint:paralleltest // allure gotest.Test owns subtest execution
 func TestNewConfigMust(t *testing.T) {
-	t.Run("valid env returns config with parsed values", func(t *testing.T) {
-		is := assert.New(t)
+	gotest.Test(t, "new config must", func(a *gotest.Context) {
+		a.Step("valid env returns config with parsed values", func(a *gotest.Context) {
+			is := allureassert.New(a)
 
-		unsetAllKafkaConnectEnv(t)
-		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
-		t.Setenv("KAFKA_CONNECT_TIMEOUT", "5s")
-		t.Setenv("KAFKA_CONNECT_RETRY_MAX_ATTEMPTS", "3")
-		t.Setenv("KAFKA_CONNECT_RETRY_INITIAL_DELAY", "100ms")
+			unsetAllKafkaConnectEnv(a.T())
+			a.T().Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+			a.T().Setenv("KAFKA_CONNECT_TIMEOUT", "5s")
+			a.T().Setenv("KAFKA_CONNECT_RETRY_MAX_ATTEMPTS", "3")
+			a.T().Setenv("KAFKA_CONNECT_RETRY_INITIAL_DELAY", "100ms")
 
-		cfg := kafkaconnect.NewConfigMust()
+			cfg := kafkaconnect.NewConfigMust()
 
-		is.Equal("http://localhost:8083", cfg.BaseURL)
-		is.Equal(5*time.Second, cfg.Timeout)
-		is.Equal(3, cfg.RetryMaxAttempts)
-		is.Equal(100*time.Millisecond, cfg.RetryInitialDelay)
-	})
+			is.Equal("http://localhost:8083", cfg.BaseURL)
+			is.Equal(5*time.Second, cfg.Timeout)
+			is.Equal(3, cfg.RetryMaxAttempts)
+			is.Equal(100*time.Millisecond, cfg.RetryInitialDelay)
+		})
 
-	t.Run("defaults applied when optional env unset", func(t *testing.T) {
-		is := assert.New(t)
+		a.Step("defaults applied when optional env unset", func(a *gotest.Context) {
+			is := allureassert.New(a)
 
-		unsetAllKafkaConnectEnv(t)
-		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+			unsetAllKafkaConnectEnv(a.T())
+			a.T().Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
 
-		cfg := kafkaconnect.NewConfigMust()
+			cfg := kafkaconnect.NewConfigMust()
 
-		is.Equal(30*time.Second, cfg.Timeout)
-		is.Equal(5, cfg.RetryMaxAttempts)
-		is.Equal(300*time.Millisecond, cfg.RetryInitialDelay)
-	})
+			is.Equal(30*time.Second, cfg.Timeout)
+			is.Equal(5, cfg.RetryMaxAttempts)
+			is.Equal(300*time.Millisecond, cfg.RetryInitialDelay)
+		})
 
-	t.Run("missing required BASE_URL panics", func(t *testing.T) {
-		unsetAllKafkaConnectEnv(t)
+		a.Step("missing required BASE_URL panics", func(a *gotest.Context) {
+			unsetAllKafkaConnectEnv(a.T())
 
-		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
-	})
+			mustPanic(a.T(), func() { kafkaconnect.NewConfigMust() })
+		})
 
-	t.Run("invalid TIMEOUT panics", func(t *testing.T) {
-		unsetAllKafkaConnectEnv(t)
-		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
-		t.Setenv("KAFKA_CONNECT_TIMEOUT", "not-a-duration")
+		a.Step("invalid TIMEOUT panics", func(a *gotest.Context) {
+			unsetAllKafkaConnectEnv(a.T())
+			a.T().Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+			a.T().Setenv("KAFKA_CONNECT_TIMEOUT", "not-a-duration")
 
-		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
-	})
+			mustPanic(a.T(), func() { kafkaconnect.NewConfigMust() })
+		})
 
-	t.Run("zero TIMEOUT panics on validation", func(t *testing.T) {
-		unsetAllKafkaConnectEnv(t)
-		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
-		t.Setenv("KAFKA_CONNECT_TIMEOUT", "0s")
+		a.Step("zero TIMEOUT panics on validation", func(a *gotest.Context) {
+			unsetAllKafkaConnectEnv(a.T())
+			a.T().Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+			a.T().Setenv("KAFKA_CONNECT_TIMEOUT", "0s")
 
-		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
-	})
+			mustPanic(a.T(), func() { kafkaconnect.NewConfigMust() })
+		})
 
-	t.Run("zero RETRY_MAX_ATTEMPTS panics on validation", func(t *testing.T) {
-		unsetAllKafkaConnectEnv(t)
-		t.Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
-		t.Setenv("KAFKA_CONNECT_RETRY_MAX_ATTEMPTS", "0")
+		a.Step("zero RETRY_MAX_ATTEMPTS panics on validation", func(a *gotest.Context) {
+			unsetAllKafkaConnectEnv(a.T())
+			a.T().Setenv("KAFKA_CONNECT_BASE_URL", "http://localhost:8083")
+			a.T().Setenv("KAFKA_CONNECT_RETRY_MAX_ATTEMPTS", "0")
 
-		mustPanic(t, func() { kafkaconnect.NewConfigMust() })
-	})
+			mustPanic(a.T(), func() { kafkaconnect.NewConfigMust() })
+		})
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Config"),
+		gotest.WithSeverity("minor"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
 func mustPanic(t *testing.T, fn func()) {
@@ -85,7 +93,7 @@ func mustPanic(t *testing.T, fn func()) {
 		fn()
 	}()
 
-	must := require.New(t)
+	must := allurerequire.New(t)
 	must.NotNil(panicVal)
 	err, ok := panicVal.(error)
 	must.True(ok)
@@ -112,70 +120,73 @@ func unsetAllKafkaConnectEnv(t *testing.T) {
 	}
 }
 
-func TestConfig_Validate(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		config  kafkaconnect.Config
-		wantErr bool
-	}{
-		{
-			name: "valid config passes",
-			config: kafkaconnect.Config{
-				BaseURL:           "http://localhost:8083",
-				Timeout:           defaultTestTimeout,
-				RetryMaxAttempts:  3,
-				RetryInitialDelay: 5 * retryDelayUnit,
+func TestConfig_Validate(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "config validate", func(a *gotest.Context) {
+		tests := []struct {
+			name    string
+			config  kafkaconnect.Config
+			wantErr bool
+		}{
+			{
+				name: "valid config passes",
+				config: kafkaconnect.Config{
+					BaseURL:           "http://localhost:8083",
+					Timeout:           defaultTestTimeout,
+					RetryMaxAttempts:  3,
+					RetryInitialDelay: 5 * retryDelayUnit,
+				},
 			},
-		},
-		{
-			name: "non positive timeout rejected",
-			config: kafkaconnect.Config{
-				BaseURL:           "http://localhost:8083",
-				Timeout:           0,
-				RetryMaxAttempts:  3,
-				RetryInitialDelay: 5 * retryDelayUnit,
+			{
+				name: "non positive timeout rejected",
+				config: kafkaconnect.Config{
+					BaseURL:           "http://localhost:8083",
+					Timeout:           0,
+					RetryMaxAttempts:  3,
+					RetryInitialDelay: 5 * retryDelayUnit,
+				},
+				wantErr: true,
 			},
-			wantErr: true,
-		},
-		{
-			name: "non positive retry attempts rejected",
-			config: kafkaconnect.Config{
-				BaseURL:           "http://localhost:8083",
-				Timeout:           defaultTestTimeout,
-				RetryMaxAttempts:  0,
-				RetryInitialDelay: 5 * retryDelayUnit,
+			{
+				name: "non positive retry attempts rejected",
+				config: kafkaconnect.Config{
+					BaseURL:           "http://localhost:8083",
+					Timeout:           defaultTestTimeout,
+					RetryMaxAttempts:  0,
+					RetryInitialDelay: 5 * retryDelayUnit,
+				},
+				wantErr: true,
 			},
-			wantErr: true,
-		},
-		{
-			name: "non positive retry delay rejected",
-			config: kafkaconnect.Config{
-				BaseURL:           "http://localhost:8083",
-				Timeout:           defaultTestTimeout,
-				RetryMaxAttempts:  3,
-				RetryInitialDelay: 0,
+			{
+				name: "non positive retry delay rejected",
+				config: kafkaconnect.Config{
+					BaseURL:           "http://localhost:8083",
+					Timeout:           defaultTestTimeout,
+					RetryMaxAttempts:  3,
+					RetryInitialDelay: 0,
+				},
+				wantErr: true,
 			},
-			wantErr: true,
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				err := tt.config.Validate()
 
-			err := tt.config.Validate()
+				if tt.wantErr {
+					must.Error(err)
 
-			if tt.wantErr {
-				must.Error(err)
+					return
+				}
 
-				return
-			}
-
-			must.NoError(err)
-		})
-	}
+				must.NoError(err)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Config"),
+		gotest.WithSeverity("minor"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

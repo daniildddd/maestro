@@ -7,9 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allureassert "github.com/allure-framework/allure-go/testify/assert"
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/logger"
@@ -29,328 +30,342 @@ func newValidateRequest(t *testing.T, body, contentType string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) {
-	t.Parallel()
-
-	validReport := domain.ValidationReport{
-		Valid: true,
-		Steps: []domain.ValidationStep{
-			{
-				ID:     domain.StepConfig,
-				Status: domain.CheckSeverityOK,
-				Checks: []domain.ValidationCheck{{
-					ID:       "config.schema",
-					Severity: domain.CheckSeverityOK,
-				}},
+func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "validate connector", func(a *gotest.Context) {
+		validReport := domain.ValidationReport{
+			Valid: true,
+			Steps: []domain.ValidationStep{
+				{
+					ID:     domain.StepConfig,
+					Status: domain.CheckSeverityOK,
+					Checks: []domain.ValidationCheck{{
+						ID:       "config.schema",
+						Severity: domain.CheckSeverityOK,
+					}},
+				},
+				{
+					ID:     domain.StepTables,
+					Status: domain.CheckSeverityWarning,
+					Checks: []domain.ValidationCheck{{
+						ID:       "postgres.table.primary_key",
+						Severity: domain.CheckSeverityWarning,
+						Table:    "public.payments",
+					}},
+				},
 			},
-			{
-				ID:     domain.StepTables,
-				Status: domain.CheckSeverityWarning,
-				Checks: []domain.ValidationCheck{{
-					ID:       "postgres.table.primary_key",
-					Severity: domain.CheckSeverityWarning,
-					Table:    "public.payments",
-				}},
-			},
-		},
-	}
+		}
 
-	invalidReport := domain.ValidationReport{
-		Valid: false,
-		Steps: []domain.ValidationStep{{
-			ID:     domain.StepCDC,
-			Status: domain.CheckSeverityError,
-			Checks: []domain.ValidationCheck{{
-				ID:       "postgres.cdc.wal_level",
-				Severity: domain.CheckSeverityError,
-				Message:  "wal_level = 'replica'",
+		invalidReport := domain.ValidationReport{
+			Valid: false,
+			Steps: []domain.ValidationStep{{
+				ID:     domain.StepCDC,
+				Status: domain.CheckSeverityError,
+				Checks: []domain.ValidationCheck{{
+					ID:       "postgres.cdc.wal_level",
+					Severity: domain.CheckSeverityError,
+					Message:  "wal_level = 'replica'",
+				}},
 			}},
-		}},
-	}
+		}
 
-	validBody := transport.ValidateResponse{
-		Valid: true,
-		Steps: []transport.ValidateStepResponse{
-			{
-				ID:     "config",
-				Status: "ok",
-				Checks: []transport.ValidateCheckResponse{{ID: "config.schema", Severity: "ok"}},
+		validBody := transport.ValidateResponse{
+			Valid: true,
+			Steps: []transport.ValidateStepResponse{
+				{
+					ID:     "config",
+					Status: "ok",
+					Checks: []transport.ValidateCheckResponse{{ID: "config.schema", Severity: "ok"}},
+				},
+				{
+					ID:     "tables",
+					Status: "warning",
+					Checks: []transport.ValidateCheckResponse{{
+						ID:       "postgres.table.primary_key",
+						Severity: "warning",
+						Table:    "public.payments",
+					}},
+				},
 			},
-			{
-				ID:     "tables",
-				Status: "warning",
+		}
+
+		invalidBody := transport.ValidateResponse{
+			Valid: false,
+			Steps: []transport.ValidateStepResponse{{
+				ID:     "cdc",
+				Status: "error",
 				Checks: []transport.ValidateCheckResponse{{
-					ID:       "postgres.table.primary_key",
-					Severity: "warning",
-					Table:    "public.payments",
+					ID:       "postgres.cdc.wal_level",
+					Severity: "error",
+					Message:  "wal_level = 'replica'",
 				}},
-			},
-		},
-	}
-
-	invalidBody := transport.ValidateResponse{
-		Valid: false,
-		Steps: []transport.ValidateStepResponse{{
-			ID:     "cdc",
-			Status: "error",
-			Checks: []transport.ValidateCheckResponse{{
-				ID:       "postgres.cdc.wal_level",
-				Severity: "error",
-				Message:  "wal_level = 'replica'",
 			}},
-		}},
-	}
+		}
 
-	tests := []struct {
-		name        string
-		body        string
-		contentType string
-		setupMock   func(m *MockConnectorsService)
-		wantStatus  int
-		wantCode    string
-		wantBody    transport.ValidateResponse
-		wantDetails transport.ValidateResponse
-	}{
-		{
-			name: "valid report returns 200 with warnings",
-			body: `{
+		tests := []struct {
+			name        string
+			body        string
+			contentType string
+			setupMock   func(m *MockConnectorsService)
+			wantStatus  int
+			wantCode    string
+			wantBody    transport.ValidateResponse
+			wantDetails transport.ValidateResponse
+		}{
+			{
+				name: "valid report returns 200 with warnings",
+				body: `{
 				"plugin_type": "io.debezium.connector.postgresql.PostgresConnector",
 				"name": "pg-connector",
 				"config": {"database.hostname": "pg"}
 			}`,
-			contentType: "application/json",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					ValidateConnector(
-						mock.Anything,
-						"io.debezium.connector.postgresql.PostgresConnector",
-						map[string]string{"name": "pg-connector", "database.hostname": "pg"},
-					).
-					Return(validReport, nil).
-					Once()
+				contentType: "application/json",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						ValidateConnector(
+							mock.Anything,
+							"io.debezium.connector.postgresql.PostgresConnector",
+							map[string]string{"name": "pg-connector", "database.hostname": "pg"},
+						).
+						Return(validReport, nil).
+						Once()
+				},
+				wantStatus: http.StatusOK,
+				wantBody:   validBody,
 			},
-			wantStatus: http.StatusOK,
-			wantBody:   validBody,
-		},
-		{
-			name:        "invalid json returns INVALID_REQUEST_BODY",
-			body:        `{invalid`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_REQUEST_BODY",
-		},
-		{
-			name: "unknown field returns INVALID_REQUEST_BODY",
-			body: `{
+			{
+				name:        "invalid json returns INVALID_REQUEST_BODY",
+				body:        `{invalid`,
+				contentType: "application/json",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "INVALID_REQUEST_BODY",
+			},
+			{
+				name: "unknown field returns INVALID_REQUEST_BODY",
+				body: `{
 				"plugin_type": "p",
 				"name": "n",
 				"config": {"a": "b"},
 				"extra": 1
 			}`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_REQUEST_BODY",
-		},
-		{
-			name: "missing plugin_type returns VALIDATION_FAILED",
-			body: `{
+				contentType: "application/json",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "INVALID_REQUEST_BODY",
+			},
+			{
+				name: "missing plugin_type returns VALIDATION_FAILED",
+				body: `{
 				"name": "n",
 				"config": {"a": "b"}
 			}`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "VALIDATION_FAILED",
-		},
-		{
-			name: "missing config returns VALIDATION_FAILED",
-			body: `{
+				contentType: "application/json",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "VALIDATION_FAILED",
+			},
+			{
+				name: "missing config returns VALIDATION_FAILED",
+				body: `{
 				"plugin_type": "p",
 				"name": "n"
 			}`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "VALIDATION_FAILED",
-		},
-		{
-			name: "empty config returns VALIDATION_FAILED",
-			body: `{
+				contentType: "application/json",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "VALIDATION_FAILED",
+			},
+			{
+				name: "empty config returns VALIDATION_FAILED",
+				body: `{
 				"plugin_type": "p",
 				"name": "n",
 				"config": {}
 			}`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "VALIDATION_FAILED",
-		},
-		{
-			name: "missing name returns VALIDATION_FAILED",
-			body: `{
-				"plugin_type": "p",
-				"config": {"a": "b"}
-			}`,
-			contentType: "application/json",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "VALIDATION_FAILED",
-		},
-		{
-			name: "missing content type returns INVALID_CONTENT_TYPE",
-			body: `{
-				"plugin_type": "p",
-				"name": "n",
-				"config": {"a": "b"}
-			}`,
-			contentType: "",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_CONTENT_TYPE",
-		},
-		{
-			name: "wrong content type returns INVALID_CONTENT_TYPE",
-			body: `{
-				"plugin_type": "p",
-				"name": "n",
-				"config": {"a": "b"}
-			}`,
-			contentType: "text/plain",
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_CONTENT_TYPE",
-		},
-		{
-			name: "invalid report returns 400 with details",
-			body: `{
-				"plugin_type": "p",
-				"name": "n",
-				"config": {"a": "b"}
-			}`,
-			contentType: "application/json",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					ValidateConnector(mock.Anything, "p", mock.Anything).
-					Return(invalidReport, nil).
-					Once()
+				contentType: "application/json",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "VALIDATION_FAILED",
 			},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "CONNECTOR_CONFIG_INVALID",
-			wantDetails: invalidBody,
-		},
-	}
+			{
+				name: "missing name returns VALIDATION_FAILED",
+				body: `{
+				"plugin_type": "p",
+				"config": {"a": "b"}
+			}`,
+				contentType: "application/json",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "VALIDATION_FAILED",
+			},
+			{
+				name: "missing content type returns INVALID_CONTENT_TYPE",
+				body: `{
+				"plugin_type": "p",
+				"name": "n",
+				"config": {"a": "b"}
+			}`,
+				contentType: "",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "INVALID_CONTENT_TYPE",
+			},
+			{
+				name: "wrong content type returns INVALID_CONTENT_TYPE",
+				body: `{
+				"plugin_type": "p",
+				"name": "n",
+				"config": {"a": "b"}
+			}`,
+				contentType: "text/plain",
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "INVALID_CONTENT_TYPE",
+			},
+			{
+				name: "invalid report returns 400 with details",
+				body: `{
+				"plugin_type": "p",
+				"name": "n",
+				"config": {"a": "b"}
+			}`,
+				contentType: "application/json",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						ValidateConnector(mock.Anything, "p", mock.Anything).
+						Return(invalidReport, nil).
+						Once()
+				},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "CONNECTOR_CONFIG_INVALID",
+				wantDetails: invalidBody,
+			},
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			is := assert.New(t)
-			must := require.New(t)
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				is := allureassert.New(a)
+				must := allurerequire.New(a)
 
-			connectorsService := NewMockConnectorsService(t)
-			tt.setupMock(connectorsService)
+				connectorsService := NewMockConnectorsService(a.T())
+				tt.setupMock(connectorsService)
 
-			handler := newTestHandler(connectorsService)
+				handler := newTestHandler(connectorsService)
 
-			rec := httptest.NewRecorder()
-			rw := core_http_response.NewResponseWriter(rec)
+				rec := httptest.NewRecorder()
+				rw := core_http_response.NewResponseWriter(rec)
 
-			handler.ValidateConnector(rw, newValidateRequest(t, tt.body, tt.contentType))
+				a.Attachment("config.json", []byte(tt.body), "application/json")
+				handler.ValidateConnector(rw, newValidateRequest(a.T(), tt.body, tt.contentType))
+				a.Attachment("response.json", rec.Body.Bytes(), "application/json")
 
-			must.Equal(tt.wantStatus, rec.Code)
+				must.Equal(tt.wantStatus, rec.Code)
 
-			if tt.wantCode != "" {
-				var body errorResponseBody
+				if tt.wantCode != "" {
+					var body errorResponseBody
 
-				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-				is.Equal(tt.wantCode, body.Code)
+					must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+					is.Equal(tt.wantCode, body.Code)
 
-				if len(body.Details) > 0 {
-					var details transport.ValidateResponse
+					if len(body.Details) > 0 {
+						var details transport.ValidateResponse
 
-					must.NoError(json.Unmarshal(body.Details, &details))
-					is.Equal(tt.wantDetails, details)
+						must.NoError(json.Unmarshal(body.Details, &details))
+						is.Equal(tt.wantDetails, details)
+					}
+
+					return
 				}
 
-				return
-			}
+				var body transport.ValidateResponse
 
-			var body transport.ValidateResponse
-
-			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-			is.Equal(tt.wantBody, body)
-		})
-	}
+				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+				is.Equal(tt.wantBody, body)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Validate connector"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
-func TestConnectorsHTTPHandler_ValidateConnector_InvalidFullBody(t *testing.T) {
-	t.Parallel()
+func TestConnectorsHTTPHandler_ValidateConnector_InvalidFullBody(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "validate connector full error body", func(a *gotest.Context) {
+		must := allurerequire.New(a)
 
-	must := require.New(t)
-
-	invalidReport := domain.ValidationReport{
-		Valid: false,
-		Steps: []domain.ValidationStep{{
-			ID:     domain.StepCDC,
-			Status: domain.CheckSeverityError,
-			Checks: []domain.ValidationCheck{{
-				ID:       "postgres.cdc.wal_level",
-				Severity: domain.CheckSeverityError,
-				Message:  "wal_level = 'replica'",
+		invalidReport := domain.ValidationReport{
+			Valid: false,
+			Steps: []domain.ValidationStep{{
+				ID:     domain.StepCDC,
+				Status: domain.CheckSeverityError,
+				Checks: []domain.ValidationCheck{{
+					ID:       "postgres.cdc.wal_level",
+					Severity: domain.CheckSeverityError,
+					Message:  "wal_level = 'replica'",
+				}},
 			}},
-		}},
-	}
+		}
 
-	wantDetails := transport.ValidateResponse{
-		Valid: false,
-		Steps: []transport.ValidateStepResponse{{
-			ID:     "cdc",
-			Status: "error",
-			Checks: []transport.ValidateCheckResponse{{
-				ID:       "postgres.cdc.wal_level",
-				Severity: "error",
-				Message:  "wal_level = 'replica'",
+		wantDetails := transport.ValidateResponse{
+			Valid: false,
+			Steps: []transport.ValidateStepResponse{{
+				ID:     "cdc",
+				Status: "error",
+				Checks: []transport.ValidateCheckResponse{{
+					ID:       "postgres.cdc.wal_level",
+					Severity: "error",
+					Message:  "wal_level = 'replica'",
+				}},
 			}},
-		}},
-	}
+		}
 
-	type fullErrorBody struct {
-		Code    string                     `json:"code"`
-		Message string                     `json:"message"`
-		Details transport.ValidateResponse `json:"details"`
-	}
+		type fullErrorBody struct {
+			Code    string                     `json:"code"`
+			Message string                     `json:"message"`
+			Details transport.ValidateResponse `json:"details"`
+		}
 
-	wantBody := fullErrorBody{
-		Code:    "CONNECTOR_CONFIG_INVALID",
-		Message: "Connector configuration is invalid",
-		Details: wantDetails,
-	}
+		wantBody := fullErrorBody{
+			Code:    "CONNECTOR_CONFIG_INVALID",
+			Message: "Connector configuration is invalid",
+			Details: wantDetails,
+		}
 
-	connectorsService := NewMockConnectorsService(t)
-	connectorsService.EXPECT().
-		ValidateConnector(mock.Anything, "p", mock.Anything).
-		Return(invalidReport, nil).
-		Once()
+		connectorsService := NewMockConnectorsService(a.T())
+		connectorsService.EXPECT().
+			ValidateConnector(mock.Anything, "p", mock.Anything).
+			Return(invalidReport, nil).
+			Once()
 
-	handler := newTestHandler(connectorsService)
+		handler := newTestHandler(connectorsService)
 
-	body := `{
+		body := `{
 		"plugin_type": "p",
 		"name": "n",
 		"config": {"a": "b"}
 	}`
 
-	rec := httptest.NewRecorder()
-	rw := core_http_response.NewResponseWriter(rec)
+		rec := httptest.NewRecorder()
+		rw := core_http_response.NewResponseWriter(rec)
 
-	handler.ValidateConnector(rw, newValidateRequest(t, body, "application/json"))
+		a.Attachment("config.json", []byte(body), "application/json")
 
-	must.Equal(http.StatusBadRequest, rec.Code)
-	must.Equal("application/json", rec.Header().Get("Content-Type"))
+		handler.ValidateConnector(rw, newValidateRequest(a.T(), body, "application/json"))
+		a.Attachment("response.json", rec.Body.Bytes(), "application/json")
 
-	var got fullErrorBody
+		must.Equal(http.StatusBadRequest, rec.Code)
+		must.Equal("application/json", rec.Header().Get("Content-Type"))
 
-	must.NoError(json.Unmarshal(rec.Body.Bytes(), &got))
-	must.Equal(wantBody, got)
+		var got fullErrorBody
+
+		must.NoError(json.Unmarshal(rec.Body.Bytes(), &got))
+		must.Equal(wantBody, got)
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Validate connector"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

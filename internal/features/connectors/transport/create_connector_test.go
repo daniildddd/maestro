@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allureassert "github.com/allure-framework/allure-go/testify/assert"
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -16,10 +17,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestConnectorsHTTPHandler_CreateConnector(t *testing.T) {
-	t.Parallel()
-
-	validBody := `{
+func TestConnectorsHTTPHandler_CreateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "create connector", func(a *gotest.Context) {
+		validBody := `{
 		"name": "pg-connector",
 		"config": {
 			"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
@@ -27,168 +27,174 @@ func TestConnectorsHTTPHandler_CreateConnector(t *testing.T) {
 		}
 	}`
 
-	tests := []struct {
-		name        string
-		body        string
-		contentType *string
-		setupMock   func(m *MockConnectorsService)
-		wantStatus  int
-		wantCode    string
-		wantBody    transport.ConnectorCreateResponse
-	}{
-		{
-			name: "success returns created connector",
-			body: validBody,
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					CreateConnector(mock.Anything, "pg-connector", mock.Anything).
-					Return(domain.Connector{
-						Name:       "pg-connector",
-						PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-						Config: domain.SourceConfig{
-							Hostname:   "pg-1",
-							Port:       "5432",
-							User:       "debezium",
-							DBName:     new("postgres"),
-							PluginName: new("pgoutput"),
-						},
-						Status:     domain.ConnectorStatusStarting,
-						TasksCount: 0,
-						Tasks:      []domain.Task{},
-					}, nil).
-					Once()
-			},
-			wantStatus: http.StatusCreated,
-			wantBody: transport.ConnectorCreateResponse{
-				Name:       "pg-connector",
-				PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-				Status:     "starting",
-				Config: transport.SourceConfigDTO{
-					DatabaseHostname: "pg-1",
-					DatabasePort:     "5432",
-					DatabaseUser:     "debezium",
-					DatabaseDBName:   new("postgres"),
-					PluginName:       new("pgoutput"),
+		tests := []struct {
+			name        string
+			body        string
+			contentType *string
+			setupMock   func(m *MockConnectorsService)
+			wantStatus  int
+			wantCode    string
+			wantBody    transport.ConnectorCreateResponse
+		}{
+			{
+				name: "success returns created connector",
+				body: validBody,
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						CreateConnector(mock.Anything, "pg-connector", mock.Anything).
+						Return(domain.Connector{
+							Name:       "pg-connector",
+							PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+							Config: domain.SourceConfig{
+								Hostname:   "pg-1",
+								Port:       "5432",
+								User:       "debezium",
+								DBName:     new("postgres"),
+								PluginName: new("pgoutput"),
+							},
+							Status:     domain.ConnectorStatusStarting,
+							TasksCount: 0,
+							Tasks:      []domain.Task{},
+						}, nil).
+						Once()
 				},
-				TasksCount: 0,
-				Tasks:      []transport.TaskResponse{},
+				wantStatus: http.StatusCreated,
+				wantBody: transport.ConnectorCreateResponse{
+					Name:       "pg-connector",
+					PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+					Status:     "starting",
+					Config: transport.SourceConfigDTO{
+						DatabaseHostname: "pg-1",
+						DatabasePort:     "5432",
+						DatabaseUser:     "debezium",
+						DatabaseDBName:   new("postgres"),
+						PluginName:       new("pgoutput"),
+					},
+					TasksCount: 0,
+					Tasks:      []transport.TaskResponse{},
+				},
 			},
-		},
-		{
-			name: "empty name returns validation error",
-			body: `{
+			{
+				name: "empty name returns validation error",
+				body: `{
 				"name": "",
 				"config": {"a": "b"}
 			}`,
-			setupMock:  func(_ *MockConnectorsService) {},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "VALIDATION_FAILED",
-		},
-		{
-			name: "empty config returns validation error",
-			body: `{
+				setupMock:  func(_ *MockConnectorsService) {},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "VALIDATION_FAILED",
+			},
+			{
+				name: "empty config returns validation error",
+				body: `{
 				"name": "pg-connector",
 				"config": {}
 			}`,
-			setupMock:  func(_ *MockConnectorsService) {},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "VALIDATION_FAILED",
-		},
-		{
-			name:       "malformed json returns error",
-			body:       "{invalid",
-			setupMock:  func(_ *MockConnectorsService) {},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_REQUEST_BODY",
-		},
-		{
-			name: "unknown field returns INVALID_REQUEST_BODY",
-			body: `{
+				setupMock:  func(_ *MockConnectorsService) {},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "VALIDATION_FAILED",
+			},
+			{
+				name:       "malformed json returns error",
+				body:       "{invalid",
+				setupMock:  func(_ *MockConnectorsService) {},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_REQUEST_BODY",
+			},
+			{
+				name: "unknown field returns INVALID_REQUEST_BODY",
+				body: `{
 				"name": "pg-connector",
 				"config": {"a": "b"},
 				"extra": 1
 			}`,
-			setupMock:  func(_ *MockConnectorsService) {},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_REQUEST_BODY",
-		},
-		{
-			name: "missing content type returns INVALID_CONTENT_TYPE",
-			body: `{
-				"name": "pg-connector",
-				"config": {"a": "b"}
-			}`,
-			contentType: new(""),
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_CONTENT_TYPE",
-		},
-		{
-			name: "wrong content type returns INVALID_CONTENT_TYPE",
-			body: `{
-				"name": "pg-connector",
-				"config": {"a": "b"}
-			}`,
-			contentType: new("text/plain"),
-			setupMock:   func(_ *MockConnectorsService) {},
-			wantStatus:  http.StatusBadRequest,
-			wantCode:    "INVALID_CONTENT_TYPE",
-		},
-		{
-			name: "service error returns CONNECTOR_ALREADY_EXISTS",
-			body: validBody,
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					CreateConnector(mock.Anything, "pg-connector", mock.Anything).
-					Return(domain.Connector{}, errs.ErrConnectorAlreadyExists).
-					Once()
+				setupMock:  func(_ *MockConnectorsService) {},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_REQUEST_BODY",
 			},
-			wantStatus: http.StatusConflict,
-			wantCode:   "CONNECTOR_ALREADY_EXISTS",
-		},
-	}
+			{
+				name: "missing content type returns INVALID_CONTENT_TYPE",
+				body: `{
+				"name": "pg-connector",
+				"config": {"a": "b"}
+			}`,
+				contentType: new(""),
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "INVALID_CONTENT_TYPE",
+			},
+			{
+				name: "wrong content type returns INVALID_CONTENT_TYPE",
+				body: `{
+				"name": "pg-connector",
+				"config": {"a": "b"}
+			}`,
+				contentType: new("text/plain"),
+				setupMock:   func(_ *MockConnectorsService) {},
+				wantStatus:  http.StatusBadRequest,
+				wantCode:    "INVALID_CONTENT_TYPE",
+			},
+			{
+				name: "service error returns CONNECTOR_ALREADY_EXISTS",
+				body: validBody,
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						CreateConnector(mock.Anything, "pg-connector", mock.Anything).
+						Return(domain.Connector{}, errs.ErrConnectorAlreadyExists).
+						Once()
+				},
+				wantStatus: http.StatusConflict,
+				wantCode:   "CONNECTOR_ALREADY_EXISTS",
+			},
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				is := allureassert.New(a)
+				must := allurerequire.New(a)
 
-			is := assert.New(t)
-			must := require.New(t)
+				connectorsService := NewMockConnectorsService(a.T())
+				tt.setupMock(connectorsService)
 
-			connectorsService := NewMockConnectorsService(t)
-			tt.setupMock(connectorsService)
+				handler := newTestHandler(connectorsService)
 
-			handler := newTestHandler(connectorsService)
+				rec := httptest.NewRecorder()
+				rw := core_http_response.NewResponseWriter(rec)
 
-			rec := httptest.NewRecorder()
-			rw := core_http_response.NewResponseWriter(rec)
-
-			req := newConnectorsRequest(t, http.MethodPost, "/connectors", tt.body)
-			if tt.contentType != nil {
-				if *tt.contentType == "" {
-					req.Header.Del("Content-Type")
-				} else {
-					req.Header.Set("Content-Type", *tt.contentType)
+				req := newConnectorsRequest(a.T(), http.MethodPost, "/connectors", tt.body)
+				if tt.contentType != nil {
+					if *tt.contentType == "" {
+						req.Header.Del("Content-Type")
+					} else {
+						req.Header.Set("Content-Type", *tt.contentType)
+					}
 				}
-			}
 
-			handler.CreateConnector(rw, req)
+				a.Attachment("config.json", []byte(tt.body), "application/json")
+				handler.CreateConnector(rw, req)
+				a.Attachment("response.json", rec.Body.Bytes(), "application/json")
 
-			must.Equal(tt.wantStatus, rec.Code)
+				must.Equal(tt.wantStatus, rec.Code)
 
-			if tt.wantCode != "" {
-				var body errorResponseBody
+				if tt.wantCode != "" {
+					var body errorResponseBody
+
+					must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+					is.Equal(tt.wantCode, body.Code)
+
+					return
+				}
+
+				var body transport.ConnectorCreateResponse
 
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-				is.Equal(tt.wantCode, body.Code)
-
-				return
-			}
-
-			var body transport.ConnectorCreateResponse
-
-			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-			is.Equal(tt.wantBody, body)
-		})
-	}
+				is.Equal(tt.wantBody, body)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Create connector"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

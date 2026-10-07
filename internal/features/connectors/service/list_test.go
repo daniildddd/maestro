@@ -5,8 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -15,136 +16,139 @@ import (
 
 var errSourceDown = errors.New("source down")
 
-func TestConnectorsService_GetConnectors(t *testing.T) {
-	t.Parallel()
+func TestConnectorsService_GetConnectors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+	gotest.Test(t, "list connectors", func(a *gotest.Context) {
+		pgConnector := domain.Connector{
+			Name:       "pg-connector",
+			PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+			Status:     domain.ConnectorStatusRunning,
+			TasksCount: 1,
+		}
+		mysqlConnector := domain.Connector{
+			Name:       "mysql-connector",
+			PluginType: "io.debezium.connector.mysql.MySqlConnector",
+			Status:     domain.ConnectorStatusPaused,
+			TasksCount: 2,
+		}
+		exoticConnector := domain.Connector{
+			Name:       "exotic",
+			PluginType: "io.debezium.connector.vitess.VitessConnector",
+			Status:     domain.ConnectorStatusRunning,
+		}
 
-	pgConnector := domain.Connector{
-		Name:       "pg-connector",
-		PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-		Status:     domain.ConnectorStatusRunning,
-		TasksCount: 1,
-	}
-	mysqlConnector := domain.Connector{
-		Name:       "mysql-connector",
-		PluginType: "io.debezium.connector.mysql.MySqlConnector",
-		Status:     domain.ConnectorStatusPaused,
-		TasksCount: 2,
-	}
-	exoticConnector := domain.Connector{
-		Name:       "exotic",
-		PluginType: "io.debezium.connector.vitess.VitessConnector",
-		Status:     domain.ConnectorStatusRunning,
-	}
-
-	tests := []struct {
-		name      string
-		filter    *domain.ConnectorFilter
-		setupMock func(kc *MockKafkaConnect)
-		want      []domain.Connector
-		wantIs    error
-	}{
-		{
-			name:   "returns connectors as-is",
-			filter: mustFilter(t, 1, 20, "", ""),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return([]domain.Connector{pgConnector, exoticConnector}, nil).
-					Once()
+		tests := []struct {
+			name      string
+			filter    *domain.ConnectorFilter
+			setupMock func(kc *MockKafkaConnect)
+			want      []domain.Connector
+			wantIs    error
+		}{
+			{
+				name:   "returns connectors as-is",
+				filter: mustFilter(t, 1, 20, "", ""),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return([]domain.Connector{pgConnector, exoticConnector}, nil).
+						Once()
+				},
+				want: []domain.Connector{pgConnector, exoticConnector},
 			},
-			want: []domain.Connector{pgConnector, exoticConnector},
-		},
-		{
-			name:   "status filter keeps only matching connectors",
-			filter: mustFilter(t, 1, 20, domain.ConnectorStatusPaused, ""),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return([]domain.Connector{pgConnector, mysqlConnector}, nil).
-					Once()
+			{
+				name:   "status filter keeps only matching connectors",
+				filter: mustFilter(t, 1, 20, domain.ConnectorStatusPaused, ""),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return([]domain.Connector{pgConnector, mysqlConnector}, nil).
+						Once()
+				},
+				want: []domain.Connector{mysqlConnector},
 			},
-			want: []domain.Connector{mysqlConnector},
-		},
-		{
-			name:   "search matches name substring case-insensitively",
-			filter: mustFilter(t, 1, 20, "", "MYSQL"),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return([]domain.Connector{pgConnector, mysqlConnector}, nil).
-					Once()
+			{
+				name:   "search matches name substring case-insensitively",
+				filter: mustFilter(t, 1, 20, "", "MYSQL"),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return([]domain.Connector{pgConnector, mysqlConnector}, nil).
+						Once()
+				},
+				want: []domain.Connector{mysqlConnector},
 			},
-			want: []domain.Connector{mysqlConnector},
-		},
-		{
-			name:   "pagination slices filtered result",
-			filter: mustFilter(t, 2, 1, "", ""),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return([]domain.Connector{pgConnector, mysqlConnector}, nil).
-					Once()
+			{
+				name:   "pagination slices filtered result",
+				filter: mustFilter(t, 2, 1, "", ""),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return([]domain.Connector{pgConnector, mysqlConnector}, nil).
+						Once()
+				},
+				want: []domain.Connector{mysqlConnector},
 			},
-			want: []domain.Connector{mysqlConnector},
-		},
-		{
-			name:   "pagination beyond end returns empty list",
-			filter: mustFilter(t, 10, 20, "", ""),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return([]domain.Connector{pgConnector}, nil).
-					Once()
+			{
+				name:   "pagination beyond end returns empty list",
+				filter: mustFilter(t, 10, 20, "", ""),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return([]domain.Connector{pgConnector}, nil).
+						Once()
+				},
+				want: []domain.Connector{},
 			},
-			want: []domain.Connector{},
-		},
-		{
-			name:   "kafka connect unavailable maps to ErrKafkaConnectUnavailable",
-			filter: mustFilter(t, 1, 20, "", ""),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return(nil, domain.ErrKafkaConnectUnavailable).
-					Once()
+			{
+				name:   "kafka connect unavailable maps to ErrKafkaConnectUnavailable",
+				filter: mustFilter(t, 1, 20, "", ""),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return(nil, domain.ErrKafkaConnectUnavailable).
+						Once()
+				},
+				wantIs: errs.ErrKafkaConnectUnavailable,
 			},
-			wantIs: errs.ErrKafkaConnectUnavailable,
-		},
-		{
-			name:   "unexpected error passes through",
-			filter: mustFilter(t, 1, 20, "", ""),
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					GetConnectors(mock.Anything).
-					Return(nil, errSourceDown).
-					Once()
+			{
+				name:   "unexpected error passes through",
+				filter: mustFilter(t, 1, 20, "", ""),
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						GetConnectors(mock.Anything).
+						Return(nil, errSourceDown).
+						Once()
+				},
+				wantIs: errSourceDown,
 			},
-			wantIs: errSourceDown,
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				kc := NewMockKafkaConnect(a.T())
+				tt.setupMock(kc)
 
-			kc := NewMockKafkaConnect(t)
-			tt.setupMock(kc)
+				svc := service.NewConnectorsService(kc, noopAuditor{})
 
-			svc := service.NewConnectorsService(kc, noopAuditor{})
+				got, err := svc.GetConnectors(context.Background(), tt.filter)
 
-			got, err := svc.GetConnectors(context.Background(), tt.filter)
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
 
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
+					return
+				}
 
-				return
-			}
-
-			must.NoError(err)
-			must.Equal(tt.want, got)
-		})
-	}
+				must.NoError(err)
+				must.Equal(tt.want, got)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("List connectors"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
 
 func mustFilter(t *testing.T, page, limit int, status, search string) *domain.ConnectorFilter {

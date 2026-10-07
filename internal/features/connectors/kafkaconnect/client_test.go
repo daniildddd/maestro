@@ -135,7 +135,7 @@ func TestHTTPClient_Ping(t *testing.T) { //nolint:paralleltest // allure gotest.
 	)
 }
 
-func TestHTTPClient_Do(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_Do(t *testing.T) { //nolint:paralleltest,maintidx // allure owns subtests; table volume comes from per-case servers
 	gotest.Test(t, "http client do", func(a *gotest.Context) {
 		tests := []struct {
 			name string
@@ -317,6 +317,65 @@ func TestHTTPClient_Do(t *testing.T) { //nolint:paralleltest // allure gotest.Te
 					must.ErrorAs(err, &herr)
 					must.Equal(500, herr.StatusCode)
 					must.Equal("boom", herr.Body)
+				},
+			},
+			{
+				name: "client timeout aborts slow server",
+				run: func(a *gotest.Context) {
+					a.T().Helper()
+
+					must := allurerequire.New(a)
+
+					srv := httptest.NewServer(httpexchange.NewHandler(a.Context(), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+						time.Sleep(200 * time.Millisecond)
+
+						_, _ = w.Write([]byte(`{}`)) //nolint:errcheck // test response write
+					})))
+					a.T().Cleanup(srv.Close)
+
+					client := NewHTTPClient(Config{
+						BaseURL:           srv.URL,
+						Timeout:           50 * time.Millisecond,
+						RetryMaxAttempts:  1,
+						RetryInitialDelay: time.Millisecond,
+					}, plugins.NewRegistry(plugins.PostgresAdapter{}))
+
+					err := client.do(a.Context(), http.MethodGet, "/x", nil, nil)
+
+					must.Error(err)
+					must.ErrorIs(err, domain.ErrKafkaConnectUnavailable)
+					must.ErrorContains(err, "Client.Timeout exceeded")
+				},
+			},
+			{
+				name: "generous timeout lets slow server answer",
+				run: func(a *gotest.Context) {
+					a.T().Helper()
+
+					must := allurerequire.New(a)
+
+					srv := httptest.NewServer(httpexchange.NewHandler(a.Context(), http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+						time.Sleep(20 * time.Millisecond)
+
+						_, _ = w.Write([]byte(`{"name":"pg-connector"}`)) //nolint:errcheck // test response write
+					})))
+					a.T().Cleanup(srv.Close)
+
+					client := NewHTTPClient(Config{
+						BaseURL:           srv.URL,
+						Timeout:           5 * time.Second,
+						RetryMaxAttempts:  1,
+						RetryInitialDelay: time.Millisecond,
+					}, plugins.NewRegistry(plugins.PostgresAdapter{}))
+
+					var got struct {
+						Name string `json:"name"`
+					}
+
+					err := client.do(a.Context(), http.MethodGet, "/x", nil, &got)
+
+					must.NoError(err)
+					must.Equal("pg-connector", got.Name)
 				},
 			},
 		}

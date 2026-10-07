@@ -146,6 +146,18 @@ func TestConnectorsHTTPHandler_CreateConnector(t *testing.T) { //nolint:parallel
 				wantStatus: http.StatusConflict,
 				wantCode:   "CONNECTOR_ALREADY_EXISTS",
 			},
+			{
+				name: "service error returns REBALANCE_IN_PROGRESS",
+				body: validBody,
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						CreateConnector(mock.Anything, "pg-connector", mock.Anything).
+						Return(domain.Connector{}, errs.ErrRebalanceInProgress).
+						Once()
+				},
+				wantStatus: http.StatusServiceUnavailable,
+				wantCode:   "REBALANCE_IN_PROGRESS",
+			},
 		}
 
 		for _, tt := range tests {

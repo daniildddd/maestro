@@ -64,6 +64,18 @@ func TestConnectorsHTTPHandler_RestartConnectorTask(t *testing.T) { //nolint:par
 				wantStatus: http.StatusNotFound,
 				wantCode:   "NOT_FOUND",
 			},
+			{
+				name: "service error returns REBALANCE_IN_PROGRESS",
+				path: "/connectors/pg-connector/tasks/0/restart",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						RestartTask(mock.Anything, "pg-connector", 0).
+						Return(errs.ErrRebalanceInProgress).
+						Once()
+				},
+				wantStatus: http.StatusServiceUnavailable,
+				wantCode:   "REBALANCE_IN_PROGRESS",
+			},
 		}
 
 		for _, tt := range tests {

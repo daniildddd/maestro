@@ -122,3 +122,12 @@ packages:
       structname: "Mock{{.InterfaceName}}"
     interfaces:
       connectChecker:
+  github.com/daniildddd/maestro/internal/features/connectors/service:
+    config:
+      dir: "{{.InterfaceDir}}"
+      filename: "mocks_test.go"
+      pkgname: "service_test"
+      structname: "Mock{{.InterfaceName}}"
+    interfaces:
+      dbChecker:
+      KafkaConnect:

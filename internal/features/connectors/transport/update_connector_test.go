@@ -160,6 +160,19 @@ func TestConnectorsHTTPHandler_UpdateConnector(t *testing.T) { //nolint:parallel
 				wantStatus: http.StatusBadRequest,
 				wantCode:   "VALIDATION_FAILED",
 			},
+			{
+				name: "service error returns REBALANCE_IN_PROGRESS",
+				path: "/connectors/pg-connector",
+				body: validBody,
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						UpdateConnector(mock.Anything, "pg-connector", mock.Anything).
+						Return(domain.Connector{}, errs.ErrRebalanceInProgress).
+						Once()
+				},
+				wantStatus: http.StatusServiceUnavailable,
+				wantCode:   "REBALANCE_IN_PROGRESS",
+			},
 		}
 
 		for _, tt := range tests {

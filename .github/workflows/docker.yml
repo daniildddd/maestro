@@ -46,6 +46,9 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          # trivy-action unsets severity for SARIF unless this is true;
+          # without it UNKNOWN tzdata (DLA-4792-1) fails the gate.
+          limit-severities-for-sarif: true
 
       - name: Upload Trivy results to Security tab
         if: always()

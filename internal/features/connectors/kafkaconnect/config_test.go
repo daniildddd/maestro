@@ -12,7 +12,7 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
 )
 
-//nolint:paralleltest // allure gotest.Test owns subtest execution
+//nolint:paralleltest // t.Setenv is incompatible with t.Parallel (affects process-wide env)
 func TestNewConfigMust(t *testing.T) {
 	gotest.Test(t, "new config must", func(a *gotest.Context) {
 		a.Step("valid env returns config with parsed values", func(a *gotest.Context) {
@@ -120,7 +120,9 @@ func unsetAllKafkaConnectEnv(t *testing.T) {
 	}
 }
 
-func TestConfig_Validate(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConfig_Validate(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "config validate", func(a *gotest.Context) {
 		tests := []struct {
 			name    string

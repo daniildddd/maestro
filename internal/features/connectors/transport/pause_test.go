@@ -17,7 +17,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestConnectorsHTTPHandler_PauseConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_PauseConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "pause connector", func(a *gotest.Context) {
 		tests := []struct {
 			name       string

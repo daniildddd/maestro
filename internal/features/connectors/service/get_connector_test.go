@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsService_GetConnectorByID(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_GetConnectorByID(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector by id", func(a *gotest.Context) {
 		tests := []struct {
 			name      string

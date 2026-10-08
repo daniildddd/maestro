@@ -16,7 +16,9 @@ import (
 	core_http_response "github.com/daniildddd/maestro/internal/core/transport/response"
 )
 
-func TestConnectorsHTTPHandler_RestartConnectorTask(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_RestartConnectorTask(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "restart task", func(a *gotest.Context) {
 		tests := []struct {
 			name       string

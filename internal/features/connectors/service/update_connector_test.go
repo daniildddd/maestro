@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsService_UpdateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_UpdateConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "update connector", func(a *gotest.Context) {
 		config := map[string]string{
 			"connector.class":   postgresClass,

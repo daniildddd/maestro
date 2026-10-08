@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func TestHTTPClient_GetConnectors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connectors", func(a *gotest.Context) {
 		a.Step("list returns connectors of any engine without failures", func(a *gotest.Context) {
 			must := allurerequire.New(a)
@@ -185,7 +187,9 @@ func TestHTTPClient_GetConnectors(t *testing.T) { //nolint:paralleltest // allur
 	)
 }
 
-func TestHTTPClient_GetConnectorByID(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectorByID(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector by id", func(a *gotest.Context) {
 		must := allurerequire.New(a)
 
@@ -242,7 +246,9 @@ func TestHTTPClient_GetConnectorByID(t *testing.T) { //nolint:paralleltest // al
 	)
 }
 
-func TestHTTPClient_CreateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_CreateConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "create connector", func(a *gotest.Context) {
 		create := func(a *gotest.Context, handler func(w http.ResponseWriter, r *http.Request)) (domain.Connector, error) {
 			a.T().Helper()
@@ -384,7 +390,9 @@ func TestHTTPClient_CreateConnector(t *testing.T) { //nolint:paralleltest // all
 	)
 }
 
-func TestHTTPClient_UpdateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_UpdateConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "update connector", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -563,7 +571,9 @@ func TestHTTPClient_UpdateConnector(t *testing.T) { //nolint:paralleltest // all
 	)
 }
 
-func TestHTTPClient_PauseConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_PauseConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "pause connector", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -648,7 +658,9 @@ func TestHTTPClient_PauseConnector(t *testing.T) { //nolint:paralleltest // allu
 	)
 }
 
-func TestHTTPClient_ResumeConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_ResumeConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "resume connector", func(a *gotest.Context) {
 		must := allurerequire.New(a)
 
@@ -702,7 +714,9 @@ func TestHTTPClient_ResumeConnector(t *testing.T) { //nolint:paralleltest // all
 	)
 }
 
-func TestHTTPClient_RestartConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_RestartConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "restart connector", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -791,7 +805,9 @@ func TestHTTPClient_RestartConnector(t *testing.T) { //nolint:paralleltest // al
 	)
 }
 
-func TestHTTPClient_Delete(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_Delete(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "delete connector", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -872,7 +888,9 @@ func TestHTTPClient_Delete(t *testing.T) { //nolint:paralleltest // allure gotes
 	)
 }
 
-func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector by id errors", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -993,7 +1011,9 @@ func TestHTTPClient_GetConnectorByID_Errors(t *testing.T) { //nolint:paralleltes
 	)
 }
 
-func TestHTTPClient_CreateConnector_Validation(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_CreateConnector_Validation(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "create connector validation", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -1109,7 +1129,9 @@ func serveRestartRunning(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func TestHTTPClient_RestartConnector_TaskFlags(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_RestartConnector_TaskFlags(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "restart connector task flags", func(a *gotest.Context) {
 		tests := []struct {
 			name         string
@@ -1201,7 +1223,9 @@ func TestHTTPClient_RestartConnector_TaskFlags(t *testing.T) { //nolint:parallel
 	)
 }
 
-func TestHTTPClient_RestartConnector_RereadErrors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_RestartConnector_RereadErrors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "restart connector reread errors", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -1291,7 +1315,9 @@ func servePauseOK(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func TestHTTPClient_PauseConnector_Reread(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_PauseConnector_Reread(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "pause connector reread", func(a *gotest.Context) {
 		tests := []struct {
 			name string
@@ -1333,7 +1359,9 @@ func TestHTTPClient_PauseConnector_Reread(t *testing.T) { //nolint:paralleltest 
 	)
 }
 
-func TestHTTPClient_PauseConnector_RereadErrors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_PauseConnector_RereadErrors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "pause connector reread errors", func(a *gotest.Context) {
 		tests := []struct {
 			name    string

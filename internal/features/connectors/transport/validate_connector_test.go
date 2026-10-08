@@ -30,7 +30,9 @@ func newValidateRequest(t *testing.T, body, contentType string) *http.Request {
 	return req.WithContext(logger.ToContext(req.Context(), nopLogger()))
 }
 
-func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "validate connector", func(a *gotest.Context) {
 		validReport := domain.ValidationReport{
 			Valid: true,
@@ -291,7 +293,9 @@ func TestConnectorsHTTPHandler_ValidateConnector(t *testing.T) { //nolint:parall
 	)
 }
 
-func TestConnectorsHTTPHandler_ValidateConnector_InvalidFullBody(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_ValidateConnector_InvalidFullBody(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "validate connector full error body", func(a *gotest.Context) {
 		must := allurerequire.New(a)
 

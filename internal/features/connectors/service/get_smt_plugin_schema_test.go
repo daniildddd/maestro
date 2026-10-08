@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsService_GetSMTPluginSchema(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_GetSMTPluginSchema(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get smt plugin schema", func(a *gotest.Context) {
 		allFields := []domain.ConnectorPluginField{
 			{

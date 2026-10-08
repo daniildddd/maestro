@@ -17,7 +17,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestConnectorsHTTPHandler_GetConnectors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_GetConnectors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connectors", func(a *gotest.Context) {
 		pgConnector := domain.Connector{
 			Name:       "pg-connector",

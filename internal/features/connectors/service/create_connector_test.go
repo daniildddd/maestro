@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsService_CreateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_CreateConnector(t *testing.T) { //nolint:maintidx // table volume comes from per-case fixtures
+	t.Parallel()
+
 	gotest.Test(t, "create connector", func(a *gotest.Context) {
 		config := map[string]string{
 			"connector.class":   postgresClass,

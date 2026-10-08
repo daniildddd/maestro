@@ -11,7 +11,9 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func TestHTTPClient_GetTaskByID(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetTaskByID(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get task by id", func(a *gotest.Context) {
 		tests := []struct {
 			name       string
@@ -86,7 +88,9 @@ func TestHTTPClient_GetTaskByID(t *testing.T) { //nolint:paralleltest // allure 
 	)
 }
 
-func TestHTTPClient_RestartTask(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_RestartTask(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "restart task", func(a *gotest.Context) {
 		conflict := func(message string) http.HandlerFunc {
 			return func(w http.ResponseWriter, _ *http.Request) {

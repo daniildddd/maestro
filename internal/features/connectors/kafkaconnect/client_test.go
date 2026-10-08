@@ -17,7 +17,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
 
-func TestNewHTTPClient(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestNewHTTPClient(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "new http client", func(a *gotest.Context) {
 		must := allurerequire.New(a)
 
@@ -61,7 +63,9 @@ func (r errReader) Close() error {
 	return nil
 }
 
-func TestHTTPClient_Ping(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_Ping(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "http client ping", func(a *gotest.Context) {
 		tests := []struct {
 			name         string
@@ -135,7 +139,9 @@ func TestHTTPClient_Ping(t *testing.T) { //nolint:paralleltest // allure gotest.
 	)
 }
 
-func TestHTTPClient_Do(t *testing.T) { //nolint:paralleltest,maintidx // allure owns subtests; table volume comes from per-case servers
+func TestHTTPClient_Do(t *testing.T) { //nolint:maintidx // table volume comes from per-case servers
+	t.Parallel()
+
 	gotest.Test(t, "http client do", func(a *gotest.Context) {
 		tests := []struct {
 			name string
@@ -393,7 +399,9 @@ func TestHTTPClient_Do(t *testing.T) { //nolint:paralleltest,maintidx // allure 
 	)
 }
 
-func TestHTTPClient_WithRetry(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_WithRetry(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "http client retry", func(a *gotest.Context) {
 		tests := []struct {
 			name string
@@ -496,7 +504,9 @@ func TestHTTPClient_WithRetry(t *testing.T) { //nolint:paralleltest // allure go
 	)
 }
 
-func TestHTTPClient_RetryWait(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_RetryWait(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "http client retry wait", func(a *gotest.Context) {
 		tests := []struct {
 			name         string
@@ -561,7 +571,9 @@ func TestHTTPClient_RetryWait(t *testing.T) { //nolint:paralleltest // allure go
 	)
 }
 
-func TestBodyOf(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestBodyOf(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "body of", func(a *gotest.Context) {
 		tests := []struct {
 			name string

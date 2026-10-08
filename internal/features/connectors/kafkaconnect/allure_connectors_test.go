@@ -10,7 +10,9 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func TestAllureHTTPClient_GetConnectors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestAllureHTTPClient_GetConnectors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "list connectors captures connect exchange", func(a *gotest.Context) {
 		must := allurerequire.New(a)
 

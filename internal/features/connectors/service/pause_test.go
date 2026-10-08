@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/service"
 )
 
-func TestConnectorsService_PauseConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_PauseConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "pause connector", func(a *gotest.Context) {
 		tests := []struct {
 			name      string

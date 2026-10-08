@@ -16,7 +16,9 @@ import (
 
 var errSourceDown = errors.New("source down")
 
-func TestConnectorsService_GetConnectors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_GetConnectors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "list connectors", func(a *gotest.Context) {
 		pgConnector := domain.Connector{
 			Name:       "pg-connector",

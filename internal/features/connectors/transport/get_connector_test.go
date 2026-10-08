@@ -17,7 +17,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestConnectorsHTTPHandler_GetConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_GetConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector by id", func(a *gotest.Context) {
 		tests := []struct {
 			name       string

@@ -34,7 +34,9 @@ func (s checkerStub) Check(
 	return s.check(ctx, config)
 }
 
-func TestConnectorsService_ValidateConnector(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsService_ValidateConnector(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "validate connector", func(a *gotest.Context) {
 		config := map[string]string{"database.hostname": "pg-1"}
 

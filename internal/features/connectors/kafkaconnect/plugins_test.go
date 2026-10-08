@@ -10,7 +10,9 @@ import (
 	"github.com/daniildddd/maestro/internal/core/domain"
 )
 
-func TestHTTPClient_GetConnectorPlugins(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectorPlugins(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector plugins", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -92,7 +94,9 @@ func TestHTTPClient_GetConnectorPlugins(t *testing.T) { //nolint:paralleltest //
 	)
 }
 
-func TestHTTPClient_GetSMTPlugins(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetSMTPlugins(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get smt plugins", func(a *gotest.Context) {
 		tests := []struct {
 			name       string
@@ -168,7 +172,9 @@ func TestHTTPClient_GetSMTPlugins(t *testing.T) { //nolint:paralleltest // allur
 	)
 }
 
-func TestHTTPClient_GetConnectorPluginSchema(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectorPluginSchema(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector plugin schema", func(a *gotest.Context) {
 		tests := []struct {
 			name     string
@@ -316,7 +322,9 @@ func TestHTTPClient_GetConnectorPluginSchema(t *testing.T) { //nolint:parallelte
 	)
 }
 
-func TestHTTPClient_GetConnectorPluginSchemaWithValues(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectorPluginSchemaWithValues(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector plugin schema with values", func(a *gotest.Context) {
 		must := allurerequire.New(a)
 
@@ -379,7 +387,9 @@ func TestHTTPClient_GetConnectorPluginSchemaWithValues(t *testing.T) { //nolint:
 	)
 }
 
-func TestHTTPClient_ValidateConfig(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_ValidateConfig(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "validate config", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -507,7 +517,9 @@ func TestHTTPClient_ValidateConfig(t *testing.T) { //nolint:paralleltest // allu
 	)
 }
 
-func TestHTTPClient_GetConnectorPluginSchemaWithValues_Errors(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_GetConnectorPluginSchemaWithValues_Errors(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector plugin schema with values errors", func(a *gotest.Context) {
 		tests := []struct {
 			name    string
@@ -623,7 +635,9 @@ func TestHTTPClient_GetConnectorPluginSchemaWithValues_Errors(t *testing.T) { //
 	)
 }
 
-func TestHTTPClient_ValidateConfig_EmptyError(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestHTTPClient_ValidateConfig_EmptyError(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "validate config empty error", func(a *gotest.Context) {
 		tests := []struct {
 			name    string

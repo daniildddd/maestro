@@ -17,7 +17,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestConnectorsHTTPHandler_GetConnectorPlugins(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_GetConnectorPlugins(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "get connector plugins", func(a *gotest.Context) {
 		plugins := []domain.ConnectorPlugin{
 			{

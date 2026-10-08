@@ -12,7 +12,9 @@ import (
 	"github.com/daniildddd/maestro/internal/features/connectors/transport"
 )
 
-func TestConnectorsHTTPHandler_PrivateRoutes(t *testing.T) { //nolint:paralleltest // allure gotest.Test owns subtest execution
+func TestConnectorsHTTPHandler_PrivateRoutes(t *testing.T) {
+	t.Parallel()
+
 	gotest.Test(t, "connector routes", func(a *gotest.Context) {
 		a.Step("private routes are registered with user and admin roles", func(a *gotest.Context) {
 			is := allureassert.New(a)

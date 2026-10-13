@@ -187,7 +187,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\"config\": {\"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"database.dbname\": \"testdb\", \"database.hostname\": \"localhost\", \"database.password\": \"postgres\", \"database.port\": \"5432\", \"database.user\": \"postgres\", \"key.converter\": \"org.apache.kafka.connect.json.JsonConverter\", \"plugin.name\": \"pgoutput\", \"transforms\": \"unwrap\", \"transforms.unwrap.type\": \"io.debezium.transforms.ExtractNewRecordState\", \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\"}, \"name\": \"{{connectorName}}\"}"
+              "raw": "{\"config\": {\"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"database.dbname\": \"testdb\", \"database.hostname\": \"localhost\", \"database.password\": \"{{dbPassword}}\", \"database.port\": \"5432\", \"database.user\": \"postgres\", \"key.converter\": \"org.apache.kafka.connect.json.JsonConverter\", \"plugin.name\": \"pgoutput\", \"transforms\": \"unwrap\", \"transforms.unwrap.type\": \"io.debezium.transforms.ExtractNewRecordState\", \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\"}, \"name\": \"{{connectorName}}\"}"
             },
             "header": [
               {
@@ -273,7 +273,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\"config\": {\"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"database.dbname\": \"testdb\", \"database.hostname\": \"localhost\", \"database.password\": \"postgres\", \"database.port\": \"5432\", \"database.user\": \"postgres\", \"plugin.name\": \"pgoutput\"}, \"name\": \"{{connectorName}}\", \"plugin_type\": \"io.debezium.connector.postgresql.PostgresConnector\"}"
+              "raw": "{\"config\": {\"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"database.dbname\": \"testdb\", \"database.hostname\": \"localhost\", \"database.password\": \"{{dbPassword}}\", \"database.port\": \"5432\", \"database.user\": \"postgres\", \"plugin.name\": \"pgoutput\"}, \"name\": \"{{connectorName}}\", \"plugin_type\": \"io.debezium.connector.postgresql.PostgresConnector\"}"
             },
             "header": [
               {
@@ -323,7 +323,7 @@
                   "language": "json"
                 }
               },
-              "raw": "{\"config\": {\"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"database.dbname\": \"postgres\", \"database.hostname\": \"new-host\", \"database.password\": \"********\", \"database.port\": \"5432\", \"database.user\": \"postgres\", \"plugin.name\": \"pgoutput\", \"table.include.list\": \"public.users\", \"transforms\": \"unwrap\", \"transforms.unwrap.type\": \"io.debezium.transforms.ExtractNewRecordState\"}}"
+              "raw": "{\"config\": {\"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\", \"database.dbname\": \"postgres\", \"database.hostname\": \"new-host\", \"database.password\": \"{{dbPassword}}\", \"database.port\": \"5432\", \"database.user\": \"postgres\", \"plugin.name\": \"pgoutput\", \"table.include.list\": \"public.users\", \"transforms\": \"unwrap\", \"transforms.unwrap.type\": \"io.debezium.transforms.ExtractNewRecordState\"}}"
             },
             "header": [
               {
@@ -727,6 +727,10 @@
     {
       "key": "connectorName",
       "value": "pg-connector"
+    },
+    {
+      "key": "dbPassword",
+      "value": "postgres"
     }
   ]
 }

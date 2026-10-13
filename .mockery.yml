@@ -66,8 +66,6 @@ packages:
             pkgname: repository_test
           - dir: internal/features/audit/repository
             pkgname: repository_test
-          - dir: internal/core/transport/health
-            pkgname: health_test
       Tx:
         configs:
           - dir: internal/features/auth/repository
@@ -80,8 +78,6 @@ packages:
             pkgname: repository_test
           - dir: internal/features/audit/repository
             pkgname: repository_test
-          - dir: internal/core/transport/health
-            pkgname: health_test
       Rows:
         configs:
           - dir: internal/features/users/repository

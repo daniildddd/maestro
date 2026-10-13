@@ -8,6 +8,7 @@
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![test](https://github.com/daniildddd/maestro/actions/workflows/test.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/test.yml)
 [![lint](https://github.com/daniildddd/maestro/actions/workflows/lint.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/lint.yml)
+[![coverage](https://github.com/daniildddd/maestro/actions/workflows/test.yml/badge.svg)](https://github.com/daniildddd/maestro/actions/workflows/test.yml)
 
 Maestro is a control plane for Debezium CDC connectors running on Kafka Connect.
 It wraps the Kafka Connect REST API with an authenticated backend, a web console,

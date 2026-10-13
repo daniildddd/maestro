@@ -51,7 +51,9 @@ CI mirrors this: `test.yml` (unit), `integration.yml` (testcontainers),
 
 Formal cases live in [`test-cases.md`](test-cases.md): `TC-<area>-<NN>`
 (`CONN`, `AUTH`, `AUDIT`, `DBCHECK`, `USERS`), priority
-`smoke` ⊂ `critical path` ⊂ `extended`.
+`smoke` ⊂ `critical path` ⊂ `extended`. Manual HTTP counterpart of `TC-CONN-*`:
+[`postman/maestro-connectors.postman_collection.json`](../../postman/maestro-connectors.postman_collection.json)
+(import with `postman/local.postman_environment.json`).
 
 ## Entry/exit criteria
 

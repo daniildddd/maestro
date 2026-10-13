@@ -3,8 +3,9 @@ package service_test
 import (
 	"testing"
 
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -14,82 +15,87 @@ import (
 func TestConnectorsService_RestartTask(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name      string
-		setupMock func(kc *MockKafkaConnect)
-		wantIs    error
-	}{
-		{
-			name: "success restarts task",
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					RestartTask(mock.Anything, "pg-connector", 0).
-					Return(nil).
-					Once()
+	gotest.Test(t, "restart connector task", func(a *gotest.Context) {
+		tests := []struct {
+			name      string
+			setupMock func(kc *MockKafkaConnect)
+			wantIs    error
+		}{
+			{
+				name: "success restarts task",
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						RestartTask(mock.Anything, "pg-connector", 0).
+						Return(nil).
+						Once()
+				},
 			},
-		},
-		{
-			name: "missing task maps to ErrConnectorTaskNotFound",
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					RestartTask(mock.Anything, "pg-connector", 0).
-					Return(domain.ErrConnectorTaskNotFound).
-					Once()
+			{
+				name: "missing task maps to ErrConnectorTaskNotFound",
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						RestartTask(mock.Anything, "pg-connector", 0).
+						Return(domain.ErrConnectorTaskNotFound).
+						Once()
+				},
+				wantIs: errs.ErrConnectorTaskNotFound,
 			},
-			wantIs: errs.ErrConnectorTaskNotFound,
-		},
-		{
-			name: "rebalance maps to ErrRebalanceInProgress",
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					RestartTask(mock.Anything, "pg-connector", 0).
-					Return(domain.ErrRebalanceInProgress).
-					Once()
+			{
+				name: "rebalance maps to ErrRebalanceInProgress",
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						RestartTask(mock.Anything, "pg-connector", 0).
+						Return(domain.ErrRebalanceInProgress).
+						Once()
+				},
+				wantIs: errs.ErrRebalanceInProgress,
 			},
-			wantIs: errs.ErrRebalanceInProgress,
-		},
-		{
-			name: "connect unavailable maps to ErrKafkaConnectUnavailable",
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					RestartTask(mock.Anything, "pg-connector", 0).
-					Return(domain.ErrKafkaConnectUnavailable).
-					Once()
+			{
+				name: "connect unavailable maps to ErrKafkaConnectUnavailable",
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						RestartTask(mock.Anything, "pg-connector", 0).
+						Return(domain.ErrKafkaConnectUnavailable).
+						Once()
+				},
+				wantIs: errs.ErrKafkaConnectUnavailable,
 			},
-			wantIs: errs.ErrKafkaConnectUnavailable,
-		},
-		{
-			name: "unexpected error passes through wrapped",
-			setupMock: func(kc *MockKafkaConnect) {
-				kc.EXPECT().
-					RestartTask(mock.Anything, "pg-connector", 0).
-					Return(errSourceDown).
-					Once()
+			{
+				name: "unexpected error passes through wrapped",
+				setupMock: func(kc *MockKafkaConnect) {
+					kc.EXPECT().
+						RestartTask(mock.Anything, "pg-connector", 0).
+						Return(errSourceDown).
+						Once()
+				},
+				wantIs: errSourceDown,
 			},
-			wantIs: errSourceDown,
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				must := allurerequire.New(a)
 
-			must := require.New(t)
+				kc := NewMockKafkaConnect(a.T())
+				tt.setupMock(kc)
 
-			kc := NewMockKafkaConnect(t)
-			tt.setupMock(kc)
+				svc := service.NewConnectorsService(kc, noopAuditor{})
 
-			svc := service.NewConnectorsService(kc, noopAuditor{})
+				err := svc.RestartTask(testCtx(), "pg-connector", 0)
 
-			err := svc.RestartTask(testCtx(), "pg-connector", 0)
+				if tt.wantIs != nil {
+					must.ErrorIs(err, tt.wantIs)
 
-			if tt.wantIs != nil {
-				must.ErrorIs(err, tt.wantIs)
+					return
+				}
 
-				return
-			}
-
-			must.NoError(err)
-		})
-	}
+				must.NoError(err)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Restart connector task"),
+		gotest.WithSeverity("critical"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

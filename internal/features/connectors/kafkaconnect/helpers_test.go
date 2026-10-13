@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	"github.com/allure-framework/allure-go/commons/httpexchange"
+
 	"github.com/daniildddd/maestro/internal/features/connectors/kafkaconnect"
 	"github.com/daniildddd/maestro/internal/features/connectors/plugins"
 )
@@ -16,29 +19,6 @@ const (
 	defaultTestTimeout = time.Second
 	retryDelayUnit     = time.Millisecond
 )
-
-func newTestClient(t *testing.T, handler http.HandlerFunc) *kafkaconnect.HTTPClient {
-	t.Helper()
-
-	srv := httptest.NewServer(handler)
-	t.Cleanup(srv.Close)
-
-	return kafkaconnect.NewHTTPClient(
-		kafkaconnect.Config{
-			BaseURL:           srv.URL,
-			Timeout:           time.Second,
-			RetryMaxAttempts:  3,
-			RetryInitialDelay: 5 * time.Millisecond,
-		},
-		plugins.NewRegistry(
-			plugins.PostgresAdapter{},
-			plugins.MySQLAdapter{},
-			plugins.MongoDBAdapter{},
-			plugins.SQLServerAdapter{},
-			plugins.OracleAdapter{},
-		),
-	)
-}
 
 func newTestClientOnServer(t *testing.T, srv *httptest.Server) *kafkaconnect.HTTPClient {
 	t.Helper()
@@ -58,6 +38,15 @@ func newTestClientOnServer(t *testing.T, srv *httptest.Server) *kafkaconnect.HTT
 			plugins.OracleAdapter{},
 		),
 	)
+}
+
+func newAllureTestServer(a *gotest.Context, handler http.Handler) *httptest.Server {
+	a.T().Helper()
+
+	srv := httptest.NewServer(httpexchange.NewHandler(a.Context(), handler))
+	a.T().Cleanup(srv.Close)
+
+	return srv
 }
 
 func serveUpdateProbe(t *testing.T, w http.ResponseWriter, r *http.Request) bool {
@@ -182,19 +171,19 @@ func newExpansion(class, state string, config map[string]string) expansion {
 	return e
 }
 
-func runRestartTask(ctx context.Context, t *testing.T, handler http.HandlerFunc) (int, error) {
-	t.Helper()
+//nolint:contextcheck // context comes from the caller step; creating it here would detach cancellation
+func runRestartTask(ctx context.Context, a *gotest.Context, handler http.HandlerFunc) (int, error) {
+	a.T().Helper()
 
 	attempts := 0
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := newAllureTestServer(a, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
 
 		handler(w, r)
 	}))
-	t.Cleanup(srv.Close)
 
-	client := newTestClientOnServer(t, srv)
+	client := newTestClientOnServer(a.T(), srv)
 
 	return attempts, client.RestartTask(ctx, "pg-connector", 0)
 }

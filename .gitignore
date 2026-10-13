@@ -29,3 +29,6 @@ web/node_modules/
 web/dist/
 web/*.local
 web/*.tsbuildinfo
+
+/**/allure-results/
+/**/allure-report/

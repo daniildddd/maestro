@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allureassert "github.com/allure-framework/allure-go/testify/assert"
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -19,114 +20,120 @@ import (
 func TestConnectorsHTTPHandler_GetConnectors(t *testing.T) {
 	t.Parallel()
 
-	pgConnector := domain.Connector{
-		Name:       "pg-connector",
-		PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-		Status:     domain.ConnectorStatusRunning,
-		TasksCount: 1,
-	}
+	gotest.Test(t, "get connectors", func(a *gotest.Context) {
+		pgConnector := domain.Connector{
+			Name:       "pg-connector",
+			PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+			Status:     domain.ConnectorStatusRunning,
+			TasksCount: 1,
+		}
 
-	tests := []struct {
-		name       string
-		query      string
-		setupMock  func(m *MockConnectorsService)
-		wantStatus int
-		wantCode   string
-		wantBody   transport.ConnectorListResponse
-	}{
-		{
-			name:  "success returns connectors with meta and total",
-			query: "page=1&limit=10",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					GetConnectors(mock.Anything, mock.Anything).
-					Return([]domain.Connector{pgConnector}, nil).
-					Once()
-			},
-			wantStatus: http.StatusOK,
-			wantBody: transport.ConnectorListResponse{
-				Data: []transport.ConnectorResponse{
-					{
-						Name:       "pg-connector",
-						PluginType: "io.debezium.connector.postgresql.PostgresConnector",
-						Status:     "running",
-						TasksCount: 1,
-					},
+		tests := []struct {
+			name       string
+			query      string
+			setupMock  func(m *MockConnectorsService)
+			wantStatus int
+			wantCode   string
+			wantBody   transport.ConnectorListResponse
+		}{
+			{
+				name:  "success returns connectors with meta and total",
+				query: "page=1&limit=10",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						GetConnectors(mock.Anything, mock.Anything).
+						Return([]domain.Connector{pgConnector}, nil).
+						Once()
 				},
-				Meta:  transport.Meta{Page: 1, Limit: 10},
-				Total: 1,
+				wantStatus: http.StatusOK,
+				wantBody: transport.ConnectorListResponse{
+					Data: []transport.ConnectorResponse{
+						{
+							Name:       "pg-connector",
+							PluginType: "io.debezium.connector.postgresql.PostgresConnector",
+							Status:     "running",
+							TasksCount: 1,
+						},
+					},
+					Meta:  transport.Meta{Page: 1, Limit: 10},
+					Total: 1,
+				},
 			},
-		},
-		{
-			name:  "invalid page returns error",
-			query: "page=abc",
-			setupMock: func(_ *MockConnectorsService) {
+			{
+				name:  "invalid page returns error",
+				query: "page=abc",
+				setupMock: func(_ *MockConnectorsService) {
+				},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_QUERY_PARAM",
 			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_QUERY_PARAM",
-		},
-		{
-			name:  "invalid limit returns error",
-			query: "limit=abc",
-			setupMock: func(_ *MockConnectorsService) {
+			{
+				name:  "invalid limit returns error",
+				query: "limit=abc",
+				setupMock: func(_ *MockConnectorsService) {
+				},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_QUERY_PARAM",
 			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_QUERY_PARAM",
-		},
-		{
-			name:  "invalid status filter returns error",
-			query: "page=1&limit=10&status=bogus",
-			setupMock: func(_ *MockConnectorsService) {
+			{
+				name:  "invalid status filter returns error",
+				query: "page=1&limit=10&status=bogus",
+				setupMock: func(_ *MockConnectorsService) {
+				},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_QUERY_PARAM",
 			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_QUERY_PARAM",
-		},
-		{
-			name:  "service error returns KAFKA_CONNECT_UNAVAILABLE",
-			query: "page=1&limit=10",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					GetConnectors(mock.Anything, mock.Anything).
-					Return(nil, errs.ErrKafkaConnectUnavailable).
-					Once()
+			{
+				name:  "service error returns KAFKA_CONNECT_UNAVAILABLE",
+				query: "page=1&limit=10",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						GetConnectors(mock.Anything, mock.Anything).
+						Return(nil, errs.ErrKafkaConnectUnavailable).
+						Once()
+				},
+				wantStatus: http.StatusServiceUnavailable,
+				wantCode:   "KAFKA_CONNECT_UNAVAILABLE",
 			},
-			wantStatus: http.StatusServiceUnavailable,
-			wantCode:   "KAFKA_CONNECT_UNAVAILABLE",
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				is := allureassert.New(a)
+				must := allurerequire.New(a)
 
-			is := assert.New(t)
-			must := require.New(t)
+				connectorsService := NewMockConnectorsService(a.T())
+				tt.setupMock(connectorsService)
 
-			connectorsService := NewMockConnectorsService(t)
-			tt.setupMock(connectorsService)
+				handler := newTestHandler(connectorsService)
 
-			handler := newTestHandler(connectorsService)
+				rec := httptest.NewRecorder()
+				rw := core_http_response.NewResponseWriter(rec)
 
-			rec := httptest.NewRecorder()
-			rw := core_http_response.NewResponseWriter(rec)
+				handler.GetConnectors(rw, newConnectorsRequest(a.T(), http.MethodGet, "/connectors?"+tt.query, ""))
+				a.Attachment("response.json", rec.Body.Bytes(), "application/json")
 
-			handler.GetConnectors(rw, newConnectorsRequest(t, http.MethodGet, "/connectors?"+tt.query, ""))
+				must.Equal(tt.wantStatus, rec.Code)
 
-			must.Equal(tt.wantStatus, rec.Code)
+				if tt.wantCode != "" {
+					var body errorResponseBody
 
-			if tt.wantCode != "" {
-				var body errorResponseBody
+					must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+					is.Equal(tt.wantCode, body.Code)
+
+					return
+				}
+
+				var body transport.ConnectorListResponse
 
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-				is.Equal(tt.wantCode, body.Code)
-
-				return
-			}
-
-			var body transport.ConnectorListResponse
-
-			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-			is.Equal(tt.wantBody, body)
-		})
-	}
+				is.Equal(tt.wantBody, body)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Get connectors"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

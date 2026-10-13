@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allureassert "github.com/allure-framework/allure-go/testify/assert"
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -19,79 +20,85 @@ import (
 func TestConnectorsHTTPHandler_GetSMTPlugins(t *testing.T) {
 	t.Parallel()
 
-	plugins := []domain.ConnectorPlugin{
-		{
-			ID: "io.debezium.transforms.ExtractNewRecordState",
-		},
-	}
-
-	tests := []struct {
-		name       string
-		setupMock  func(m *MockConnectorsService)
-		wantStatus int
-		wantCode   string
-		wantBody   []transport.PluginListItemResponse
-	}{
-		{
-			name: "success returns smt plugin ids",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					GetSMTPlugins(mock.Anything).
-					Return(plugins, nil).
-					Once()
+	gotest.Test(t, "get smt plugins", func(a *gotest.Context) {
+		plugins := []domain.ConnectorPlugin{
+			{
+				ID: "io.debezium.transforms.ExtractNewRecordState",
 			},
-			wantStatus: http.StatusOK,
-			wantBody: []transport.PluginListItemResponse{
-				{
-					ID: "io.debezium.transforms.ExtractNewRecordState",
+		}
+
+		tests := []struct {
+			name       string
+			setupMock  func(m *MockConnectorsService)
+			wantStatus int
+			wantCode   string
+			wantBody   []transport.PluginListItemResponse
+		}{
+			{
+				name: "success returns smt plugin ids",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						GetSMTPlugins(mock.Anything).
+						Return(plugins, nil).
+						Once()
+				},
+				wantStatus: http.StatusOK,
+				wantBody: []transport.PluginListItemResponse{
+					{
+						ID: "io.debezium.transforms.ExtractNewRecordState",
+					},
 				},
 			},
-		},
-		{
-			name: "service error returns KAFKA_CONNECT_UNAVAILABLE",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					GetSMTPlugins(mock.Anything).
-					Return(nil, errs.ErrKafkaConnectUnavailable).
-					Once()
+			{
+				name: "service error returns KAFKA_CONNECT_UNAVAILABLE",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						GetSMTPlugins(mock.Anything).
+						Return(nil, errs.ErrKafkaConnectUnavailable).
+						Once()
+				},
+				wantStatus: http.StatusServiceUnavailable,
+				wantCode:   "KAFKA_CONNECT_UNAVAILABLE",
 			},
-			wantStatus: http.StatusServiceUnavailable,
-			wantCode:   "KAFKA_CONNECT_UNAVAILABLE",
-		},
-	}
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				is := allureassert.New(a)
+				must := allurerequire.New(a)
 
-			is := assert.New(t)
-			must := require.New(t)
+				connectorsService := NewMockConnectorsService(a.T())
+				tt.setupMock(connectorsService)
 
-			connectorsService := NewMockConnectorsService(t)
-			tt.setupMock(connectorsService)
+				handler := newTestHandler(connectorsService)
 
-			handler := newTestHandler(connectorsService)
+				rec := httptest.NewRecorder()
+				rw := core_http_response.NewResponseWriter(rec)
 
-			rec := httptest.NewRecorder()
-			rw := core_http_response.NewResponseWriter(rec)
+				handler.GetSMTPlugins(rw, newConnectorsRequest(a.T(), http.MethodGet, "/smt-plugins", ""))
+				a.Attachment("response.json", rec.Body.Bytes(), "application/json")
 
-			handler.GetSMTPlugins(rw, newConnectorsRequest(t, http.MethodGet, "/smt-plugins", ""))
+				must.Equal(tt.wantStatus, rec.Code)
 
-			must.Equal(tt.wantStatus, rec.Code)
+				if tt.wantCode != "" {
+					var body errorResponseBody
 
-			if tt.wantCode != "" {
-				var body errorResponseBody
+					must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+					is.Equal(tt.wantCode, body.Code)
+
+					return
+				}
+
+				var body []transport.PluginListItemResponse
 
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-				is.Equal(tt.wantCode, body.Code)
-
-				return
-			}
-
-			var body []transport.PluginListItemResponse
-
-			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-			is.Equal(tt.wantBody, body)
-		})
-	}
+				is.Equal(tt.wantBody, body)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Get smt plugins"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }

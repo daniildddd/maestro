@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	gotest "github.com/allure-framework/allure-go/commons/gotest" //nolint:revive // package clause is allure, gotest keeps call sites readable
+	allureassert "github.com/allure-framework/allure-go/testify/assert"
+	allurerequire "github.com/allure-framework/allure-go/testify/require"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 
 	"github.com/daniildddd/maestro/internal/core/domain"
 	"github.com/daniildddd/maestro/internal/core/errs"
@@ -19,127 +20,133 @@ import (
 func TestConnectorsHTTPHandler_GetConnectorPluginSchema(t *testing.T) {
 	t.Parallel()
 
-	fields := []domain.ConnectorPluginField{
-		{
-			Name:       "database.hostname",
-			Type:       "STRING",
-			Importance: domain.PluginImportanceHigh,
-			Required:   true,
-		},
-		{
-			Name:       "database.password",
-			Type:       "PASSWORD",
-			Importance: domain.PluginImportanceHigh,
-		},
-		{
-			Name:       "internal.option",
-			Type:       "INT",
-			Importance: domain.PluginImportanceLow,
-		},
-	}
-
-	tests := []struct {
-		name       string
-		path       string
-		setupMock  func(m *MockConnectorsService)
-		wantStatus int
-		wantCode   string
-		wantBody   transport.PluginSchemaResponse
-	}{
-		{
-			name: "success returns schema fields",
-			path: "/connector-plugins/{id}/config?importance=all",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					GetConnectorPluginSchema(mock.Anything, "{id}", mock.Anything).
-					Return(domain.ConnectorPluginSchema{Fields: fields}, nil).
-					Once()
+	gotest.Test(t, "get connector plugin schema", func(a *gotest.Context) {
+		fields := []domain.ConnectorPluginField{
+			{
+				Name:       "database.hostname",
+				Type:       "STRING",
+				Importance: domain.PluginImportanceHigh,
+				Required:   true,
 			},
-			wantStatus: http.StatusOK,
-			wantBody: transport.PluginSchemaResponse{
-				Fields: []transport.PluginSchemaFieldResponse{
-					{
-						Name:       "database.hostname",
-						Type:       "STRING",
-						Importance: "HIGH",
-						Required:   true,
-					},
-					{
-						Name:       "database.password",
-						Type:       "PASSWORD",
-						Importance: "HIGH",
-					},
-					{
-						Name:       "internal.option",
-						Type:       "INT",
-						Importance: "LOW",
+			{
+				Name:       "database.password",
+				Type:       "PASSWORD",
+				Importance: domain.PluginImportanceHigh,
+			},
+			{
+				Name:       "internal.option",
+				Type:       "INT",
+				Importance: domain.PluginImportanceLow,
+			},
+		}
+
+		tests := []struct {
+			name       string
+			path       string
+			setupMock  func(m *MockConnectorsService)
+			wantStatus int
+			wantCode   string
+			wantBody   transport.PluginSchemaResponse
+		}{
+			{
+				name: "success returns schema fields",
+				path: "/connector-plugins/{id}/config?importance=all",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						GetConnectorPluginSchema(mock.Anything, "{id}", mock.Anything).
+						Return(domain.ConnectorPluginSchema{Fields: fields}, nil).
+						Once()
+				},
+				wantStatus: http.StatusOK,
+				wantBody: transport.PluginSchemaResponse{
+					Fields: []transport.PluginSchemaFieldResponse{
+						{
+							Name:       "database.hostname",
+							Type:       "STRING",
+							Importance: "HIGH",
+							Required:   true,
+						},
+						{
+							Name:       "database.password",
+							Type:       "PASSWORD",
+							Importance: "HIGH",
+						},
+						{
+							Name:       "internal.option",
+							Type:       "INT",
+							Importance: "LOW",
+						},
 					},
 				},
 			},
-		},
-		{
-			name:       "missing connector id returns error",
-			path:       "/connector-plugins//config?importance=all",
-			setupMock:  func(_ *MockConnectorsService) {},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_PATH_PARAM",
-		},
-		{
-			name: "invalid importance returns error",
-			path: "/connector-plugins/{id}/config?importance=bogus",
-			setupMock: func(_ *MockConnectorsService) {
+			{
+				name:       "missing connector id returns error",
+				path:       "/connector-plugins//config?importance=all",
+				setupMock:  func(_ *MockConnectorsService) {},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_PATH_PARAM",
 			},
-			wantStatus: http.StatusBadRequest,
-			wantCode:   "INVALID_QUERY_PARAM",
-		},
-		{
-			name: "service error returns NOT_FOUND",
-			path: "/connector-plugins/{id}/config?importance=all",
-			setupMock: func(m *MockConnectorsService) {
-				m.EXPECT().
-					GetConnectorPluginSchema(mock.Anything, "{id}", mock.Anything).
-					Return(domain.ConnectorPluginSchema{}, errs.ErrConnectorPluginNotFound).
-					Once()
+			{
+				name: "invalid importance returns error",
+				path: "/connector-plugins/{id}/config?importance=bogus",
+				setupMock: func(_ *MockConnectorsService) {
+				},
+				wantStatus: http.StatusBadRequest,
+				wantCode:   "INVALID_QUERY_PARAM",
 			},
-			wantStatus: http.StatusNotFound,
-			wantCode:   "NOT_FOUND",
-		},
-	}
+			{
+				name: "service error returns NOT_FOUND",
+				path: "/connector-plugins/{id}/config?importance=all",
+				setupMock: func(m *MockConnectorsService) {
+					m.EXPECT().
+						GetConnectorPluginSchema(mock.Anything, "{id}", mock.Anything).
+						Return(domain.ConnectorPluginSchema{}, errs.ErrConnectorPluginNotFound).
+						Once()
+				},
+				wantStatus: http.StatusNotFound,
+				wantCode:   "NOT_FOUND",
+			},
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
+		for _, tt := range tests {
+			a.Step(tt.name, func(a *gotest.Context) {
+				is := allureassert.New(a)
+				must := allurerequire.New(a)
 
-			is := assert.New(t)
-			must := require.New(t)
+				connectorsService := NewMockConnectorsService(a.T())
+				tt.setupMock(connectorsService)
 
-			connectorsService := NewMockConnectorsService(t)
-			tt.setupMock(connectorsService)
+				handler := newTestHandler(connectorsService)
 
-			handler := newTestHandler(connectorsService)
+				rec := httptest.NewRecorder()
+				rw := core_http_response.NewResponseWriter(rec)
 
-			rec := httptest.NewRecorder()
-			rw := core_http_response.NewResponseWriter(rec)
+				req := newConnectorsRequest(a.T(), http.MethodGet, tt.path, "")
 
-			req := newConnectorsRequest(t, http.MethodGet, tt.path, "")
+				handler.GetConnectorPluginSchema(rw, req)
+				a.Attachment("response.json", rec.Body.Bytes(), "application/json")
 
-			handler.GetConnectorPluginSchema(rw, req)
+				must.Equal(tt.wantStatus, rec.Code)
 
-			must.Equal(tt.wantStatus, rec.Code)
+				if tt.wantCode != "" {
+					var body errorResponseBody
 
-			if tt.wantCode != "" {
-				var body errorResponseBody
+					must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
+					is.Equal(tt.wantCode, body.Code)
+
+					return
+				}
+
+				var body transport.PluginSchemaResponse
 
 				must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-				is.Equal(tt.wantCode, body.Code)
-
-				return
-			}
-
-			var body transport.PluginSchemaResponse
-
-			must.NoError(json.Unmarshal(rec.Body.Bytes(), &body))
-			is.Equal(tt.wantBody, body)
-		})
-	}
+				is.Equal(tt.wantBody, body)
+			})
+		}
+	},
+		gotest.WithEpic("Connectors"),
+		gotest.WithFeature("Get connector plugin schema"),
+		gotest.WithSeverity("normal"),
+		gotest.WithOwner("qa-intern"),
+	)
 }
